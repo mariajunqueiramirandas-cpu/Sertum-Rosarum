@@ -3,6 +3,7 @@ package com.sertumrosarum.feature.prayer
 import androidx.lifecycle.SavedStateHandle
 import com.sertumrosarum.domain.prayer.FixedPrayer
 import com.sertumrosarum.domain.prayer.MysterySet
+import com.sertumrosarum.feature.guides.PrayerGuide
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
@@ -120,6 +121,9 @@ class PrayerSessionViewModelTest {
         original.jumpToBead(8)
         original.toggleEyesClosed()
         original.toggleHaptics()
+        original.toggleMeditated()
+        original.returnHome()
+        original.selectTab(SanctuaryTab.GUIDES)
         val restoredHandle = SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })
         assertEquals(original.state.value, model(restoredHandle).state.value)
     }
@@ -168,6 +172,103 @@ class PrayerSessionViewModelTest {
         assertEquals(MysterySet.SORROWFUL, model.state.value.selectedSet)
         assertEquals(MysterySet.LUMINOUS, model.state.value.sessionSet)
         assertEquals(position, model.state.value.stepIndex)
+    }
+
+    @Test fun `tabs change the place without touching the selection or a paused crown`() {
+        val model = model()
+        model.start()
+        model.jumpToDecade(1)
+        val index = model.state.value.stepIndex
+        model.returnHome()
+        SanctuaryTab.entries.forEach { tab ->
+            model.selectTab(tab)
+            assertEquals(tab, model.state.value.tab)
+            assertEquals(SanctuaryScreen.HOME, model.state.value.screen)
+        }
+        assertEquals(MysterySet.LUMINOUS, model.state.value.selectedSet)
+        model.resume()
+        assertEquals(index, model.state.value.stepIndex)
+    }
+
+    @Test fun `a ready guide starts its own crown and a guide still in bud starts nothing`() {
+        val model = model()
+        model.selectMystery(MysterySet.JOYFUL)
+        model.start(PrayerGuide.FAMILY)
+        assertEquals(SanctuaryScreen.PRAYER, model.state.value.screen)
+        assertEquals(PrayerGuide.FAMILY, model.state.value.sessionGuide)
+        assertEquals(MysterySet.JOYFUL, model.state.value.sessionSet)
+        model.returnHome()
+        PrayerGuide.entries.filterNot { it.ready }.forEach { model.start(it) }
+        assertEquals(SanctuaryScreen.HOME, model.state.value.screen)
+        assertEquals(PrayerGuide.FAMILY, model.state.value.sessionGuide)
+        model.start()
+        assertEquals(PrayerGuide.TRADITIONAL, model.state.value.sessionGuide)
+    }
+
+    @Test fun `bead by bead lines follow the Ave Maria only while the meditated rosary is on`() {
+        val model = model()
+        model.selectMystery(MysterySet.JOYFUL)
+        model.start()
+        model.jumpToDecade(0)
+        assertNull(model.state.value.beadMeditation)
+        model.toggleMeditated()
+        assertNull("the announcement has no bead line", model.state.value.beadMeditation)
+        val lines = requireNotNull(model.state.value.contemplation).beads
+        assertEquals(10, lines.size)
+        repeat(10) { bead ->
+            model.jumpToBead(bead)
+            assertEquals(lines[bead], model.state.value.beadMeditation)
+        }
+        model.next()
+        assertEquals(FixedPrayer.GLORY_BE, model.state.value.step.prayer)
+        assertNull(model.state.value.beadMeditation)
+        model.toggleMeditated()
+        model.jumpToBead(4)
+        assertNull(model.state.value.beadMeditation)
+    }
+
+    @Test fun `every mystery has its three written layers and introductory prayers have none`() {
+        val model = model()
+        MysterySet.entries.forEach { set ->
+            model.returnHome()
+            model.selectMystery(set)
+            model.start()
+            assertNull(model.state.value.contemplation)
+            repeat(5) { decade ->
+                model.jumpToDecade(decade)
+                val layers = requireNotNull(model.state.value.contemplation)
+                assertTrue(layers.scene.isNotBlank() && layers.meaning.isNotBlank() && layers.practice.isNotBlank())
+                assertTrue(layers.beads.isEmpty() || layers.beads.size == 10)
+            }
+        }
+    }
+
+    @Test fun `catechetical notes belong to the catechetical guide and are not repeated on every bead`() {
+        val model = model()
+        model.start()
+        assertNull(model.state.value.catecheticalNote)
+        model.returnHome()
+        model.start(PrayerGuide.CATECHETICAL)
+        repeat(4) { assertNotNull(model.state.value.catecheticalNote); model.next() }
+        assertEquals(0, model.state.value.step.beadIndex)
+        assertNotNull(model.state.value.catecheticalNote)
+        model.next()
+        assertNull(model.state.value.catecheticalNote)
+        model.jumpToDecade(0)
+        assertNotNull(model.state.value.catecheticalNote)
+        model.jumpToBead(0)
+        val first = model.state.value.catecheticalNote
+        assertNotNull(first)
+        model.jumpToBead(1)
+        assertNull(model.state.value.catecheticalNote)
+    }
+
+    @Test fun `crowns describe their own shape`() {
+        assertEquals("Cinco dezenas de dez contas", PrayerGuide.TRADITIONAL.shape.summary)
+        assertEquals("Sete setenas de sete contas", PrayerGuide.TEARS.shape.summary)
+        assertEquals("Sete dezenas de dez contas", PrayerGuide.FRANCISCAN.shape.summary)
+        assertEquals("7 × 7", PrayerGuide.TEARS.shape.badge)
+        assertTrue(PrayerGuide.entries.all { it.path.isNotEmpty() })
     }
 
     private class MutableClock(var instant: Instant) : Clock() {

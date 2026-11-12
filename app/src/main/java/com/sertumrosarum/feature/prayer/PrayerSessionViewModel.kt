@@ -6,13 +6,21 @@ import com.sertumrosarum.domain.prayer.FixedPrayer
 import com.sertumrosarum.domain.prayer.MysterySet
 import com.sertumrosarum.domain.prayer.PrayerPhase
 import com.sertumrosarum.domain.prayer.RosarySequenceBuilder
+import com.sertumrosarum.feature.guides.PrayerGuide
 import java.time.Clock
 import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 
 enum class ThemeMode(val label: String) { SYSTEM("Sistema"), DAY("Dia"), VIGIL("Vigília") }
+/** [HOME] is the tabbed sanctuary; the other two are full-screen and hide the tabs. */
 enum class SanctuaryScreen { HOME, PRAYER, DELIVERED }
+enum class SanctuaryTab(val label: String, val caption: String) {
+    HOME("Início", "O santuário do dia"),
+    GUIDES("Roteiros", "Trilhas e terços"),
+    TREASURY("Tesouro", "Orações e formação"),
+    GARDEN("Meu Jardim", "Diário e intenções"),
+}
 enum class PrayerPulse { SOFT, TRANSITION, COMPLETION }
 
 data class PrayerUiState(
@@ -21,6 +29,9 @@ data class PrayerUiState(
     val sessionSet: MysterySet = selectedSet,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val screen: SanctuaryScreen = SanctuaryScreen.HOME,
+    val tab: SanctuaryTab = SanctuaryTab.HOME,
+    val sessionGuide: PrayerGuide = PrayerGuide.TRADITIONAL,
+    val meditated: Boolean = false,
     val stepIndex: Int = 0,
     val startedAt: Long? = null,
     val finishedAt: Long? = null,
@@ -36,6 +47,11 @@ data class PrayerUiState(
         PrayerPhase.CLOSING -> 5
     }
     val progress get() = if (finishedAt != null) 1f else stepIndex.toFloat() / sequence.size
+    /** The written layers of the mystery being prayed, when the step belongs to a decade. */
+    val contemplation get() = step.decadeIndex?.let { ContemplationSamples.contemplationFor(sessionSet, it) }
+    /** One line for the current Ave-Maria, shown only while the bead-by-bead rosary is on. */
+    val beadMeditation get() = if (meditated && step.prayer == FixedPrayer.HAIL_MARY) contemplation?.beads?.getOrNull(step.beadIndex ?: -1) else null
+    val catecheticalNote get() = if (sessionGuide.catechetical) ContemplationSamples.catecheticalNote(step) else null
     val durationSeconds get() = ((finishedAt ?: startedAt ?: 0L) - (startedAt ?: 0L)).coerceAtLeast(0L) / 1000L
 }
 
@@ -56,6 +72,9 @@ class PrayerSessionViewModel(
             sessionSet = savedState.get<String>("sessionSet")?.let(MysterySet::valueOf) ?: initialSet,
             themeMode = savedState.get<String>("themeMode")?.let(ThemeMode::valueOf) ?: ThemeMode.SYSTEM,
             screen = savedState.get<String>("screen")?.let(SanctuaryScreen::valueOf) ?: SanctuaryScreen.HOME,
+            tab = savedState.get<String>("tab")?.let(SanctuaryTab::valueOf) ?: SanctuaryTab.HOME,
+            sessionGuide = savedState.get<String>("sessionGuide")?.let(PrayerGuide::valueOf) ?: PrayerGuide.TRADITIONAL,
+            meditated = savedState["meditated"] ?: false,
             stepIndex = (savedState.get<Int>("stepIndex") ?: 0).coerceIn(0, 79),
             startedAt = savedState["startedAt"],
             finishedAt = savedState["finishedAt"],
@@ -73,6 +92,9 @@ class PrayerSessionViewModel(
         savedState["sessionSet"] = next.sessionSet.name
         savedState["themeMode"] = next.themeMode.name
         savedState["screen"] = next.screen.name
+        savedState["tab"] = next.tab.name
+        savedState["sessionGuide"] = next.sessionGuide.name
+        savedState["meditated"] = next.meditated
         savedState["stepIndex"] = next.stepIndex
         savedState["startedAt"] = next.startedAt
         savedState["finishedAt"] = next.finishedAt
@@ -88,8 +110,16 @@ class PrayerSessionViewModel(
     fun setTheme(mode: ThemeMode) = update { it.copy(themeMode = mode) }
     fun toggleEyesClosed() = update { it.copy(eyesClosed = !it.eyesClosed) }
     fun toggleHaptics() = update { it.copy(hapticsEnabled = !it.hapticsEnabled) }
-    fun start() = update {
-        it.copy(screen = SanctuaryScreen.PRAYER, sessionSet = it.selectedSet, stepIndex = 0, startedAt = clock.millis(), finishedAt = null)
+    fun selectTab(tab: SanctuaryTab) = update { it.copy(tab = tab) }
+    fun toggleMeditated() = update { it.copy(meditated = !it.meditated) }
+    fun start() = start(PrayerGuide.TRADITIONAL)
+
+    /** Begins a crown with the chosen guide. Guides whose prayer is not ready yet are ignored. */
+    fun start(guide: PrayerGuide) {
+        if (!guide.ready) return
+        update {
+            it.copy(screen = SanctuaryScreen.PRAYER, sessionSet = it.selectedSet, sessionGuide = guide, stepIndex = 0, startedAt = clock.millis(), finishedAt = null)
+        }
     }
     fun resume() = update { if (it.hasSession) it.copy(screen = SanctuaryScreen.PRAYER) else it }
     fun returnHome() = update { it.copy(screen = SanctuaryScreen.HOME) }

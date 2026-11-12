@@ -16,6 +16,13 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicText
+import androidx.compose.animation.core.spring
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.selection.toggleable
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -38,6 +45,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sertumrosarum.ui.theme.SertumTheme
@@ -56,9 +64,10 @@ fun SacredText(
     style: TextStyle = SertumTheme.typography.body,
     color: Color = SertumTheme.colors.ink,
     align: TextAlign? = null,
-) = BasicText(text, modifier, style.copy(color = color, textAlign = align ?: style.textAlign))
+    maxLines: Int = Int.MAX_VALUE,
+) = BasicText(text, modifier, style.copy(color = color, textAlign = align ?: style.textAlign), overflow = TextOverflow.Ellipsis, maxLines = maxLines)
 
-enum class SacredIcon { SUN, MOON, SYSTEM, BACK, CLOSE, EYE, HAPTIC, CHEVRON, CROSS, CHECK, ROSE }
+enum class SacredIcon { SUN, MOON, SYSTEM, BACK, CLOSE, EYE, HAPTIC, CHEVRON, CROSS, CHECK, ROSE, ARCH, BEADS, BOOK, SPROUT }
 
 @Composable
 fun SacredIcon(icon: SacredIcon, modifier: Modifier = Modifier, color: Color = SertumTheme.colors.ink) {
@@ -111,6 +120,47 @@ fun SacredIcon(icon: SacredIcon, modifier: Modifier = Modifier, color: Color = S
                 drawRoundRect(color, point(8f, 5f), Size(8f * unit, 14f * unit), androidx.compose.ui.geometry.CornerRadius(2 * unit), style = Stroke(stroke))
                 line(4f, 8f, 4f, 16f); line(20f, 8f, 20f, 16f)
                 line(1f, 10f, 1f, 14f); line(23f, 10f, 23f, 14f)
+            }
+            SacredIcon.ARCH -> {
+                // The garden's niche: an outer arch on its step, and the doorway within.
+                val arch = Path().apply {
+                    moveTo(5.5f * unit, 20f * unit); lineTo(5.5f * unit, 10.5f * unit)
+                    cubicTo(5.5f * unit, 1.8f * unit, 18.5f * unit, 1.8f * unit, 18.5f * unit, 10.5f * unit)
+                    lineTo(18.5f * unit, 20f * unit)
+                    moveTo(9.5f * unit, 20f * unit); lineTo(9.5f * unit, 12f * unit)
+                    cubicTo(9.5f * unit, 8.4f * unit, 14.5f * unit, 8.4f * unit, 14.5f * unit, 12f * unit)
+                    lineTo(14.5f * unit, 20f * unit)
+                }
+                drawPath(arch, color, style = Stroke(stroke, cap = StrokeCap.Round))
+                line(3f, 20f, 21f, 20f)
+            }
+            SacredIcon.BEADS -> {
+                // A small open rosary: nine beads on a loop, and the cross that hangs from it.
+                repeat(9) { index ->
+                    val angle = (130f + index * 35f) * PI / 180
+                    drawCircle(color, 1.25f * unit, point(12f, 9.5f) + Offset(cos(angle).toFloat(), sin(angle).toFloat()) * (7f * unit))
+                }
+                line(12f, 16.5f, 12f, 22.5f); line(10f, 18.6f, 14f, 18.6f)
+            }
+            SacredIcon.BOOK -> {
+                val pages = Path().apply {
+                    moveTo(12f * unit, 7f * unit); quadraticTo(7.5f * unit, 4f * unit, 3f * unit, 5.5f * unit)
+                    lineTo(3f * unit, 18f * unit); quadraticTo(7.5f * unit, 16.5f * unit, 12f * unit, 19.5f * unit)
+                    quadraticTo(16.5f * unit, 16.5f * unit, 21f * unit, 18f * unit); lineTo(21f * unit, 5.5f * unit)
+                    quadraticTo(16.5f * unit, 4f * unit, 12f * unit, 7f * unit)
+                }
+                drawPath(pages, color, style = Stroke(stroke, cap = StrokeCap.Round))
+                line(12f, 7f, 12f, 19.5f)
+            }
+            SacredIcon.SPROUT -> {
+                val leaves = Path().apply {
+                    moveTo(12f * unit, 14.5f * unit); quadraticTo(5f * unit, 15f * unit, 4f * unit, 8f * unit)
+                    quadraticTo(11f * unit, 7.5f * unit, 12f * unit, 14.5f * unit)
+                    moveTo(12f * unit, 11.5f * unit); quadraticTo(13f * unit, 4.5f * unit, 20f * unit, 4f * unit)
+                    quadraticTo(20f * unit, 11f * unit, 12f * unit, 11.5f * unit)
+                }
+                drawPath(leaves, color, style = Stroke(stroke, cap = StrokeCap.Round))
+                line(12f, 21.5f, 12f, 11.5f)
             }
             SacredIcon.ROSE -> Unit // The painted rose is rendered above.
         }
@@ -187,4 +237,48 @@ fun SacredCard(modifier: Modifier = Modifier, lifted: Boolean = false, content: 
             .shadow(if (colors.isDark) 0.dp else if (lifted) 18.dp else 8.dp, shape, ambientColor = colors.marian.copy(alpha = .16f), spotColor = colors.marian.copy(alpha = .22f))
             .clip(shape).background(colors.elevated).border(1.dp, colors.border.copy(alpha = if (colors.isDark) .9f else .7f), shape),
     ) { content() }
+}
+
+/** A switch that blooms: the bud on the left opens into a rose on the right. */
+@Composable
+fun SacredSwitch(checked: Boolean, modifier: Modifier = Modifier) {
+    val colors = SertumTheme.colors
+    val art = LocalBotanicalArtwork.current
+    val travel by animateFloatAsState(if (checked) 1f else 0f, spring(dampingRatio = .8f, stiffness = 320f), label = "sacred-switch")
+    Canvas(modifier.size(width = 54.dp, height = 32.dp)) {
+        val on = travel.coerceIn(0f, 1f)
+        val round = CornerRadius(size.height / 2f)
+        drawRoundRect(lerp(colors.surface, colors.petal, on), cornerRadius = round)
+        drawRoundRect(lerp(colors.border, colors.ruby.copy(alpha = .4f), on), cornerRadius = round, style = Stroke(1.dp.toPx()))
+        val thumb = Offset(size.height / 2f + (size.width - size.height) * on, center.y)
+        drawCircle(colors.elevated, size.height / 2f - 3.dp.toPx(), thumb)
+        paintBotanical(art.bud, thumb, 21.dp.toPx(), 1f - on)
+        paintBotanical(art.rose, thumb, 23.dp.toPx(), on)
+    }
+}
+
+/** One quiet choice with its explanation; the whole row is the switch. */
+@Composable
+fun SacredToggleRow(title: String, caption: String, checked: Boolean, onToggle: () -> Unit, modifier: Modifier = Modifier, tag: String = "toggle") {
+    val colors = SertumTheme.colors
+    val type = SertumTheme.typography
+    Row(
+        modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).toggleable(checked, role = Role.Switch, onValueChange = { onToggle() })
+            .testTag(tag).heightIn(min = 56.dp).padding(horizontal = 6.dp, vertical = 8.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp),
+    ) {
+        Column(Modifier.weight(1f)) {
+            SacredText(title, style = type.label)
+            SacredText(caption, Modifier.padding(top = 1.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.secondary)
+        }
+        SacredSwitch(checked)
+    }
+}
+
+/** A small label in a soft sage pill, for a state or a count that needs no emphasis. */
+@Composable
+fun SacredChip(text: String, modifier: Modifier = Modifier, tint: Color = SertumTheme.colors.marian) {
+    Box(modifier.clip(CircleShape).background(tint.copy(alpha = .13f)).padding(horizontal = 11.dp, vertical = 4.dp)) {
+        SacredText(text, style = SertumTheme.typography.micro, color = tint, maxLines = 1)
+    }
 }

@@ -51,6 +51,7 @@ import com.sertumrosarum.domain.prayer.Mystery
 import com.sertumrosarum.domain.prayer.MysterySet
 import com.sertumrosarum.feature.prayer.PrayerSessionViewModel
 import com.sertumrosarum.feature.prayer.PrayerUiState
+import com.sertumrosarum.feature.prayer.SanctuaryTab
 import com.sertumrosarum.feature.prayer.ThemeMode
 import com.sertumrosarum.ui.canvas.RoseMark
 import com.sertumrosarum.ui.canvas.SanctuaryGarden
@@ -97,14 +98,23 @@ fun SanctuaryScreen(state: PrayerUiState, model: PrayerSessionViewModel) {
                 MysterySelector(state.selectedSet, model::selectMystery)
                 Spacer(Modifier.height(16.dp))
                 MysteryCard(state.selectedSet)
+                Row(
+                    Modifier.align(Alignment.CenterHorizontally).padding(top = 10.dp).clip(CircleShape).clickable(role = Role.Button) { model.selectTab(SanctuaryTab.GUIDES) }
+                        .testTag("other-guides").heightIn(min = 48.dp).padding(horizontal = 18.dp),
+                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp),
+                ) {
+                    SacredText("Rezar com outro roteiro", style = type.label, color = colors.marian)
+                    SacredIcon(SacredIcon.CHEVRON, Modifier.size(12.dp), colors.marian)
+                }
 
-                SacredText("“A minha alma engrandece o Senhor.”", Modifier.fillMaxWidth().padding(top = 34.dp), type.whisper, colors.secondary, TextAlign.Center)
-                SacredText("Lucas 1, 46", Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 40.dp), type.micro, colors.muted, TextAlign.Center)
+                SacredText("“A minha alma engrandece o Senhor.”", Modifier.fillMaxWidth().padding(top = 24.dp), type.whisper, colors.secondary, TextAlign.Center)
+                SacredText("Lucas 1, 46", Modifier.fillMaxWidth().padding(top = 6.dp), type.micro, colors.muted, TextAlign.Center)
+                SacredText("Uma oração de cada vez. Sem pressa.", Modifier.fillMaxWidth().padding(top = 22.dp, bottom = 40.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.secondary, TextAlign.Center)
             }
             // The page dissolves into the action instead of being cut by it.
             Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(32.dp).background(Brush.verticalGradient(listOf(colors.background.copy(alpha = 0f), colors.background))))
         }
-        Column(Modifier.fillMaxWidth().background(colors.background).padding(horizontal = 24.dp).padding(top = 4.dp, bottom = 14.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(Modifier.fillMaxWidth().background(colors.background).padding(horizontal = 24.dp).padding(top = 4.dp, bottom = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
             if (state.hasSession) {
                 Row(
                     Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(colors.surface).border(1.dp, colors.border, RoundedCornerShape(24.dp))
@@ -121,7 +131,6 @@ fun SanctuaryScreen(state: PrayerUiState, model: PrayerSessionViewModel) {
                 Spacer(Modifier.height(12.dp))
             }
             SacredPrimaryButton(if (state.hasSession) "Tecer uma nova coroa" else "Tecer a coroa de hoje", model::start, tag = "start-rosary")
-            SacredText("Uma oração de cada vez. Sem pressa.", Modifier.padding(top = 11.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.secondary)
         }
     }
 }
@@ -166,7 +175,7 @@ private fun SanctuaryHeader(mode: ThemeMode, onTheme: (ThemeMode) -> Unit) {
 }
 
 @Composable
-private fun MysterySelector(selected: MysterySet, onSelect: (MysterySet) -> Unit) {
+internal fun MysterySelector(selected: MysterySet, onSelect: (MysterySet) -> Unit) {
     val colors = SertumTheme.colors
     val track = RoundedCornerShape(26.dp)
     Row(Modifier.fillMaxWidth().clip(track).background(colors.surface).border(1.dp, colors.border.copy(alpha = .7f), track).padding(5.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
