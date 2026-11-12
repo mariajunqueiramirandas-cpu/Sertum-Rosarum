@@ -30,7 +30,7 @@ The runtime assets are [day](../../../app/src/main/res/drawable-nodpi/sanctuary_
 
 `SanctuaryGarden` fits the complete image without cropping, with a small protective inset. Sparse animated pollen, a soft mystery-colored light, and the sun or crescent remain in Compose Canvas. The painted figures stay still. Ambient animation respects the existing system animation setting. The painting's rose colors remain constant; the page wash and surrounding light respond to the selected mystery.
 
-The prayer beads, mystery stem, and delivered crown remain the app's custom Canvas artwork.
+The prayer beads, mystery stem, delivered crown, and small ornaments use a [coordinated family of painted botanical textures](../botanical/README.md), derived from this garden and composed and animated in Canvas.
 
 ## Preview provenance
 

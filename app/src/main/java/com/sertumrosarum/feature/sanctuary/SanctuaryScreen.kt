@@ -111,7 +111,7 @@ fun SanctuaryScreen(state: PrayerUiState, model: PrayerSessionViewModel) {
                         .clickable(role = Role.Button, onClick = model::resume).testTag("resume").heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 10.dp),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
                 ) {
-                    RoseMark(Modifier.size(28.dp), colors.ruby)
+                    RoseMark(Modifier.size(28.dp))
                     Column(Modifier.weight(1f)) {
                         SacredText("Sua oração espera por você", style = type.label)
                         SacredText("Continuar de onde parou", style = type.micro.copy(fontWeight = FontWeight.Normal), color = colors.secondary)
@@ -134,7 +134,7 @@ private fun SanctuaryHeader(mode: ThemeMode, onTheme: (ThemeMode) -> Unit) {
     var menuOpen by remember { mutableStateOf(false) }
     Row(Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 10.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-            RoseMark(Modifier.size(30.dp), colors.ruby)
+            RoseMark(Modifier.size(30.dp))
             SacredText("sertum", style = type.brand)
         }
         Box {

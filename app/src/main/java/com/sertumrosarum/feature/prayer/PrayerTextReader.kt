@@ -31,16 +31,16 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.drawWithContent
+import androidx.compose.ui.draw.drawWithCache
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.BlendMode
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.CompositingStrategy
-import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.Paint
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
@@ -183,25 +183,34 @@ private fun ReadingPositionRail(scroll: ScrollState, modifier: Modifier = Modifi
 
 /** Alpha masks reveal the actual garden background, without opaque edge strips. */
 private fun Modifier.readingEdgeFades(scroll: ScrollState) =
-    graphicsLayer { compositingStrategy = CompositingStrategy.Offscreen }
-        .drawWithContent {
-            drawContent()
+    drawWithCache {
+        val maskPaint = Paint()
+        onDrawWithContent {
             val depth = 24.dp.toPx().coerceAtMost(size.height / 2f)
             val above = scroll.value.toFloat().coerceIn(0f, depth)
             val below = (scroll.maxValue.toLong() - scroll.value).toFloat().coerceIn(0f, depth)
-            if (above > 0f) {
-                drawRect(
-                    Brush.verticalGradient(listOf(Color.Transparent, Color.Black), endY = above),
-                    size = Size(size.width, above),
-                    blendMode = BlendMode.DstIn,
-                )
+            if (above == 0f && below == 0f) {
+                drawContent()
+                return@onDrawWithContent
             }
-            if (below > 0f) {
+            // Keep the mask and its layer bounds together, including on short
+            // layouts. Only reading content is faded; the real page shows through.
+            val canvas = drawContext.canvas
+            canvas.saveLayer(Rect(Offset.Zero, size), maskPaint)
+            try {
+                drawContent()
                 drawRect(
-                    Brush.verticalGradient(listOf(Color.Black, Color.Transparent), startY = size.height - below, endY = size.height),
-                    topLeft = Offset(0f, size.height - below),
-                    size = Size(size.width, below),
-                    blendMode = BlendMode.DstIn,
+                    Brush.verticalGradient(
+                        0f to if (above > 0f) Color.Black else Color.Transparent,
+                        above / size.height to Color.Transparent,
+                        1f - below / size.height to Color.Transparent,
+                        1f to if (below > 0f) Color.Black else Color.Transparent,
+                        endY = size.height,
+                    ),
+                    blendMode = BlendMode.DstOut,
                 )
+            } finally {
+                canvas.restore()
             }
         }
+    }

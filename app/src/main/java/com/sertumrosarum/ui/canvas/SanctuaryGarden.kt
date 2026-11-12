@@ -18,15 +18,12 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
-import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathOperation
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.withTransform
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
@@ -42,48 +39,6 @@ internal fun rememberGardenBreath(label: String, millis: Int = 9000): State<Floa
     if (SertumTheme.reducedMotion) return remember { mutableFloatStateOf(0f) }
     return rememberInfiniteTransition(label = label)
         .animateFloat(0f, (2 * PI).toFloat(), infiniteRepeatable(tween(millis, easing = LinearEasing), RepeatMode.Restart), label = "$label-phase")
-}
-
-/** Original soft rose: five open petals around a paler inner whorl. Each prayer grows the same flower. */
-fun DrawScope.drawGardenFlower(center: Offset, radius: Float, petal: Color, heart: Color, bloom: Float = 1f) {
-    val r = radius * (.6f + bloom * .4f)
-    val inner = lerp(petal.copy(alpha = 1f), Color.White, .34f).copy(alpha = petal.alpha)
-    repeat(5) { index ->
-        rotate(index * 72f, center) {
-            drawOval(petal, Offset(center.x - r * .47f, center.y - r), Size(r * .94f, r * 1.04f))
-        }
-    }
-    repeat(5) { index ->
-        rotate(36f + index * 72f, center) {
-            drawOval(inner, Offset(center.x - r * .3f, center.y - r * .68f), Size(r * .6f, r * .68f))
-        }
-    }
-    drawCircle(heart, r * .22f, center)
-    drawCircle(Color.White.copy(alpha = .45f), r * .07f, center - Offset(r * .06f, r * .07f))
-}
-
-/** A closed bud resting on two sepals: a prayer still waiting to be prayed. */
-fun DrawScope.drawGardenBud(center: Offset, radius: Float, bud: Color, sepal: Color) {
-    val r = radius
-    val base = Offset(center.x, center.y + r * .85f)
-    gardenLeaf(base, Offset(center.x - r * .95f, center.y - r * .1f), r * .3f, sepal)
-    gardenLeaf(base, Offset(center.x + r * .95f, center.y - r * .1f), r * .3f, sepal)
-    drawPath(Path().apply {
-        moveTo(center.x, center.y - r)
-        cubicTo(center.x + r * .95f, center.y - r * .2f, center.x + r * .62f, center.y + r * .85f, center.x, center.y + r * .85f)
-        cubicTo(center.x - r * .62f, center.y + r * .85f, center.x - r * .95f, center.y - r * .2f, center.x, center.y - r)
-    }, bud)
-}
-
-internal fun DrawScope.gardenLeaf(start: Offset, end: Offset, width: Float, color: Color) {
-    val direction = end - start
-    val middle = (start + end) / 2f
-    val normal = Offset(-direction.y, direction.x) / direction.getDistance().coerceAtLeast(1f) * width
-    drawPath(Path().apply {
-        moveTo(start.x, start.y)
-        quadraticTo(middle.x + normal.x, middle.y + normal.y, end.x, end.y)
-        quadraticTo(middle.x - normal.x, middle.y - normal.y, start.x, start.y)
-    }, color)
 }
 
 /**

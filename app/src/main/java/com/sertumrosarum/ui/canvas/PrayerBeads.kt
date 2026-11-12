@@ -6,6 +6,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Row
@@ -16,6 +17,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
@@ -41,18 +43,23 @@ import kotlin.math.sin
 @Composable
 fun CompactMysteries(completed: Int, current: Int?, onSelect: (Int) -> Unit) {
     val colors = SertumTheme.colors
+    val art = LocalBotanicalArtwork.current
     Row(Modifier.fillMaxWidth()) {
         repeat(5) { index ->
-            val reached = index <= completed
-            Box(Modifier.weight(1f).height(36.dp).testTag("decade-$index")
+            val reached = index < completed || index == current
+            Box(Modifier.weight(1f).height(48.dp).testTag("decade-$index")
                 .semantics { contentDescription = "Ir ao ${index + 1}º mistério"; selected = current == index }
                 .clickable(role = Role.Button, onClick = { onSelect(index) }), contentAlignment = Alignment.Center) {
-                Box(
-                    Modifier.size(28.dp).clip(CircleShape)
+                Row(
+                    Modifier.width(48.dp).height(30.dp).clip(RoundedCornerShape(16.dp))
                         .background(if (index == current) colors.petal else if (reached) colors.marian.copy(alpha = .16f) else colors.surface)
-                        .border(1.dp, if (index == current) colors.ruby.copy(alpha = .35f) else colors.border, CircleShape),
-                    contentAlignment = Alignment.Center,
+                        .border(1.dp, if (index == current) colors.gold.copy(alpha = .55f) else colors.border, RoundedCornerShape(16.dp)),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally),
                 ) {
+                    Canvas(Modifier.size(20.dp)) {
+                        paintBotanical(if (reached) art.rose else art.bud, center, size.minDimension, if (reached) 1f else .78f)
+                    }
                     SacredText("${index + 1}", style = SertumTheme.typography.label.copy(fontSize = 13.sp), color = if (index == current) colors.onPetal else if (reached) colors.marian else colors.muted)
                 }
             }
@@ -64,6 +71,7 @@ fun CompactMysteries(completed: Int, current: Int?, onSelect: (Int) -> Unit) {
 @Composable
 fun FiveMysteriesArc(completed: Int, current: Int?, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
     val colors = SertumTheme.colors
+    val art = LocalBotanicalArtwork.current
     val breath = rememberGardenBreath("mystery-stem", 5200)
     BoxWithConstraints(modifier.fillMaxWidth().height(100.dp)) {
         val usable = maxWidth - 44.dp
@@ -92,26 +100,32 @@ fun FiveMysteriesArc(completed: Int, current: Int?, onSelect: (Int) -> Unit, mod
                     val ahead = point(u + .01f) - p
                     val along = ahead / ahead.getDistance().coerceAtLeast(.01f)
                     val side = Offset(-along.y, along.x) * (if (index % 4 == 1) 1f else -1f)
-                    gardenLeaf(p, p + side * 8.dp.toPx() + along * 5.dp.toPx(), 2.6.dp.toPx(), colors.marian.copy(alpha = if (u <= growth) .75f else .32f))
+                    val sway = .4.dp.toPx() * sin(breath.value + index * 1.3f)
+                    paintLeaf(art.leaf, p, p + side * (10.dp.toPx() + sway) + along * 5.dp.toPx(), if (u <= growth) .9f else .5f)
                 }
             }
         }
         repeat(5) { index ->
             val u = (index + .5f) / 5f
+            val opened = index < completed || index == current || completed == 5
+            val bloom by animateFloatAsState(if (opened) 1f else 0f, spring(dampingRatio = .75f, stiffness = 85f), label = "mystery-bloom-$index")
             Box(Modifier.offset(stemX(u) - 24.dp, stemY(u) - 24.dp).size(48.dp).clip(CircleShape).testTag("decade-$index")
                 .semantics { contentDescription = "Ir ao ${index + 1}º mistério"; selected = current == index }
                 .clickable(role = Role.Button, onClick = { onSelect(index) })) {
                 Canvas(Modifier.fillMaxSize()) {
                     val glow = .5f + .5f * sin(breath.value)
                     if (index == current) {
-                        drawCircle(colors.ruby.copy(alpha = .07f + .06f * glow), 23.dp.toPx(), center)
-                        drawCircle(colors.elevated, 17.dp.toPx(), center)
+                        drawCircle(colors.gold.copy(alpha = .07f + .04f * glow), 23.dp.toPx(), center)
+                        drawCircle(colors.elevated, 18.5.dp.toPx(), center)
+                        drawCircle(colors.gold.copy(alpha = .45f), 20.dp.toPx(), center, style = Stroke(.65.dp.toPx()))
                     }
-                    if (index < completed || index == current || completed == 5) {
-                        drawGardenFlower(center, (if (index == current) 13.5.dp else 10.5.dp).toPx(), colors.ruby.copy(alpha = if (index == current) .95f else .62f), colors.gold)
-                    } else {
-                        drawGardenBud(center, 6.5.dp.toPx(), colors.ruby.copy(alpha = if (colors.isDark) .6f else .42f), colors.marian.copy(alpha = .7f))
-                    }
+                    val petals = bloom.coerceIn(0f, 1f)
+                    paintBotanical(art.bud, center - Offset(0f, 4.dp.toPx() * (1f - petals)), 25.dp.toPx(), (1f - petals) * .8f)
+                    paintBotanical(
+                        if (index == current) art.ivoryRose else art.rose, center,
+                        (if (index == current) 33.dp else 26.dp).toPx() * (.65f + .35f * bloom.coerceIn(0f, 1.15f)),
+                        petals * (if (index == current) 1f else .94f), turn = index * 11f - 22f,
+                    )
                 }
             }
         }
@@ -122,6 +136,7 @@ fun FiveMysteriesArc(completed: Int, current: Int?, onSelect: (Int) -> Unit, mod
 @Composable
 fun BloomingBeadsArc(count: Int, active: Int?, complete: Boolean, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
     val colors = SertumTheme.colors
+    val art = LocalBotanicalArtwork.current
     val breath = rememberGardenBreath("rose-breath", 4800)
     BoxWithConstraints(modifier.fillMaxWidth().height(96.dp)) {
         val slot = maxWidth / count
@@ -149,13 +164,16 @@ fun BloomingBeadsArc(count: Int, active: Int?, complete: Boolean, onSelect: (Int
                 Canvas(Modifier.fillMaxSize()) {
                     if (isActive) {
                         val pulse = .5f + .5f * cos(breath.value)
-                        drawCircle(colors.ruby.copy(alpha = .06f + .08f * pulse), (15.5f + 2.5f * pulse).dp.toPx(), center)
+                        drawCircle(colors.ruby.copy(alpha = .05f + .04f * pulse), (18.5f + 1.5f * pulse).dp.toPx(), center)
+                        drawCircle(colors.gold.copy(alpha = .55f), 17.dp.toPx(), center, style = Stroke(.6.dp.toPx()))
                     }
-                    if (bloom > .02f) {
-                        drawGardenFlower(center, (if (isActive) 11.5.dp else 9.5.dp).toPx(), colors.ruby.copy(alpha = if (isActive) .95f else .6f), colors.gold, bloom.coerceAtMost(1.15f))
-                    } else {
-                        drawGardenBud(center, 6.dp.toPx(), colors.ruby.copy(alpha = if (colors.isDark) .55f else .38f), colors.marian.copy(alpha = .65f))
-                    }
+                    val petals = bloom.coerceIn(0f, 1f)
+                    paintBotanical(art.bud, center - Offset(0f, 4.dp.toPx() * (1f - petals)), 23.dp.toPx(), (1f - petals) * (if (colors.isDark) .85f else .75f))
+                    paintBotanical(
+                        art.rose, center,
+                        (if (isActive) 29.dp else 24.dp).toPx() * (.6f + .4f * bloom.coerceIn(0f, 1.15f)),
+                        petals * (if (isActive) 1f else .9f), turn = (index % 3 - 1) * 9f,
+                    )
                 }
             }
         }

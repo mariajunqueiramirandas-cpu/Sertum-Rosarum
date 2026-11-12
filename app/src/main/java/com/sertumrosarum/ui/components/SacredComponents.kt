@@ -31,7 +31,6 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -42,6 +41,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sertumrosarum.ui.theme.SertumTheme
+import com.sertumrosarum.ui.canvas.LocalBotanicalArtwork
+import com.sertumrosarum.ui.canvas.RoseMark
+import com.sertumrosarum.ui.canvas.paintBotanical
+import com.sertumrosarum.ui.canvas.paintLeaf
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -59,6 +62,10 @@ enum class SacredIcon { SUN, MOON, SYSTEM, BACK, CLOSE, EYE, HAPTIC, CHEVRON, CR
 
 @Composable
 fun SacredIcon(icon: SacredIcon, modifier: Modifier = Modifier, color: Color = SertumTheme.colors.ink) {
+    if (icon == SacredIcon.ROSE) {
+        RoseMark(modifier.size(22.dp), alpha = color.alpha)
+        return
+    }
     Canvas(modifier.size(22.dp)) {
         val unit = size.minDimension / 24f
         val stroke = 1.5f * unit
@@ -105,13 +112,7 @@ fun SacredIcon(icon: SacredIcon, modifier: Modifier = Modifier, color: Color = S
                 line(4f, 8f, 4f, 16f); line(20f, 8f, 20f, 16f)
                 line(1f, 10f, 1f, 14f); line(23f, 10f, 23f, 14f)
             }
-            SacredIcon.ROSE -> {
-                repeat(6) { index -> rotate(index * 60f) {
-                    drawOval(color, point(9f, 3f), Size(6 * unit, 10 * unit), style = Stroke(stroke))
-                } }
-                drawCircle(color, 2 * unit, center, style = Stroke(stroke))
-                drawCircle(color, 10.5f * unit, center, style = Stroke(stroke * .65f))
-            }
+            SacredIcon.ROSE -> Unit // The painted rose is rendered above.
         }
     }
 }
@@ -161,29 +162,19 @@ fun SacredPrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = 
     }
 }
 
-/** A small sprig that marks a pause in the text: two leaves around a closed bud. */
+/** A painted rosebud and sage sprig mark a quiet pause in the prayer. */
 @Composable
 fun SacredFlourish(modifier: Modifier = Modifier) {
     val colors = SertumTheme.colors
-    Canvas(modifier.size(width = 76.dp, height = 14.dp)) {
-        val mid = center
-        val reach = size.width / 2f
-        val leaf = colors.marian.copy(alpha = .55f)
-        listOf(-1f, 1f).forEach { side ->
-            drawLine(
-                Brush.horizontalGradient(listOf(leaf, Color.Transparent), mid.x + side * reach * .3f, mid.x + side * reach),
-                Offset(mid.x + side * reach * .3f, mid.y), Offset(mid.x + side * reach, mid.y), 1.dp.toPx(), StrokeCap.Round,
-            )
-            val tip = Offset(mid.x + side * reach * .36f, mid.y - size.height * .32f)
-            val root = Offset(mid.x + side * reach * .1f, mid.y + size.height * .1f)
-            val bend = Offset((tip.x + root.x) / 2f, mid.y + size.height * .5f)
-            val lift = Offset((tip.x + root.x) / 2f, mid.y - size.height * .5f)
-            drawPath(Path().apply {
-                moveTo(root.x, root.y); quadraticTo(bend.x, bend.y, tip.x, tip.y); quadraticTo(lift.x, lift.y, root.x, root.y)
-            }, leaf)
-        }
-        drawCircle(colors.ruby.copy(alpha = .75f), size.height * .26f, mid)
-        drawCircle(colors.gold, size.height * .1f, mid)
+    val art = LocalBotanicalArtwork.current
+    Canvas(modifier.size(width = 92.dp, height = 18.dp)) {
+        drawLine(
+            Brush.horizontalGradient(listOf(Color.Transparent, colors.gold.copy(alpha = .32f), Color.Transparent)),
+            Offset(0f, center.y + 2.dp.toPx()), Offset(size.width, center.y + 2.dp.toPx()), .55.dp.toPx(),
+        )
+        paintLeaf(art.leaf, center + Offset(-3.dp.toPx(), 3.dp.toPx()), center + Offset(-23.dp.toPx(), -4.dp.toPx()), .85f)
+        paintLeaf(art.leaf, center + Offset(3.dp.toPx(), 3.dp.toPx()), center + Offset(23.dp.toPx(), -4.dp.toPx()), .85f)
+        paintBotanical(art.bud, center, 19.dp.toPx())
     }
 }
 

@@ -13,6 +13,7 @@ The experience should feel welcoming, familiar, and unhurried. The garden is par
 - Actions are petals: a pale blush fill with a rosewood label. Nothing on screen is a dark slab.
 - A small sprig (two leaves around a closed bud) marks each pause in the text.
 - Night is the same garden at dusk: deep forest, cream, muted rose, moonlight, and honey accents.
+- All botanical details share four painted textures derived from the garden: a layered blush rose, an ivory rose, a closed bud, and a sage leaf. They appear in the mark, prayer beads, mystery stem, dividers, eyes-closed surface, and delivered crown. The [botanical masters and prompts](artwork/botanical/README.md) preserve the family.
 - Scripture and fixed Catholic prayers retain their traditional wording. Friendly supporting copy surrounds the prayer without changing it.
 
 ## Color tokens
@@ -58,7 +59,7 @@ The Marian garden opens the screen, under a small floral wordmark and the appear
 
 ### Prayer
 
-Five buds and roses show mystery progress along a leafed stem that grows as the prayer advances. Full prayer text has generous space and scrolls for longer prayers. The ten beads are separate, directly selectable closed buds on a garland; each opens into a rose with a spring animation. Previous and next actions remain visible on short screens.
+Five painted buds and roses show mystery progress along a leafed stem that grows as the prayer advances. The current mystery is an ivory bloom in a fine gold setting. Compact layouts pair the botanical marks with mystery numbers. Full prayer text has generous space and scrolls for longer prayers. The ten beads are separate, directly selectable closed buds on a garland; each blends into a layered blush rose with a spring animation and a fine selection ring. Previous and next actions remain visible on short screens.
 
 Overflowing prayers show a persistent sage reading-position rail. Soft alpha fades appear only at edges with hidden text, revealing the actual garden background. A separate 48 dp touch target says **Continue lendo** and advances by most of a viewport, retaining an overlap for reading continuity. At the end it becomes **Voltar ao início**. These cues disappear when the complete text fits. Each new prayer starts at the top; scrolling never advances the rosary. Native accessibility scrolling remains available, and the reading cue exposes its action and whether more text remains.
 
@@ -70,8 +71,8 @@ A crown of fifty roses woven with leaves surrounds a large central blossom. The 
 
 ## Motion, haptics, and accessibility
 
-- The home garden's surrounding light and pollen move on one slow breath; the sacred painting stays at rest. Active prayer roses breathe slowly; completed roses bloom with a damped spring.
-- Ambient motion stays still when system animations are turned off.
+- The home garden's surrounding light and pollen move on one slow breath; the sacred painting stays at rest. Active prayer roses have a slow surrounding glow; completed roses open with a damped spring. Leaves move by less than a dp along the mystery stem and subtly around the crown.
+- Ambient motion stays still when system animations are turned off, including when the setting changes while the app is open.
 - Prayer routes crossfade; buttons gently compress on press.
 - Small beads use a soft single pulse. Prayer and decade boundaries use two pulses; completion uses three growing pulses.
 - Every icon control has a Portuguese description. Mystery and bead controls expose their selected state and position.

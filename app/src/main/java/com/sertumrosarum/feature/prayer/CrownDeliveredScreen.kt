@@ -35,7 +35,7 @@ fun CrownDeliveredScreen(state: PrayerUiState, onReturn: () -> Unit) {
     val type = SertumTheme.typography
     Column(Modifier.fillMaxSize().testTag("crown-delivered").padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Row(Modifier.padding(top = 19.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
-            RoseMark(Modifier.size(26.dp), colors.ruby)
+            RoseMark(Modifier.size(26.dp))
             SacredText("sertum", style = type.brand)
         }
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {

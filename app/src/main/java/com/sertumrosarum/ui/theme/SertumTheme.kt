@@ -1,11 +1,16 @@
 package com.sertumrosarum.ui.theme
 
+import android.database.ContentObserver
+import android.os.Handler
+import android.os.Looper
 import android.provider.Settings
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.Immutable
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
@@ -22,6 +27,8 @@ import androidx.compose.ui.unit.sp
 import com.sertumrosarum.R
 import com.sertumrosarum.domain.prayer.MysterySet
 import com.sertumrosarum.feature.prayer.ThemeMode
+import com.sertumrosarum.ui.canvas.LocalBotanicalArtwork
+import com.sertumrosarum.ui.canvas.rememberBotanicalArtwork
 
 /**
  * [ruby] is the rose of the flowers and small accents. Actions are petals:
@@ -120,17 +127,26 @@ fun SertumTheme(mode: ThemeMode, mysterySet: MysterySet, content: @Composable ()
     }
     val colors = if (dark) VigilColors else DayColors
     val context = LocalContext.current
-    val reducedMotion = remember(context) {
-        Settings.Global.getFloat(context.contentResolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
+    val resolver = context.contentResolver
+    fun animationsDisabled() = Settings.Global.getFloat(resolver, Settings.Global.ANIMATOR_DURATION_SCALE, 1f) == 0f
+    val reducedMotion = remember(context) { mutableStateOf(animationsDisabled()) }
+    DisposableEffect(resolver) {
+        val observer = object : ContentObserver(Handler(Looper.getMainLooper())) {
+            override fun onChange(selfChange: Boolean) { reducedMotion.value = animationsDisabled() }
+        }
+        resolver.registerContentObserver(Settings.Global.getUriFor(Settings.Global.ANIMATOR_DURATION_SCALE), false, observer)
+        reducedMotion.value = animationsDisabled()
+        onDispose { resolver.unregisterContentObserver(observer) }
     }
     CompositionLocalProvider(
+        LocalBotanicalArtwork provides rememberBotanicalArtwork(),
         LocalSertumColors provides colors,
         LocalIndication provides remember(colors.marian) { SacredIndication(colors.marian) },
         LocalSertumTypography provides SertumTypography(),
         LocalSertumSpacing provides SertumSpacing(),
         LocalSertumShapes provides SertumShapes(),
         LocalMysteryAtmosphere provides atmosphere(mysterySet, dark),
-        LocalReducedMotion provides reducedMotion,
+        LocalReducedMotion provides reducedMotion.value,
         content = content,
     )
 }

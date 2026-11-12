@@ -185,7 +185,7 @@ private fun EyesClosedZone(label: String, onNext: () -> Unit, onPrevious: () -> 
                 drawCircle(colors.ruby.copy(alpha = .05f + .04f * swell), size.minDimension * (.4f + .1f * swell))
                 drawCircle(colors.ruby.copy(alpha = .08f), size.minDimension * .3f)
             }
-            RoseMark(Modifier.size(64.dp), colors.ruby.copy(alpha = .85f))
+            RoseMark(Modifier.size(72.dp), alpha = .95f)
         }
         Spacer(Modifier.height(10.dp))
         SacredText("Seu toque acompanha a oração.", style = SertumTheme.typography.section, align = TextAlign.Center)
