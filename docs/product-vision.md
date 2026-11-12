@@ -1,5 +1,7 @@
 # 🌹 Product Vision & Experience Architecture
 
+> Current visual direction: **O Jardim de Maria**. The [design system](design-system.md) defines the user-selected quiet garden, rounded type, and original botanical illustrations.
+
 > **Official Name:** `Sertum Rosarum: O Santo Terço`  
 > **Launcher Short Name:** `Sertum`  
 > **Contemplative AI Engine:** `Lumen` (*Luz para contemplação*)  

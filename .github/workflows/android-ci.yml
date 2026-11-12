@@ -4,25 +4,187 @@ on:
   push:
     branches: [main]
   pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Replace obsolete PR builds, but let every main push finish and get its own release.
+concurrency:
+  group: android-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  CI: 'true'
 
 jobs:
   test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-
-      - name: Set up JDK 17
-        uses: actions/setup-java@v4
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: "17"
+          java-version: '17'
+      - uses: gradle/actions/setup-gradle@v5
+        with:
+          # Trusted PRs can warm their own branch-scoped dependency and task caches.
+          cache-read-only: ${{ github.event_name == 'pull_request' && github.event.pull_request.head.repo.fork }}
+          cache-encryption-key: ${{ github.ref == 'refs/heads/main' && secrets.GRADLE_ENCRYPTION_KEY || '' }}
+      - name: Configure memory, versions, and signing
+        env:
+          ANDROID_KEYSTORE_BASE64: ${{ github.ref == 'refs/heads/main' && secrets.ANDROID_KEYSTORE_BASE64 || '' }}
+          ANDROID_KEYSTORE_PASSWORD: ${{ github.ref == 'refs/heads/main' && secrets.ANDROID_KEYSTORE_PASSWORD || '' }}
+          ANDROID_KEY_ALIAS: ${{ github.ref == 'refs/heads/main' && secrets.ANDROID_KEY_ALIAS || '' }}
+          ANDROID_KEY_PASSWORD: ${{ github.ref == 'refs/heads/main' && secrets.ANDROID_KEY_PASSWORD || '' }}
+        run: python3 .github/scripts/configure_build.py
+      - name: Verify release automation
+        run: python3 -m unittest discover -s .github/scripts/tests -v
+      - name: Build all APKs, unit tests, and lint once
+        run: ./gradlew assembleDebug assembleDebugAndroidTest assembleRelease testDebugUnitTest lintDebug --build-cache --configuration-cache --parallel
+      - name: Verify optimized APK signature and alignment
+        run: |
+          build_tools="$ANDROID_HOME/build-tools/35.0.0"
+          "$build_tools/apksigner" verify --verbose --print-certs app/build/outputs/apk/release/app-release.apk
+          "$build_tools/zipalign" -c 4 app/build/outputs/apk/release/app-release.apk
+      - name: Prepare APKs for device tests
+        run: |
+          mkdir -p app/build/outputs/ci/apks
+          cp app/build/outputs/apk/debug/app-debug.apk app/build/outputs/ci/apks/
+          cp app/build/outputs/apk/androidTest/debug/app-debug-androidTest.apk app/build/outputs/ci/apks/
+          cp app/build/outputs/apk/release/app-release.apk app/build/outputs/ci/apks/
+      - name: Package versioned release and SHA-256 checksums
+        id: package
+        run: python3 .github/scripts/package_release.py
+      - name: Upload prebuilt device APKs
+        uses: actions/upload-artifact@v6
+        with:
+          name: android-test-apks
+          path: app/build/outputs/ci/apks/*.apk
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
+      - name: Upload installable release APK and metadata
+        uses: actions/upload-artifact@v6
+        with:
+          name: android-release
+          path: ${{ steps.package.outputs.directory }}
+          compression-level: 0
+          retention-days: 14
+          if-no-files-found: error
+      - name: Upload build reports and R8 mapping
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: android-build-and-reports
+          path: |
+            app/build/reports/
+            app/build/outputs/mapping/release/
+          retention-days: 14
+      - name: Remove temporary private signing key
+        if: always()
+        shell: bash
+        run: |
+          if [[ -n "${ANDROID_KEYSTORE_FILE:-}" && "$ANDROID_KEYSTORE_FILE" == "$RUNNER_TEMP"/sertum-signing-* ]]; then
+            rm -f -- "$ANDROID_KEYSTORE_FILE"
+          fi
 
-      - name: Set up Gradle
-        uses: gradle/actions/setup-gradle@v4
+  compose-ui:
+    needs: test
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    env:
+      ANDROID_SERIAL: emulator-5554
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+      - name: Download already-built APKs
+        uses: actions/download-artifact@v7
+        with:
+          name: android-test-apks
+          path: app/build/ci-apks
+      - name: Enable emulator acceleration
+        run: |
+          echo 'KERNEL=="kvm", GROUP="kvm", MODE="0666", OPTIONS+="static_node=kvm"' | sudo tee /etc/udev/rules.d/99-kvm4all.rules
+          sudo udevadm control --reload-rules
+          sudo udevadm trigger --name-match=kvm
+      - name: Locate the Android SDK
+        id: sdk
+        run: echo "root=$ANDROID_HOME" >> "$GITHUB_OUTPUT"
+      - name: Cache the Android system image
+        uses: actions/cache@v5
+        with:
+          path: ${{ steps.sdk.outputs.root }}/system-images/android-33/default/x86_64
+          key: android-image-${{ runner.os }}-api33-default-x86_64-r2-v1
+      - name: Prepare SDK and snapshot compatibility key
+        id: emulator
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" 'emulator' 'platform-tools' 'system-images;android-33;default;x86_64' > /dev/null
+          revision="$(sed -n 's/^Pkg.Revision=//p' "$ANDROID_HOME/emulator/source.properties" | tr -d '[:space:]')"
+          image="$(sed -n 's/^Pkg.Revision=//p' "$ANDROID_HOME/system-images/android-33/default/x86_64/source.properties" | tr -d '[:space:]')"
+          echo "revision=$revision" >> "$GITHUB_OUTPUT"
+          echo "image=$image" >> "$GITHUB_OUTPUT"
+      - name: Restore the warmed emulator
+        id: avd
+        uses: actions/cache@v5
+        with:
+          path: |
+            ~/.android/avd/sertum-ci.avd
+            ~/.android/avd/sertum-ci.ini
+            ~/.android/adbkey
+            ~/.android/adbkey.pub
+          key: avd-ubuntu24-api33-pixel6-${{ steps.emulator.outputs.revision }}-${{ steps.emulator.outputs.image }}-${{ hashFiles('.github/signing/fallback.keystore') }}-v1
+      - name: Run device tests and optimized release smoke test
+        uses: reactivecircus/android-emulator-runner@v2
+        with:
+          api-level: 33
+          arch: x86_64
+          target: default
+          profile: pixel_6
+          avd-name: sertum-ci
+          force-avd-creation: false
+          disable-animations: true
+          emulator-options: >-
+            -no-window -gpu swiftshader_indirect -noaudio -no-boot-anim
+            -camera-back none -camera-front none -memory 2048 -cores 2
+            ${{ steps.avd.outputs.cache-hit == 'true' && '-no-snapshot-save' || '' }}
+          script: bash .github/scripts/run-device-tests.sh
+      - name: Upload UI results, screenshots, and release launch proof
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: compose-ui-results
+          path: |
+            app/build/reports/device-tests/
+            app/build/outputs/screenshots/
+          compression-level: 0
+          retention-days: 14
 
-      - name: Run unit tests
-        run: gradle testDebugUnitTest
-
-      - name: Run lint
-        run: gradle lintDebug
+  release:
+    name: Publish APK release
+    needs: [test, compose-ui]
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch')
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v7
+        with:
+          name: android-release
+          path: release-assets
+      - name: Publish the APK for this main commit
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/publish_release.py release-assets
