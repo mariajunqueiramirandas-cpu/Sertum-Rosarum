@@ -2,7 +2,14 @@ package com.sertumrosarum.domain.prayer
 
 import java.time.DayOfWeek
 
-data class Mystery(val title: String, val scripture: String, val fruit: String)
+data class Mystery(val title: String, val scripture: String, val fruit: String) {
+    /** The title as it reads mid-sentence: only a leading article loses its capital, never a name. */
+    val titleInSentence: String get() =
+        if (title.substringBefore(' ') in setOf("A", "O", "As", "Os")) title.replaceFirstChar { it.lowercase() } else title
+
+    /** The fruit as it reads mid-sentence, keeping holy names capitalised. */
+    val fruitInSentence: String get() = fruit.replaceFirstChar { it.lowercase() }
+}
 
 enum class MysterySet(
     val label: String,

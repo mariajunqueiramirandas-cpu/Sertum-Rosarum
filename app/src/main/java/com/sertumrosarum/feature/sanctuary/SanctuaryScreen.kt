@@ -237,7 +237,7 @@ private fun MysteryRow(set: MysterySet, index: Int, mystery: Mystery, last: Bool
             SacredIcon(SacredIcon.CHEVRON, Modifier.size(13.dp).rotate(turn), colors.muted)
         }
         AnimatedVisibility(expanded) {
-            SacredText("Uma semente para hoje: ${mystery.fruit.lowercase()}.", Modifier.padding(start = 46.dp, top = 8.dp, bottom = 2.dp), type.body.copy(fontSize = 14.sp, lineHeight = 21.sp), colors.secondary)
+            SacredText("Uma semente para hoje: ${mystery.fruitInSentence}.", Modifier.padding(start = 46.dp, top = 8.dp, bottom = 2.dp), type.body.copy(fontSize = 14.sp, lineHeight = 21.sp), colors.secondary)
         }
     }
 }

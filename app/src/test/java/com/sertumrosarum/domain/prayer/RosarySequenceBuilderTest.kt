@@ -44,6 +44,14 @@ class RosarySequenceBuilderTest {
         }
     }
 
+    @Test fun `mystery announcements keep holy names capitalised`() {
+        val luminous = RosarySequenceBuilder.build(MysterySet.LUMINOUS).filter { it.prayer == null }
+        assertEquals("Contemple as Bodas de Caná.\n\nFruto deste mistério: confiança em Maria.", luminous[1].text)
+        val sorrowful = RosarySequenceBuilder.build(MysterySet.SORROWFUL).filter { it.prayer == null }
+        assertEquals("Contemple a Agonia no Horto.\n\nFruto deste mistério: confiança em Deus.", sorrowful[0].text)
+        assertEquals("Contemple Jesus Carrega a Cruz.\n\nFruto deste mistério: perseverança.", sorrowful[3].text)
+    }
+
     @Test fun `automatic mystery resolver covers every day of the week`() {
         val expected = listOf(MysterySet.JOYFUL, MysterySet.SORROWFUL, MysterySet.GLORIOUS, MysterySet.LUMINOUS, MysterySet.SORROWFUL, MysterySet.JOYFUL, MysterySet.GLORIOUS)
         DayOfWeek.entries.forEachIndexed { index, day -> assertEquals(expected[index], MysterySet.forDay(day)) }
