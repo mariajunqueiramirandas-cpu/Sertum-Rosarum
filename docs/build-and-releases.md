@@ -8,7 +8,7 @@ The [Android workflow](../.github/workflows/android-ci.yml) builds, checks, and 
 2. Set a memory budget appropriate to the runner, assign an increasing Android version code, and select private signing or the stable fallback.
 3. Build the debug app, instrumented test APK, and optimized release app in **one Gradle invocation**, alongside unit tests and lint.
 4. Verify the release signature and ZIP alignment; stage the APK with a SHA-256 checksum and source metadata.
-5. Boot a cached Android 13 emulator. Install the prebuilt APKs, run the five UI flows, and collect screenshots before uninstalling the test target. Install the real minified release and verify that its sanctuary opens.
+5. Boot a cached Android 13 emulator. Install the prebuilt APKs, run the UI flows and reader accessibility checks, and collect screenshots before uninstalling the test target. Install the real minified release and verify that its sanctuary opens.
 6. After the build and device job pass, publish the already-built APK on GitHub Releases. The publishing job does not compile the app again.
 
 Every successful main run produces:

@@ -56,6 +56,8 @@ A small floral wordmark and appearance control introduce a personal greeting. Th
 
 Five buds and roses show mystery progress along a botanical arc. Full prayer text has generous space and scrolls for longer prayers. The ten beads are separate, directly selectable buds, blooming with a spring animation. Previous and next actions remain visible on short screens.
 
+Overflowing prayers show a persistent sage reading-position rail. Soft alpha fades appear only at edges with hidden text, revealing the actual garden background. A separate 48 dp touch target says **Continue lendo** and advances by most of a viewport, retaining an overlap for reading continuity. At the end it becomes **Voltar ao início**. These cues disappear when the complete text fits. Each new prayer starts at the top; scrolling never advances the rosary. Native accessibility scrolling remains available, and the reading cue exposes its action and whether more text remains.
+
 Eyes-closed mode replaces the reading area with a concise prayer heading and calm supporting copy. A large tactile garden surface occupies half the available height. Tap or swipe left/up to advance; swipe right to return. Its accessibility action also advances the prayer.
 
 ### Crown delivered

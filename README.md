@@ -77,6 +77,19 @@ Prayer position survives rotation. Compact mystery controls preserve access to t
 
 The traditional opening includes the Sign of the Cross, offering, Apostles' Creed, Our Father, three Hail Marys for faith, hope, and charity, and Glory Be. Each decade includes its mystery announcement, Our Father, ten Hail Marys, Glory Be, and the Fatima prayer. The rosary closes with Infinitas Graças and Salve Rainha.
 
+### Read every line at your own pace
+
+Long prayers show a custom sage position rail, soft fades at edges with hidden text, and a **Continue lendo** cue. Tap to read the next portion with overlap, or scroll normally. At the end, **Voltar ao início** returns to the top. Reading never advances the rosary, and prayers that fit keep the entire reading area free of scroll cues.
+
+<table>
+<tr><th>More text below</th><th>Reading through the prayer</th><th>End of the text</th></tr>
+<tr>
+<td><img src="docs/screenshots/prayer-scroll-start.png" width="235" alt="The Creed with a sage scroll marker and Continue lendo cue below the text" /></td>
+<td><img src="docs/screenshots/prayer-scroll-middle.png" width="235" alt="The Creed midway through, with soft fades showing text above and below" /></td>
+<td><img src="docs/screenshots/prayer-scroll-end.png" width="235" alt="The last lines of the Creed, the scroll marker at the bottom, and Voltar ao início" /></td>
+</tr>
+</table>
+
 ### Pray with your eyes closed
 
 A large tactile surface occupies half the prayer screen. You can keep your attention on prayer while touch guides the sequence.
@@ -151,7 +164,7 @@ The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. Build t
 
 ## Validation
 
-Phase 1 has been verified with **18 JVM unit tests**, **5 instrumented Compose UI tests on Android 13 / API 33**, a successful debug build, and **zero Android Lint findings**.
+Phase 1 has been verified with **18 JVM unit tests**, **9 instrumented Compose UI tests on Android 13 / API 33**, successful debug and optimized release builds, and **zero Android Lint findings**.
 
 ```bash
 # Build, verify the prayer engine and session state, and run lint.
@@ -165,7 +178,8 @@ Phase 1 has been verified with **18 JVM unit tests**, **5 instrumented Compose U
 | --- | --- |
 | Prayer sequence · 5 unit tests | All four mystery sets; 59 beads and 80 steps; correct opening, decade, and closing order; all seven weekdays; the twenty mysteries' metadata |
 | Session state · 13 unit tests | Forward/backward boundaries; decade and bead jumps; completion timing; differentiated pulse events; pause/resume; saved-state restoration; day changes |
-| Device UI · 5 tests | Appearance and mystery selection; the complete rosary; bead and decade navigation with pause/resume; eyes-closed taps and swipes; landscape recreation |
+| Device UI · 6 flows | Appearance and mystery selection; the complete rosary; bead and decade navigation with pause/resume; eyes-closed taps and swipes; landscape recreation; long-prayer reading without advancing the rosary |
+| Reader accessibility · 3 tests | Paging and return to start at 180% font size; no false scroll cues for short text in Vigil mode or content near the viewport's fit boundary |
 
 The UI suite also captures all six views shown above. CI collects them in the **compose-ui-results** artifact before removing the test app. For fresh local captures and the same optimized release launch check, follow the [device verification instructions](docs/build-and-releases.md#local-verification); the helper saves screenshots under `app/build/outputs/screenshots`.
 
