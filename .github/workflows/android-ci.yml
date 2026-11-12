@@ -157,13 +157,6 @@ jobs:
             -camera-back none -camera-front none -memory 2048 -cores 2
             ${{ steps.avd.outputs.cache-hit == 'true' && '-no-snapshot-save' || '' }}
           script: bash .github/scripts/run-device-tests.sh
-      - name: Export reading frames for visual review
-        run: |
-          for frame in prayer-scroll-start prayer-scroll-middle prayer-scroll-end; do
-            echo "SERTUM_PREVIEW_BEGIN:$frame"
-            base64 -w 76 "app/build/outputs/screenshots/$frame.png"
-            echo "SERTUM_PREVIEW_END:$frame"
-          done
       - name: Upload UI results, screenshots, and release launch proof
         if: always()
         uses: actions/upload-artifact@v6

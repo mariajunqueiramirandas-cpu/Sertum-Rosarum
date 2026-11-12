@@ -77,6 +77,19 @@ Prayer position survives rotation. Compact mystery controls preserve access to t
 
 The traditional opening includes the Sign of the Cross, offering, Apostles' Creed, Our Father, three Hail Marys for faith, hope, and charity, and Glory Be. Each decade includes its mystery announcement, Our Father, ten Hail Marys, Glory Be, and the Fatima prayer. The rosary closes with Infinitas Graças and Salve Rainha.
 
+### Read every line at your own pace
+
+Long prayers show a custom sage position rail, soft fades at edges with hidden text, and a **Continue lendo** cue. Tap to read the next portion with overlap, or scroll normally. At the end, **Voltar ao início** returns to the top. Reading never advances the rosary, and prayers that fit keep the entire reading area free of scroll cues.
+
+<table>
+<tr><th>More text below</th><th>Reading through the prayer</th><th>End of the text</th></tr>
+<tr>
+<td><img src="docs/screenshots/prayer-scroll-start.png" width="235" alt="The Creed with a sage scroll marker and Continue lendo cue below the text" /></td>
+<td><img src="docs/screenshots/prayer-scroll-middle.png" width="235" alt="The Creed midway through, with soft fades showing text above and below" /></td>
+<td><img src="docs/screenshots/prayer-scroll-end.png" width="235" alt="The last lines of the Creed, the scroll marker at the bottom, and Voltar ao início" /></td>
+</tr>
+</table>
+
 ### Pray with your eyes closed
 
 A large tactile surface occupies half the prayer screen. You can keep your attention on prayer while touch guides the sequence.
