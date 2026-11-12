@@ -41,17 +41,17 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @Composable
-fun CompactMysteries(completed: Int, current: Int?, onSelect: (Int) -> Unit) {
+fun CompactMysteries(completed: Int, current: Int?, onSelect: (Int) -> Unit, groups: Int = 5, groupLabel: String = "mistério") {
     val colors = SertumTheme.colors
     val art = LocalBotanicalArtwork.current
     Row(Modifier.fillMaxWidth()) {
-        repeat(5) { index ->
+        repeat(groups) { index ->
             val reached = index < completed || index == current
             Box(Modifier.weight(1f).height(48.dp).testTag("decade-$index")
-                .semantics { contentDescription = "Ir ao ${index + 1}º mistério"; selected = current == index }
+                .semantics { contentDescription = "Ir para ${groupLabel} ${index + 1} de $groups"; selected = current == index }
                 .clickable(role = Role.Button, onClick = { onSelect(index) }), contentAlignment = Alignment.Center) {
                 Row(
-                    Modifier.width(48.dp).height(30.dp).clip(RoundedCornerShape(16.dp))
+                    Modifier.width(if (groups > 5) 36.dp else 48.dp).height(30.dp).clip(RoundedCornerShape(16.dp))
                         .background(if (index == current) colors.petal else if (reached) colors.marian.copy(alpha = .16f) else colors.surface)
                         .border(1.dp, if (index == current) colors.gold.copy(alpha = .55f) else colors.border, RoundedCornerShape(16.dp)),
                     verticalAlignment = Alignment.CenterVertically,
@@ -67,9 +67,12 @@ fun CompactMysteries(completed: Int, current: Int?, onSelect: (Int) -> Unit) {
     }
 }
 
-/** Five mysteries along one stem. Mysteries already prayed are roses; those ahead are buds. */
+/**
+ * The mysteries of a crown along one stem: five for the rosary, seven for the crowns that have seven.
+ * Mysteries already prayed are roses; those ahead are buds.
+ */
 @Composable
-fun FiveMysteriesArc(completed: Int, current: Int?, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
+fun FiveMysteriesArc(completed: Int, current: Int?, onSelect: (Int) -> Unit, modifier: Modifier = Modifier, groups: Int = 5, groupLabel: String = "mistério") {
     val colors = SertumTheme.colors
     val art = LocalBotanicalArtwork.current
     val breath = rememberGardenBreath("mystery-stem", 5200)
@@ -78,10 +81,12 @@ fun FiveMysteriesArc(completed: Int, current: Int?, onSelect: (Int) -> Unit, mod
         fun stemX(u: Float) = 22.dp + usable * u
         fun stemY(u: Float) = 70.dp - 34.dp * sin(PI * u).toFloat()
         val grown = when {
-            completed >= 5 -> 1f
-            current != null -> (current + .5f) / 5f
-            else -> completed / 5f
+            completed >= groups -> 1f
+            current != null -> (current + .5f) / groups
+            else -> completed.toFloat() / groups
         }
+        // Seven flowers share the stem that five have to themselves, so each is a little smaller.
+        val scale = if (groups > 5) .86f else 1f
         val growth by animateFloatAsState(grown, spring(dampingRatio = .9f, stiffness = 40f), label = "stem-growth")
         Canvas(Modifier.fillMaxSize()) {
             fun point(u: Float) = Offset(stemX(u).toPx(), stemY(u).toPx())
@@ -93,37 +98,36 @@ fun FiveMysteriesArc(completed: Int, current: Int?, onSelect: (Int) -> Unit, mod
             }
             drawPath(stem(.03f, .97f), colors.marian.copy(alpha = .26f), style = Stroke(1.6.dp.toPx(), cap = StrokeCap.Round))
             if (growth > .04f) drawPath(stem(.03f, growth.coerceAtMost(.97f)), colors.marian.copy(alpha = .8f), style = Stroke(2.dp.toPx(), cap = StrokeCap.Round))
-            repeat(9) { index ->
-                val u = .1f + index * .1f
-                if (index % 2 == 1) {
-                    val p = point(u)
-                    val ahead = point(u + .01f) - p
-                    val along = ahead / ahead.getDistance().coerceAtLeast(.01f)
-                    val side = Offset(-along.y, along.x) * (if (index % 4 == 1) 1f else -1f)
-                    val sway = .4.dp.toPx() * sin(breath.value + index * 1.3f)
-                    paintLeaf(art.leaf, p, p + side * (10.dp.toPx() + sway) + along * 5.dp.toPx(), if (u <= growth) .9f else .5f)
-                }
+            // One leaf between each pair of flowers, on alternating sides of the stem.
+            repeat(groups - 1) { index ->
+                val u = (index + 1f) / groups
+                val p = point(u)
+                val ahead = point(u + .01f) - p
+                val along = ahead / ahead.getDistance().coerceAtLeast(.01f)
+                val side = Offset(-along.y, along.x) * (if (index % 2 == 0) 1f else -1f)
+                val sway = .4.dp.toPx() * sin(breath.value + index * 2.6f)
+                paintLeaf(art.leaf, p, p + side * (10.dp.toPx() * scale + sway) + along * 5.dp.toPx(), if (u <= growth) .9f else .5f)
             }
         }
-        repeat(5) { index ->
-            val u = (index + .5f) / 5f
-            val opened = index < completed || index == current || completed == 5
+        repeat(groups) { index ->
+            val u = (index + .5f) / groups
+            val opened = index < completed || index == current || completed == groups
             val bloom by animateFloatAsState(if (opened) 1f else 0f, spring(dampingRatio = .75f, stiffness = 85f), label = "mystery-bloom-$index")
             Box(Modifier.offset(stemX(u) - 24.dp, stemY(u) - 24.dp).size(48.dp).clip(CircleShape).testTag("decade-$index")
-                .semantics { contentDescription = "Ir ao ${index + 1}º mistério"; selected = current == index }
+                .semantics { contentDescription = "Ir para ${groupLabel} ${index + 1} de $groups"; selected = current == index }
                 .clickable(role = Role.Button, onClick = { onSelect(index) })) {
                 Canvas(Modifier.fillMaxSize()) {
                     val glow = .5f + .5f * sin(breath.value)
                     if (index == current) {
-                        drawCircle(colors.gold.copy(alpha = .07f + .04f * glow), 23.dp.toPx(), center)
-                        drawCircle(colors.elevated, 18.5.dp.toPx(), center)
-                        drawCircle(colors.gold.copy(alpha = .45f), 20.dp.toPx(), center, style = Stroke(.65.dp.toPx()))
+                        drawCircle(colors.gold.copy(alpha = .07f + .04f * glow), 23.dp.toPx() * scale, center)
+                        drawCircle(colors.elevated, 18.5.dp.toPx() * scale, center)
+                        drawCircle(colors.gold.copy(alpha = .45f), 20.dp.toPx() * scale, center, style = Stroke(.65.dp.toPx()))
                     }
                     val petals = bloom.coerceIn(0f, 1f)
-                    paintBotanical(art.bud, center - Offset(0f, 4.dp.toPx() * (1f - petals)), 25.dp.toPx(), (1f - petals) * .8f)
+                    paintBotanical(art.bud, center - Offset(0f, 4.dp.toPx() * (1f - petals)), 25.dp.toPx() * scale, (1f - petals) * .8f)
                     paintBotanical(
                         if (index == current) art.ivoryRose else art.rose, center,
-                        (if (index == current) 33.dp else 26.dp).toPx() * (.65f + .35f * bloom.coerceIn(0f, 1.15f)),
+                        (if (index == current) 33.dp else 26.dp).toPx() * scale * (.65f + .35f * bloom.coerceIn(0f, 1.15f)),
                         petals * (if (index == current) 1f else .94f), turn = index * 11f - 22f,
                     )
                 }
@@ -132,9 +136,9 @@ fun FiveMysteriesArc(completed: Int, current: Int?, onSelect: (Int) -> Unit, mod
     }
 }
 
-/** One decade as a garland. Each Ave-Maria opens its bud into a rose. */
+/** One group of beads as a garland, whether it has three, seven, or ten. Each prayer opens its bud into a rose. */
 @Composable
-fun BloomingBeadsArc(count: Int, active: Int?, complete: Boolean, onSelect: (Int) -> Unit, modifier: Modifier = Modifier) {
+fun BloomingBeadsArc(count: Int, active: Int?, complete: Boolean, onSelect: (Int) -> Unit, modifier: Modifier = Modifier, beadLabel: String = "Ave-Maria") {
     val colors = SertumTheme.colors
     val art = LocalBotanicalArtwork.current
     val breath = rememberGardenBreath("rose-breath", 4800)
@@ -159,7 +163,7 @@ fun BloomingBeadsArc(count: Int, active: Int?, complete: Boolean, onSelect: (Int
             val isActive = index == active && !complete
             val bloom by animateFloatAsState(if (bloomed || isActive) 1f else 0f, spring(dampingRatio = .62f, stiffness = 90f), label = "rose-$index")
             Box(Modifier.offset(slot * index, beadY(index) - 24.dp).width(slot).height(48.dp).testTag("bead-$index")
-                .semantics { contentDescription = "Ave-Maria ${index + 1} de $count"; selected = isActive }
+                .semantics { contentDescription = "$beadLabel ${index + 1} de $count"; selected = isActive }
                 .clickable(role = Role.Button, onClick = { onSelect(index) })) {
                 Canvas(Modifier.fillMaxSize()) {
                     if (isActive) {
@@ -177,5 +181,26 @@ fun BloomingBeadsArc(count: Int, active: Int?, complete: Boolean, onSelect: (Int
                 }
             }
         }
+    }
+}
+
+/**
+ * A crown seen from above, small enough to sit beside its name: one dot for each small bead,
+ * and a honey dot where each group begins. Five decades and seven septets look different at a glance.
+ */
+@Composable
+fun CrownGlyph(groups: Int, beads: Int, modifier: Modifier = Modifier) {
+    val colors = SertumTheme.colors
+    val art = LocalBotanicalArtwork.current
+    Canvas(modifier.size(52.dp)) {
+        val radius = size.minDimension * .4f
+        val slots = groups * (beads + 1)
+        repeat(slots) { slot ->
+            val angle = -PI / 2 + 2 * PI * slot / slots
+            val at = center + Offset(cos(angle).toFloat(), sin(angle).toFloat()) * radius
+            if (slot % (beads + 1) == 0) drawCircle(colors.gold, size.minDimension * .042f, at)
+            else drawCircle(colors.ruby.copy(alpha = if (colors.isDark) .8f else .7f), size.minDimension * (if (slots > 60) .017f else .021f), at)
+        }
+        paintBotanical(art.rose, center, size.minDimension * .4f)
     }
 }

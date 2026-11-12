@@ -39,8 +39,8 @@ fun CrownDeliveredScreen(state: PrayerUiState, onReturn: () -> Unit) {
             SacredText("sertum", style = type.brand)
         }
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            RoseCrownEmblem(Modifier.size(286.dp))
-            SacredText("Uma oração feita com amor", Modifier.padding(top = 10.dp), type.micro, colors.marian)
+            RoseCrownEmblem(Modifier.size(286.dp), state.groupCount, state.crownBeadCount)
+            SacredText(state.sessionGuide.title, Modifier.padding(top = 10.dp).testTag("delivered-guide"), type.micro, colors.marian, TextAlign.Center)
             SacredText("Sua Coroa de Rosas\nfoi entregue", Modifier.padding(top = 12.dp), type.display, align = TextAlign.Center)
             SacredText("Que a paz desta oração\nacompanhe o seu dia.", Modifier.padding(top = 14.dp), type.whisper, colors.secondary, TextAlign.Center)
             SacredFlourish(Modifier.padding(top = 24.dp, bottom = 20.dp))
@@ -49,7 +49,7 @@ fun CrownDeliveredScreen(state: PrayerUiState, onReturn: () -> Unit) {
                 Modifier.clip(CircleShape).background(colors.surface).border(1.dp, colors.border, CircleShape).padding(horizontal = 18.dp, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
-                SacredText("Cinco mistérios, ", style = type.body.copy(fontSize = 14.sp), color = colors.secondary)
+                SacredText("${state.groupCount} ${if (state.script.isRosary) "mistérios" else if (state.groupLabel == "setena") "setenas" else "dezenas"}, ", style = type.body.copy(fontSize = 14.sp), color = colors.secondary)
                 SacredText(String.format(Locale.ROOT, "%02d:%02d", state.durationSeconds / 60, state.durationSeconds % 60), Modifier.testTag("prayer-duration"), type.body.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold), colors.ink)
                 SacredText(" em oração", style = type.body.copy(fontSize = 14.sp), color = colors.secondary)
             }

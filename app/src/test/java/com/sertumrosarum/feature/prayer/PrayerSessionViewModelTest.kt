@@ -3,6 +3,7 @@ package com.sertumrosarum.feature.prayer
 import androidx.lifecycle.SavedStateHandle
 import com.sertumrosarum.domain.prayer.FixedPrayer
 import com.sertumrosarum.domain.prayer.MysterySet
+import com.sertumrosarum.feature.guides.PrayerGuide
 import java.time.Clock
 import java.time.Instant
 import java.time.ZoneId
@@ -120,6 +121,9 @@ class PrayerSessionViewModelTest {
         original.jumpToBead(8)
         original.toggleEyesClosed()
         original.toggleHaptics()
+        original.toggleMeditated()
+        original.returnHome()
+        original.selectTab(SanctuaryTab.GUIDES)
         val restoredHandle = SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) })
         assertEquals(original.state.value, model(restoredHandle).state.value)
     }
@@ -168,6 +172,240 @@ class PrayerSessionViewModelTest {
         assertEquals(MysterySet.SORROWFUL, model.state.value.selectedSet)
         assertEquals(MysterySet.LUMINOUS, model.state.value.sessionSet)
         assertEquals(position, model.state.value.stepIndex)
+    }
+
+    @Test fun `tabs change the place without touching the selection or a paused crown`() {
+        val model = model()
+        model.start()
+        model.jumpToDecade(1)
+        val index = model.state.value.stepIndex
+        model.returnHome()
+        SanctuaryTab.entries.forEach { tab ->
+            model.selectTab(tab)
+            assertEquals(tab, model.state.value.tab)
+            assertEquals(SanctuaryScreen.HOME, model.state.value.screen)
+        }
+        assertEquals(MysterySet.LUMINOUS, model.state.value.selectedSet)
+        model.resume()
+        assertEquals(index, model.state.value.stepIndex)
+    }
+
+    @Test fun `every guide starts its own crown and a fresh crown resets the position`() {
+        val model = model()
+        model.selectMystery(MysterySet.JOYFUL)
+        model.start(PrayerGuide.FAMILY)
+        assertEquals(SanctuaryScreen.PRAYER, model.state.value.screen)
+        assertEquals(PrayerGuide.FAMILY, model.state.value.sessionGuide)
+        assertEquals(MysterySet.JOYFUL, model.state.value.sessionSet)
+        PrayerGuide.entries.forEach { guide ->
+            model.returnHome()
+            model.start(guide)
+            assertEquals(SanctuaryScreen.PRAYER, model.state.value.screen)
+            assertEquals(guide, model.state.value.sessionGuide)
+            assertEquals(0, model.state.value.stepIndex)
+            assertEquals(guide.script.groupCount, model.state.value.groupCount)
+            model.jumpToDecade(guide.script.groupCount - 1)
+        }
+        model.start()
+        assertEquals(PrayerGuide.TRADITIONAL, model.state.value.sessionGuide)
+    }
+
+    @Test fun `bead by bead lines follow the Ave Maria only while the meditated rosary is on`() {
+        val model = model()
+        model.selectMystery(MysterySet.JOYFUL)
+        model.start()
+        model.jumpToDecade(0)
+        assertNull(model.state.value.beadMeditation)
+        model.toggleMeditated()
+        assertNull("the announcement has no bead line", model.state.value.beadMeditation)
+        val lines = requireNotNull(model.state.value.contemplation).beads
+        assertEquals(10, lines.size)
+        repeat(10) { bead ->
+            model.jumpToBead(bead)
+            assertEquals(lines[bead], model.state.value.beadMeditation)
+        }
+        model.next()
+        assertEquals(FixedPrayer.GLORY_BE, model.state.value.step.prayer)
+        assertNull(model.state.value.beadMeditation)
+        model.toggleMeditated()
+        model.jumpToBead(4)
+        assertNull(model.state.value.beadMeditation)
+    }
+
+    @Test fun `every mystery has its three written layers and introductory prayers have none`() {
+        val model = model()
+        MysterySet.entries.forEach { set ->
+            model.returnHome()
+            model.selectMystery(set)
+            model.start()
+            assertNull(model.state.value.contemplation)
+            repeat(5) { decade ->
+                model.jumpToDecade(decade)
+                val layers = requireNotNull(model.state.value.contemplation)
+                assertTrue(layers.scene.isNotBlank() && layers.meaning.isNotBlank() && layers.practice.isNotBlank())
+                assertEquals(10, layers.beads.size)
+            }
+        }
+    }
+
+    @Test fun `catechetical notes belong to the catechetical guide and are not repeated on every bead`() {
+        val model = model()
+        model.start()
+        assertNull(model.state.value.catecheticalNote)
+        model.returnHome()
+        model.start(PrayerGuide.CATECHETICAL)
+        repeat(4) { assertNotNull(model.state.value.catecheticalNote); model.next() }
+        assertEquals(0, model.state.value.step.beadIndex)
+        assertNotNull(model.state.value.catecheticalNote)
+        model.next()
+        assertNull(model.state.value.catecheticalNote)
+        model.jumpToDecade(0)
+        assertNotNull(model.state.value.catecheticalNote)
+        model.jumpToBead(0)
+        val first = model.state.value.catecheticalNote
+        assertNotNull(first)
+        model.jumpToBead(1)
+        assertNull(model.state.value.catecheticalNote)
+    }
+
+    @Test fun `crowns describe their own shape`() {
+        assertEquals("Cinco dezenas de dez contas", PrayerGuide.TRADITIONAL.shape.summary)
+        assertEquals("Sete setenas de sete contas", PrayerGuide.TEARS.shape.summary)
+        assertEquals("Sete dezenas de dez contas", PrayerGuide.FRANCISCAN.shape.summary)
+        assertEquals("7 × 7", PrayerGuide.TEARS.shape.badge)
+        assertTrue(PrayerGuide.entries.all { it.path.isNotEmpty() })
+    }
+
+    @Test fun `every script traverses its whole sequence in both directions and delivers only after the last prayer`() {
+        PrayerGuide.entries.forEach { guide ->
+            val model = model()
+            model.start(guide)
+            val sequence = model.state.value.sequence
+            repeat(sequence.lastIndex) { model.next() }
+            assertEquals(sequence.last(), model.state.value.step)
+            assertNull(model.state.value.finishedAt)
+            repeat(sequence.lastIndex) { model.previous() }
+            assertEquals(0, model.state.value.stepIndex)
+            repeat(sequence.lastIndex) { model.next() }
+            assertEquals(PrayerPulse.COMPLETION, model.next())
+            assertEquals(SanctuaryScreen.DELIVERED, model.state.value.screen)
+            assertEquals(guide.script.groupCount, model.state.value.completedDecades)
+            assertNull(model.next())
+        }
+    }
+
+    @Test fun `every crown jumps to all its own groups and beads without crossing group boundaries`() {
+        PrayerGuide.entries.forEach { guide ->
+            val model = model()
+            model.start(guide)
+            repeat(guide.script.groupCount) { group ->
+                model.jumpToDecade(group)
+                assertEquals(group, model.state.value.step.decadeIndex)
+                repeat(guide.script.beadCount(group)) { bead ->
+                    model.jumpToBead(bead)
+                    assertEquals(group, model.state.value.step.decadeIndex)
+                    assertEquals(bead, model.state.value.step.beadIndex)
+                }
+                val before = model.state.value.stepIndex
+                model.jumpToBead(guide.script.beadCount(group))
+                model.jumpToDecade(guide.script.groupCount)
+                assertEquals(before, model.state.value.stepIndex)
+            }
+        }
+    }
+
+    @Test fun `saved state restores the late litany and seventh Franciscan decade beyond step eighty`() {
+        listOf(PrayerGuide.COMPLETE, PrayerGuide.FRANCISCAN, PrayerGuide.TEARS).forEach { guide ->
+            val handle = SavedStateHandle()
+            val original = model(handle)
+            original.start(guide)
+            repeat(original.state.value.sequence.lastIndex) { original.next() }
+            original.returnHome()
+            original.selectMystery(MysterySet.SORROWFUL)
+            val restored = model(SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) }))
+            assertEquals(original.state.value, restored.state.value)
+            restored.resume()
+            assertEquals(original.state.value.step, restored.state.value.step)
+            assertEquals(PrayerPulse.COMPLETION, restored.next())
+        }
+    }
+
+    @Test fun `Franciscan final pair is counted and navigable without an eighth group`() {
+        val model = model()
+        model.start(PrayerGuide.FRANCISCAN)
+        model.jumpToDecade(6)
+        model.jumpToBead(9)
+        model.next() // Glória
+        model.next() // first closing Ave-Maria
+        assertEquals(7, model.state.value.completedDecades)
+        assertEquals(2, model.state.value.groupBeads.size)
+        assertEquals("Ave-Maria", model.state.value.beadLabel)
+        model.jumpToBead(1)
+        assertEquals(1, model.state.value.step.beadIndex)
+        assertEquals(72, model.state.value.crownBeadCount)
+        assertEquals(PrayerPulse.TRANSITION, model.next())
+        assertNull(model.state.value.step.beadIndex)
+    }
+
+    @Test fun `short invocations use the same soft and boundary pulses as rosary beads`() {
+        val model = model()
+        model.start(PrayerGuide.TEARS)
+        model.jumpToDecade(6)
+        assertEquals(PrayerPulse.TRANSITION, model.next()) // large bead
+        assertEquals(PrayerPulse.SOFT, model.next())
+        model.jumpToBead(6)
+        assertEquals(PrayerPulse.TRANSITION, model.next())
+        assertEquals(7, model.state.value.completedDecades)
+        assertEquals(49, model.state.value.crownBeadCount)
+    }
+
+    @Test fun `meditations index every Ave Maria in all twenty mysteries without leaking into other crowns`() {
+        val model = model()
+        model.toggleMeditated()
+        MysterySet.entries.forEach { set ->
+            model.selectMystery(set)
+            model.start()
+            repeat(5) { group ->
+                model.jumpToDecade(group)
+                val lines = requireNotNull(model.state.value.contemplation).beads
+                repeat(10) { bead ->
+                    model.jumpToBead(bead)
+                    assertEquals(lines[bead], model.state.value.beadMeditation)
+                }
+                model.next()
+                assertNull(model.state.value.beadMeditation)
+            }
+        }
+        model.start(PrayerGuide.FRANCISCAN)
+        model.jumpToDecade(6)
+        model.jumpToBead(9)
+        assertNull(model.state.value.contemplation)
+        assertNull(model.state.value.beadMeditation)
+    }
+
+    @Test fun `theme meditations follow both the selected script and the active mystery`() {
+        val model = model()
+        model.start(PrayerGuide.FAMILY)
+        model.jumpToDecade(0)
+        val first = model.state.value.themedMeditation
+        assertNotNull(first)
+        model.jumpToDecade(4)
+        assertNotEquals(first, model.state.value.themedMeditation)
+        model.start(PrayerGuide.PEACE)
+        model.jumpToDecade(0)
+        assertNotEquals(first, model.state.value.themedMeditation)
+        model.start()
+        model.jumpToDecade(0)
+        assertNull(model.state.value.themedMeditation)
+    }
+
+    @Test fun `stale saved position is clamped to its actual script and unknown guide falls back safely`() {
+        val model = model(SavedStateHandle(mapOf("sessionGuide" to "TEARS", "stepIndex" to 500)))
+        assertEquals(model.state.value.sequence.lastIndex, model.state.value.stepIndex)
+        val fallback = model(SavedStateHandle(mapOf("sessionGuide" to "removed", "sessionSet" to "removed", "stepIndex" to -5)))
+        assertEquals(PrayerGuide.TRADITIONAL, fallback.state.value.sessionGuide)
+        assertEquals(0, fallback.state.value.stepIndex)
+        assertNotNull(fallback.state.value.step)
     }
 
     private class MutableClock(var instant: Instant) : Clock() {
