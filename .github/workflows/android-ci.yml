@@ -127,7 +127,7 @@ jobs:
       - name: Prepare SDK and snapshot compatibility key
         id: emulator
         run: |
-          sdkmanager --sdk_root="$ANDROID_HOME" 'emulator' 'platform-tools' 'system-images;android-33;default;x86_64' > /dev/null
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" --sdk_root="$ANDROID_HOME" 'emulator' 'platform-tools' 'system-images;android-33;default;x86_64' > /dev/null
           revision="$(sed -n 's/^Pkg.Revision=//p' "$ANDROID_HOME/emulator/source.properties" | tr -d '[:space:]')"
           image="$(sed -n 's/^Pkg.Revision=//p' "$ANDROID_HOME/system-images/android-33/default/x86_64/source.properties" | tr -d '[:space:]')"
           echo "revision=$revision" >> "$GITHUB_OUTPUT"
