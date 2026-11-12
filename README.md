@@ -5,7 +5,7 @@ An app for helping with the Holy Rosary.
 ## Tech stack
 
 - Kotlin 2.1 + Jetpack Compose (Compose Compiler Gradle plugin)
-- **No Material libraries** — UI is built on `androidx.compose.ui` + `foundation` only, with a custom design system under `ui/theme` (colors/typography provided via `CompositionLocal`)
+- **No Material libraries** — UI will be built on `androidx.compose.ui` + `foundation` only, with a custom design system added later
 - AGP 8.9.1, Gradle 8.11.1, Kotlin DSL + version catalog (`gradle/libs.versions.toml`)
 - compileSdk 35, targetSdk 35, **minSdk 33** (Android 13+ only)
 - JDK 17 toolchain, edge-to-edge enabled
@@ -13,14 +13,12 @@ An app for helping with the Holy Rosary.
 ## Project structure
 
 ```
-app/src/main/java/com/sertumrosarum/
-├── SertumApplication.kt
-├── MainActivity.kt
-└── ui/
-    ├── theme/        # custom design system: SertumTheme, colors, typography
-    ├── navigation/   # NavHost + route constants
-    └── home/         # placeholder screen (feature folders go here)
+app/                    # single application module (namespace com.sertumrosarum)
+gradle/                 # version catalog + wrapper config
+.github/workflows/      # CI (unit tests + lint on push/PR)
 ```
+
+The module ships with a bare `MainActivity` and resources only — no app code yet.
 
 ## Requirements
 
