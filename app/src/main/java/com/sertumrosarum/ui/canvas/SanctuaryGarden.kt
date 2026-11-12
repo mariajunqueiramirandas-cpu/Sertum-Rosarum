@@ -7,12 +7,15 @@ import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.Image
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.State
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Rect
 import androidx.compose.ui.geometry.Size
@@ -20,22 +23,20 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.PathOperation
-import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.DrawScope
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.clipPath
 import androidx.compose.ui.graphics.drawscope.rotate
 import androidx.compose.ui.graphics.drawscope.withTransform
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.dp
+import com.sertumrosarum.R
 import com.sertumrosarum.ui.theme.SertumTheme
 import kotlin.math.PI
 import kotlin.math.min
 import kotlin.math.sin
 
-/**
- * A slow loop from 0 to 2π that drives every ambient movement in the garden.
- * It stays at rest when the person has turned animations off.
- */
+/** A shared slow loop, held still when system animations are disabled. */
 @Composable
 internal fun rememberGardenBreath(label: String, millis: Int = 9000): State<Float> {
     if (SertumTheme.reducedMotion) return remember { mutableFloatStateOf(0f) }
@@ -85,188 +86,70 @@ internal fun DrawScope.gardenLeaf(start: Offset, end: Offset, width: Float, colo
     }, color)
 }
 
-private fun cubic(t: Float, a: Offset, b: Offset, c: Offset, d: Offset): Offset {
-    val u = 1 - t
-    return a * (u * u * u) + b * (3 * u * u * t) + c * (3 * u * t * t) + d * (t * t * t)
-}
-
-/** A climbing stem that rises along the left of the arch and leans over its crown. */
-private fun vinePoint(u: Float): Offset = if (u < .42f) {
-    val rise = u / .42f
-    Offset(101f + 2.4f * sin(rise * 9f), 252f - rise * 124f)
-} else {
-    cubic((u - .42f) / .58f * .8f, Offset(101f, 128f), Offset(101f, 24f), Offset(259f, 24f), Offset(259f, 128f))
-}
-
-/** A tiny Marian garden, drawn entirely for Sertum: a sheltering arch, soft figures and living roses. */
+/**
+ * Bundled, model-generated sacred paintings with separate day and moonlit editions.
+ * Only the surrounding light and pollen move; the painted figures stay at rest.
+ * See docs/artwork/garden/README.md for the art direction and generation prompts.
+ */
 @Composable
 fun SanctuaryGarden(modifier: Modifier = Modifier) {
-    val colors = SertumTheme.colors
+    val dark = SertumTheme.colors.isDark
     val accent = SertumTheme.atmosphere.accent
-    val dark = colors.isDark
-    val breath = rememberGardenBreath("sanctuary-garden")
-    Canvas(modifier) {
-        val phase = breath.value
-        val fit = min(size.width / 360f, size.height / 300f)
-        withTransform({
-            translate((size.width - 360f * fit) / 2f, (size.height - 300f * fit) / 2f)
-            scale(fit, fit, Offset.Zero)
-        }) {
-            val sage = if (dark) Color(0xFF4B6955) else Color(0xFFB7C9AB)
-            val deepSage = if (dark) Color(0xFF6A8A6F) else Color(0xFF8DA683)
-            val stone = if (dark) Color(0xFFB9AE8C) else Color(0xFFEDE3CE)
-            val stoneLight = if (dark) Color(0xFFD8CCA9) else Color(0xFFFCF7EC)
-            val stoneShade = if (dark) Color(0xFF9E9373) else Color(0xFFDCCFB4)
-            val rose = if (dark) Color(0xFFDCA79A) else Color(0xFFE0A397)
-            val peach = if (dark) Color(0xFFE5C7A9) else Color(0xFFF0D2B8)
-            val honey = Color(0xFFEFD08D)
-            val skin = Color(0xFFEBC7AD)
-            val glow = Offset(180f, 138f)
-
-            // Air and light behind the arch. The glow ends inside the canvas: the page
-            // scrolls, and anything reaching past the top edge would be cut in a straight line.
-            drawCircle(Brush.radialGradient(listOf(accent.copy(alpha = if (dark) .2f else .34f), Color.Transparent), glow, 134f), 134f, glow)
-            if (dark) {
-                val moonCenter = Offset(288f, 66f)
-                drawCircle(Brush.radialGradient(listOf(Color(0xFFF6E8BB).copy(alpha = .22f), Color.Transparent), moonCenter, 46f), 46f, moonCenter)
-                val moon = Path().apply { addOval(Rect(moonCenter, 16f)) }
-                val bite = Path().apply { addOval(Rect(moonCenter + Offset(8f, -6f), 14f)) }
-                drawPath(Path.combine(PathOperation.Difference, moon, bite), Color(0xFFF6E8BB))
-                listOf(Offset(52f, 62f), Offset(84f, 104f), Offset(318f, 132f), Offset(246f, 34f), Offset(30f, 132f)).forEachIndexed { index, star ->
-                    drawCircle(Color(0xFFF6E8BB).copy(alpha = .35f + .3f * (.5f + .5f * sin(phase * 2f + index * 1.7f))), if (index % 2 == 0) 1.5f else 1.1f, star)
-                }
-            } else {
-                val sun = Offset(288f, 68f)
-                drawCircle(Brush.radialGradient(listOf(Color(0xFFF7E3AE).copy(alpha = .6f), Color.Transparent), sun, 52f), 52f, sun)
-                drawCircle(Color(0xFFF6DDA2), 16f, sun)
-                fun cloud(x: Float, y: Float, scale: Float, alpha: Float) {
-                    val white = Color.White.copy(alpha = alpha)
-                    drawRoundRect(white, Offset(x - 24f * scale, y - 5f * scale), Size(48f * scale, 11f * scale), CornerRadius(5.5f * scale))
-                    drawCircle(white, 9f * scale, Offset(x - 7f * scale, y - 6f * scale))
-                    drawCircle(white, 6.5f * scale, Offset(x + 6f * scale, y - 4f * scale))
-                }
-                cloud(58f + 3f * sin(phase), 92f, 1f, .85f)
-                cloud(318f - 2f * sin(phase), 134f, .62f, .6f)
-            }
-
-            // Far hills and the sheltered lawn.
-            drawOval(sage.copy(alpha = .16f), Offset(-30f, 196f), Size(210f, 96f))
-            drawOval(sage.copy(alpha = .13f), Offset(190f, 204f), Size(210f, 90f))
-            drawOval(sage.copy(alpha = .22f), Offset(6f, 234f), Size(348f, 58f))
-            drawOval(sage.copy(alpha = .34f), Offset(40f, 246f), Size(280f, 40f))
-            drawOval(Color.Black.copy(alpha = if (dark) .14f else .05f), Offset(96f, 250f), Size(168f, 13f))
-
-            // The ceramic arch and its niche.
-            val arch = Path().apply {
-                moveTo(104f, 252f); lineTo(104f, 128f)
-                cubicTo(104f, 30f, 256f, 30f, 256f, 128f)
-                lineTo(256f, 252f); close()
-            }
-            drawPath(arch, Brush.horizontalGradient(listOf(stone, stoneLight, stone), 104f, 256f))
-            drawPath(arch, stoneShade.copy(alpha = .55f), style = Stroke(1f))
-            val niche = Path().apply {
-                moveTo(120f, 252f); lineTo(120f, 130f)
-                cubicTo(120f, 52f, 240f, 52f, 240f, 130f)
-                lineTo(240f, 252f); close()
-            }
-            drawPath(niche, Brush.verticalGradient(listOf(if (dark) Color(0xFF587460) else Color(0xFFFCF8E9), if (dark) Color(0xFF36513F) else Color(0xFFD5E1C6)), 70f, 252f))
-            clipPath(niche) {
-                drawPath(niche, Color.Black.copy(alpha = if (dark) .16f else .06f), style = Stroke(9f))
-                drawOval(sage.copy(alpha = .45f), Offset(100f, 214f), Size(160f, 80f))
-
-                val halo = Offset(180f, 117f)
-                val warmth = .5f + .5f * sin(phase)
-                drawCircle(Brush.radialGradient(listOf(honey.copy(alpha = .42f + .16f * warmth), Color.Transparent), halo, 44f), 44f, halo)
-                drawCircle(honey.copy(alpha = .85f), 22.5f, halo, style = Stroke(1.1f))
-
-                // Quiet, faceless silhouettes of Mary holding the Child.
-                val mantle = Path().apply {
-                    moveTo(180f, 92f)
-                    cubicTo(161f, 92f, 153f, 111f, 152f, 132f)
-                    cubicTo(150f, 172f, 141f, 214f, 132f, 247f)
-                    quadraticTo(180f, 262f, 228f, 247f)
-                    cubicTo(219f, 214f, 210f, 172f, 208f, 132f)
-                    cubicTo(207f, 111f, 199f, 92f, 180f, 92f)
-                }
-                drawPath(mantle, Brush.horizontalGradient(listOf(Color(0xFF7FA3AB), Color(0xFFB3CBCC), Color(0xFF7B9FA8)), 134f, 226f))
-                val robe = Path().apply {
-                    moveTo(171f, 136f); quadraticTo(163f, 192f, 157f, 251f)
-                    quadraticTo(180f, 258f, 203f, 251f)
-                    quadraticTo(197f, 192f, 189f, 136f); close()
-                }
-                drawPath(robe, Brush.verticalGradient(listOf(Color(0xFFFAF4E6), Color(0xFFE9DFC8)), 136f, 252f))
-                drawPath(Path().apply { moveTo(149f, 164f); quadraticTo(146f, 208f, 138f, 244f) }, Color.White.copy(alpha = .2f), style = Stroke(1.4f, cap = StrokeCap.Round))
-                drawPath(Path().apply { moveTo(211f, 164f); quadraticTo(214f, 208f, 222f, 244f) }, Color.White.copy(alpha = .14f), style = Stroke(1.4f, cap = StrokeCap.Round))
-                rotate(-7f, Offset(180f, 118f)) {
-                    drawOval(Color(0xFFF8F1E3), Offset(167.5f, 102.5f), Size(25f, 30f))
-                    drawOval(skin, Offset(170.5f, 106.5f), Size(19f, 23f))
-                    drawPath(Path().apply {
-                        moveTo(165.5f, 119f); cubicTo(164f, 96f, 196f, 96f, 194.5f, 119f)
-                        cubicTo(191f, 104f, 169f, 104f, 165.5f, 119f)
-                    }, Color(0xFF9DBBBF))
-                }
-                drawPath(Path().apply { moveTo(203f, 154f); quadraticTo(204f, 174f, 192f, 180f) }, Color(0xFF8FAFB4), style = Stroke(9.5f, cap = StrokeCap.Round))
-                rotate(-32f, Offset(176f, 176f)) {
-                    drawOval(Color(0xFFFDF9EF), Offset(167.5f, 160f), Size(17f, 34f))
-                }
-                drawCircle(honey.copy(alpha = .7f), 9.6f, Offset(166f, 159f), style = Stroke(.9f))
-                drawCircle(skin, 6.6f, Offset(166f, 159f))
-                drawPath(Path().apply { moveTo(158f, 154f); quadraticTo(159f, 188f, 187f, 185f) }, Color(0xFFA6C1C3), style = Stroke(9.5f, cap = StrokeCap.Round))
-                drawCircle(skin, 3.9f, Offset(188.5f, 184.5f))
-            }
-            drawPath(niche, stoneShade.copy(alpha = .7f), style = Stroke(1.1f))
-            drawRoundRect(stoneLight, Offset(95f, 248f), Size(170f, 6.5f), CornerRadius(3.2f))
-            drawRoundRect(stone, Offset(90f, 253.5f), Size(180f, 6.5f), CornerRadius(3.2f))
-
-            // The vine that crowns the arch.
-            val vine = Path()
-            repeat(41) { index ->
-                val point = vinePoint(index / 40f)
-                if (index == 0) vine.moveTo(point.x, point.y) else vine.lineTo(point.x, point.y)
-            }
-            drawPath(vine, deepSage, style = Stroke(1.8f, cap = StrokeCap.Round))
-            repeat(15) { index ->
-                val u = (index + 1) / 16f
-                val point = vinePoint(u)
-                val ahead = vinePoint(u + .012f) - point
-                val along = ahead / ahead.getDistance().coerceAtLeast(.01f)
-                val side = Offset(-along.y, along.x) * (if (index % 2 == 0) 1f else -1f)
-                gardenLeaf(point, point + side * 9f + along * 5f, 3.4f, if (index % 3 == 0) deepSage else sage)
-            }
-            listOf(Triple(.33f, 6.5f, rose), Triple(.62f, 5.4f, peach), Triple(.83f, 6.6f, accent), Triple(1f, 5.6f, rose)).forEach { (u, radius, color) ->
-                drawGardenFlower(vinePoint(u), radius, color, honey)
-            }
-
-            // Roses sway a little, each in its own time.
-            fun gardenRose(x: Float, y: Float, radius: Float, color: Color, turn: Float) {
-                rotate(1.7f * sin(phase + turn), Offset(x, 264f)) {
-                    drawPath(Path().apply { moveTo(x - 3f, 266f); quadraticTo(x + 6f, y + 22f, x, y) }, deepSage, style = Stroke(2.2f, cap = StrokeCap.Round))
-                    gardenLeaf(Offset(x, y + 24f), Offset(x - 19f, y + 12f), 6.5f, sage)
-                    gardenLeaf(Offset(x + 1f, y + 33f), Offset(x + 18f, y + 22f), 6.5f, deepSage)
-                    drawGardenFlower(Offset(x, y), radius, color, honey)
+    val breath = rememberGardenBreath("sanctuary-garden", millis = 12000)
+    Box(modifier) {
+        Canvas(Modifier.matchParentSize()) {
+            inGardenSpace {
+                val warmth = .5f + .5f * sin(breath.value)
+                val light = Offset(180f, 130f)
+                drawCircle(
+                    Brush.radialGradient(
+                        listOf(accent.copy(alpha = (if (dark) .10f else .14f) + .025f * warmth), Color.Transparent),
+                        light, 138f,
+                    ), 138f, light,
+                )
+                val skyLight = Offset(326f, 28f)
+                val honey = if (dark) Color(0xFFF1DEAD) else Color(0xFFEBD29D)
+                drawCircle(
+                    Brush.radialGradient(listOf(honey.copy(alpha = if (dark) .10f else .16f), Color.Transparent), skyLight, 26f),
+                    26f, skyLight,
+                )
+                if (dark) {
+                    val moon = Path().apply { addOval(Rect(skyLight, 9f)) }
+                    val bite = Path().apply { addOval(Rect(skyLight + Offset(4f, -3f), 8f)) }
+                    drawPath(Path.combine(PathOperation.Difference, moon, bite), honey.copy(alpha = .8f))
+                } else {
+                    drawCircle(honey.copy(alpha = .5f), 8f, skyLight)
                 }
             }
-            gardenRose(62f, 204f, 15.5f, rose, 0f)
-            gardenRose(34f, 233f, 10.5f, accent, 1.9f)
-            gardenRose(86f, 236f, 11.5f, peach, 3.4f)
-            gardenRose(298f, 208f, 15.5f, rose, 2.6f)
-            gardenRose(327f, 236f, 10.5f, accent, .8f)
-            gardenRose(274f, 239f, 11.5f, peach, 4.4f)
-            listOf(14f to -1f, 112f to -1f, 248f to 1f, 346f to 1f).forEach { (x, lean) ->
-                gardenLeaf(Offset(x, 268f), Offset(x + lean * 9f, 252f), 3.4f, sage)
-                gardenLeaf(Offset(x, 268f), Offset(x - lean * 4f, 250f), 3f, deepSage)
+        }
+        Image(
+            painter = painterResource(if (dark) R.drawable.sanctuary_garden_vigil else R.drawable.sanctuary_garden_day),
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize().padding(4.dp),
+            contentScale = ContentScale.Fit,
+        )
+        Canvas(Modifier.matchParentSize()) {
+            inGardenSpace {
+                val phase = breath.value
+                // Sparse light at the edges, leaving the faces and hands clear.
+                listOf(Offset(38f, 119f), Offset(298f, 104f), Offset(56f, 49f), Offset(320f, 183f), Offset(280f, 26f)).forEachIndexed { index, mote ->
+                    val shimmer = .5f + .5f * sin(phase + index * 1.7f)
+                    drawCircle(
+                        (if (dark) Color(0xFFF1DEAD) else accent).copy(alpha = (if (dark) .22f else .16f) + .12f * shimmer),
+                        if (index % 2 == 0) 1.1f else .8f,
+                        mote + Offset(1.2f * sin(phase + index), 2.5f * sin(phase + index * 1.3f)),
+                    )
+                }
             }
-
-            // Pollen in the light, and two birds far away.
-            listOf(Offset(70f, 150f), Offset(300f, 160f), Offset(266f, 116f), Offset(88f, 60f), Offset(42f, 186f), Offset(326f, 96f)).forEachIndexed { index, mote ->
-                drawCircle(accent.copy(alpha = if (dark) .8f else .7f), if (index % 2 == 0) 1.9f else 1.4f, mote + Offset(0f, 3.5f * sin(phase + index * 1.3f)))
-            }
-            fun bird(x: Float, y: Float, span: Float) = drawPath(
-                Path().apply { moveTo(x, y); quadraticTo(x + span * .5f, y - span * .5f, x + span, y); quadraticTo(x + span * 1.5f, y - span * .5f, x + span * 2f, y - span * .15f) },
-                deepSage.copy(alpha = .6f), style = Stroke(1.3f, cap = StrokeCap.Round),
-            )
-            bird(66f, 48f, 9f)
-            bird(98f, 36f, 6f)
         }
     }
+}
+
+/** Fit the atmosphere to the same 6:5 composition on narrow phones and wide layouts. */
+private fun DrawScope.inGardenSpace(draw: DrawScope.() -> Unit) {
+    val fit = min(size.width / 360f, size.height / 300f)
+    withTransform({
+        translate((size.width - 360f * fit) / 2f, (size.height - 300f * fit) / 2f)
+        scale(fit, fit, Offset.Zero)
+    }, draw)
 }

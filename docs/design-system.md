@@ -6,7 +6,7 @@ The experience should feel welcoming, familiar, and unhurried. The garden is par
 
 ## Visual language
 
-- Original Canvas artwork shows a small ceramic arch crowned by a climbing vine, Mary holding the Child, a sheltered lawn, swaying roses, drifting pollen, and changing daylight.
+- The home garden is a bundled, model-generated sacred painting: an ivory arch, climbing roses, Mary holding the Child, and a stone path. Classical naturalistic faces, a flowing blue mantle, fine gold embroidery, and a radiant halo convey Mary's holiness and grace. Matching day and moonlit paintings share the same composition. Canvas adds restrained moving light and pollen; the painted figures stay still. The [artwork notes, masters, and prompts](artwork/garden/README.md) preserve the chosen direction.
 - Bundled **Fraunces** is the voice of the garden. Its softness axis is fully open, so every serif ends rounded. It sets the wordmark, headings, and every prayer. **Nunito** carries controls and small supporting copy.
 - Type is sentence case, with generous line spacing. Headings are regular weight, never bold.
 - Surfaces are soft, generously rounded, and edged with a hairline in place of a heavy shadow. Shadows are tinted sage or rose, never grey.
@@ -32,7 +32,7 @@ The experience should feel welcoming, familiar, and unhurried. The garden is par
 | Botanical accent | `#789A81` | `#9DBE9D` |
 | Soft border | `#E6E9DD` | `#314D40` |
 
-Mystery atmospheres gently wash the top of the page and tint the garden's flowers: peach for Gozosos, honey for Luminosos, lavender for Dolorosos, and soft sky for Gloriosos. The selected mystery set always retains its correct five mysteries and day-of-week resolution.
+Mystery atmospheres gently wash the top of the page and the light around the garden: peach for Gozosos, honey for Luminosos, lavender for Dolorosos, and soft sky for Gloriosos. The painting retains its original rose colors. The selected mystery set always retains its correct five mysteries and day-of-week resolution.
 
 ## Typography and shape
 
@@ -70,7 +70,7 @@ A crown of fifty roses woven with leaves surrounds a large central blossom. The 
 
 ## Motion, haptics, and accessibility
 
-- The garden moves on one slow breath: roses sway, pollen drifts, the halo warms. Active roses breathe slowly; completed roses bloom with a damped spring.
+- The home garden's surrounding light and pollen move on one slow breath; the sacred painting stays at rest. Active prayer roses breathe slowly; completed roses bloom with a damped spring.
 - Ambient motion stays still when system animations are turned off.
 - Prayer routes crossfade; buttons gently compress on press.
 - Small beads use a soft single pulse. Prayer and decade boundaries use two pulses; completion uses three growing pulses.

@@ -30,7 +30,7 @@ Open Sertum and arrive in a small garden: warm cream, sage leaves, clay-colored 
 
 ## A garden in every screen
 
-These are captures from the running Android app. Every illustration, flower, bead, icon, and control is drawn or composed specifically for Sertum.
+The sanctuary previews are rendered from the Android Compose screen using Robolectric native graphics. Its model-generated sacred paintings are bundled with the app; the flowers, beads, icons, and controls elsewhere use custom Canvas and Foundation components.
 
 <table>
   <tr>
@@ -113,7 +113,7 @@ The visual system is **O Jardim de Maria**: a comforting place of shelter, with 
 
 | Element | How it is made |
 | --- | --- |
-| The garden | Original Compose Canvas artwork: ceramic arch and climbing vine, Mary and the Child, swaying roses, sun, and moon |
+| The garden | Bundled model-generated sacred paintings for day and Vigil: Mary and the Child, a rose-covered arch and stone path, with Canvas light and pollen |
 | Living beads | Custom soft roses, closed buds that open as you pray, a growing stem, breathing halos, and spring animations |
 | Typography | Bundled Fraunces (soft serif, for the wordmark and prayers) and Nunito (controls), with explicit variable-font axes |
 | Day | Warm cream `#FBF8F2`, sage `#789A81`, rose `#C07A72`, and blush petal actions |
@@ -253,7 +253,7 @@ See [`phases.md`](phases.md) for the milestone definitions and acceptance criter
 
 ### Artwork and font credits
 
-The Marian garden, flowers, rosary visualizations, launcher icon, and interface icons are original vector and Canvas artwork for Sertum. Fraunces and Nunito are bundled from Google Fonts under their [SIL Open Font Licenses](docs/fonts).
+The home garden uses original model-generated sacred paintings, inspired by the grace and light of classical Marian art. [Full-resolution masters, final prompts, and the seven-round exploration](docs/artwork/garden/README.md) are preserved with the project. Prayer flowers, rosary visualizations, the launcher icon, and interface icons are custom vector and Canvas artwork for Sertum. Fraunces and Nunito are bundled from Google Fonts under their [SIL Open Font Licenses](docs/fonts).
 
 ---
 
