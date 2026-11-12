@@ -6,10 +6,13 @@ import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.click
@@ -51,6 +54,29 @@ class SanctuaryFlowTest {
         screenshot("crown-delivered")
         compose.onNodeWithTag("return-sanctuary").performClick()
         compose.onNodeWithTag("sanctuary").assertIsDisplayed()
+    }
+
+    @Test fun `overflowing creed shows its reading position and scrolls without advancing the rosary`() {
+        compose.onNodeWithTag("start-rosary").performClick()
+        compose.onNodeWithTag("prayer-scroll-cue").assertDoesNotExist()
+        repeat(2) { compose.onNodeWithTag("next-prayer").performClick() }
+        compose.onNodeWithTag("prayer-title").assertTextEquals("Creio em Deus Pai")
+        val scroll = compose.onNodeWithTag("prayer-scroll")
+        compose.onNodeWithTag("prayer-scroll-position").assertIsDisplayed()
+        compose.onNodeWithTag("prayer-scroll-cue").assertIsDisplayed()
+        screenshot("prayer-scroll-start")
+        compose.onNodeWithTag("prayer-scroll-cue").performClick()
+        compose.waitUntil { scroll.fetchSemanticsNode().config[SemanticsProperties.VerticalScrollAxisRange].value() > 0f }
+        compose.onNodeWithTag("bead-counter").assertTextEquals("Passo 3 de 80")
+        screenshot("prayer-scroll-middle")
+        scroll.performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, 100_000f) }
+        compose.waitUntil {
+            val range = scroll.fetchSemanticsNode().config[SemanticsProperties.VerticalScrollAxisRange]
+            range.value() == range.maxValue()
+        }
+        screenshot("prayer-scroll-end")
+        compose.onNodeWithTag("next-prayer").performClick()
+        compose.waitUntil { scroll.fetchSemanticsNode().config[SemanticsProperties.VerticalScrollAxisRange].value() == 0f }
     }
 
     @Test fun `beads decades backward stepping and pause resume preserve the prayer position`() {

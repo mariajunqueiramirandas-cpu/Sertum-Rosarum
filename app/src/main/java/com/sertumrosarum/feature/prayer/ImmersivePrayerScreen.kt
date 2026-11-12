@@ -15,11 +15,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.key
@@ -82,35 +80,26 @@ fun ImmersivePrayerScreen(state: PrayerUiState, model: PrayerSessionViewModel, o
                 else FiveMysteriesArc(state.completedDecades, step.decadeIndex, model::jumpToDecade)
                 Spacer(Modifier.height(if (compact) 0.dp else 7.dp))
             }
-            Column(
-                Modifier.weight(1f).fillMaxWidth().testTag("prayer-reader"),
-                horizontalAlignment = Alignment.CenterHorizontally,
-            ) {
-                key(step.prayer, step.decadeIndex) {
-                    Column(
-                        Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(vertical = 12.dp),
-                        verticalArrangement = Arrangement.Center,
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        SacredText(chapter, style = type.micro.copy(fontSize = 12.sp), color = colors.marian, align = TextAlign.Center)
-                        Spacer(Modifier.height(14.dp))
-                        SacredText(step.title, Modifier.testTag("prayer-title"), type.heading, align = TextAlign.Center)
-                        if (step.mystery != null && step.prayer == null) {
-                            SacredText(step.mystery.scripture, Modifier.padding(top = 10.dp), type.body.copy(fontSize = 11.sp), colors.muted)
-                        }
-                        Spacer(Modifier.height(12.dp))
-                        Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
-                            repeat(3) { dot -> Box(Modifier.size(4.dp).background(colors.marian.copy(alpha = .25f + dot * .12f), CircleShape)) }
-                        }
-                        Spacer(Modifier.height(15.dp))
-                        if (state.eyesClosed) {
-                            SacredText("Reze no seu tempo.\nO toque acompanha sua oração.", Modifier.padding(horizontal = 3.dp), type.italic.copy(fontSize = 15.sp), colors.secondary, TextAlign.Center)
-                        } else {
-                            SacredText(step.text, Modifier.padding(horizontal = 3.dp).testTag("prayer-text"), type.prayer, colors.ink, TextAlign.Center)
-                        }
-                        if (step.intention != null) {
-                            SacredText(step.intention, Modifier.padding(top = 15.dp), type.italic, colors.gold, TextAlign.Center)
-                        }
+            key(state.stepIndex, state.eyesClosed) {
+                PrayerTextReader(Modifier.weight(1f).fillMaxWidth()) {
+                    SacredText(chapter, style = type.micro.copy(fontSize = 12.sp), color = colors.marian, align = TextAlign.Center)
+                    Spacer(Modifier.height(14.dp))
+                    SacredText(step.title, Modifier.testTag("prayer-title"), type.heading, align = TextAlign.Center)
+                    if (step.mystery != null && step.prayer == null) {
+                        SacredText(step.mystery.scripture, Modifier.padding(top = 10.dp), type.body.copy(fontSize = 11.sp), colors.muted)
+                    }
+                    Spacer(Modifier.height(12.dp))
+                    Row(horizontalArrangement = Arrangement.spacedBy(5.dp)) {
+                        repeat(3) { dot -> Box(Modifier.size(4.dp).background(colors.marian.copy(alpha = .25f + dot * .12f), CircleShape)) }
+                    }
+                    Spacer(Modifier.height(15.dp))
+                    if (state.eyesClosed) {
+                        SacredText("Reze no seu tempo.\nO toque acompanha sua oração.", Modifier.padding(horizontal = 3.dp), type.italic.copy(fontSize = 15.sp), colors.secondary, TextAlign.Center)
+                    } else {
+                        SacredText(step.text, Modifier.padding(horizontal = 3.dp).testTag("prayer-text"), type.prayer, colors.ink, TextAlign.Center)
+                    }
+                    if (step.intention != null) {
+                        SacredText(step.intention, Modifier.padding(top = 15.dp), type.italic, colors.gold, TextAlign.Center)
                     }
                 }
             }
