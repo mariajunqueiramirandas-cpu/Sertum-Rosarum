@@ -14,7 +14,7 @@ Native Android, original botanical artwork, and a complete prayer experience tha
 ![Kotlin 2.1.20](https://img.shields.io/badge/Kotlin-2.1.20-AB625C?labelColor=172C29)
 ![Compose Foundation](https://img.shields.io/badge/Compose-Foundation-BA9655?labelColor=172C29)
 
-**[The experience](#the-experience) · [Screenshots](#a-garden-in-every-screen) · [Run locally](#run-it-locally) · [Validation](#validation) · [Roadmap](#roadmap)**
+**[The experience](#the-experience) · [Screenshots](#a-garden-in-every-screen) · [APK releases](#automatic-apk-releases) · [Run locally](#run-it-locally) · [Validation](#validation) · [Roadmap](#roadmap)**
 
 </div>
 
@@ -113,6 +113,16 @@ The visual system is **O Jardim de Maria**: a comforting place of shelter, with 
 
 Read the [full design system](docs/design-system.md) for tokens, interaction rules, and accessibility details.
 
+## Automatic APK releases
+
+Every successful push to `main` creates a [GitHub Release](https://github.com/mariajunqueiramirandas-cpu/Sertum-Rosarum/releases) with an **optimized, signed, installable APK**, its SHA-256 checksum, and source/build metadata. Unit tests, lint, device UI tests, and a launch check of the minified app must pass before publishing.
+
+The included stable fallback signer works without GitHub Secrets. It is an intentionally public development identity; optional private signing secrets override it on main. A different pre-existing signing certificate requires a one-time uninstall before switching to these builds.
+
+Builds use automatic version codes, R8 code and resource shrinking, larger memory budgets, Gradle task caches, and warmed emulator snapshots. The emulator tests the APKs from the build job, so compilation happens once. Obsolete PR runs are canceled; every main run is allowed to finish and release.
+
+See [build performance and releases](docs/build-and-releases.md) for memory budgets, signing, versioning, cache behavior, and the full pipeline.
+
 ## Run it locally
 
 ### Requirements
@@ -137,7 +147,7 @@ adb install -r app/build/outputs/apk/debug/app-debug.apk
 
 You can also open the repository root in Android Studio, select JDK 17 for Gradle, sync, and run the `app` configuration. On Windows, use `gradlew.bat`.
 
-The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. Each successful CI build job uploads it in the **android-build-and-reports** artifact on the [Android CI workflow](https://github.com/mariajunqueiramirandas-cpu/Sertum-Rosarum/actions/workflows/android-ci.yml).
+The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. Build the optimized, fallback-signed APK with `./gradlew assembleRelease`; it appears at `app/build/outputs/apk/release/app-release.apk`. CI uploads **android-test-apks**, **android-release**, and build reports on the [Android CI workflow](https://github.com/mariajunqueiramirandas-cpu/Sertum-Rosarum/actions/workflows/android-ci.yml). Main builds also publish the APK on [GitHub Releases](https://github.com/mariajunqueiramirandas-cpu/Sertum-Rosarum/releases).
 
 ## Validation
 
@@ -163,7 +173,7 @@ The UI suite also captures all six views shown above. To retrieve fresh captures
 adb pull /sdcard/Android/data/com.sertumrosarum/files/screenshots app/build/outputs/screenshots
 ```
 
-[GitHub Actions](.github/workflows/android-ci.yml) runs the build, unit tests, and lint in one job, and the Compose flow on an accelerated API 33 emulator in another. Both jobs upload their available reports; the UI job also uploads screen captures.
+[GitHub Actions](.github/workflows/android-ci.yml) builds all three APKs once, runs unit tests and lint, and passes those APKs to an accelerated API 33 emulator. The device job checks the five Compose flows, saves screenshots before removing the test target, and smoke-tests the real minified release. A main-only publishing job then creates the APK release. The release automation also has 14 Python tests covering memory budgets, signing, checksums, versioning, idempotency, and publishing guards.
 
 ## Inside the app
 
@@ -224,6 +234,7 @@ See [`phases.md`](phases.md) for the milestone definitions and acceptance criter
 
 | Document | What you will find |
 | --- | --- |
+| [Build performance and releases](docs/build-and-releases.md) | Automatic signed APKs, memory budgets, caches, versioning, and stable fallback signing |
 | [Design system](docs/design-system.md) | The current quiet garden: palette, type, artwork, motion, and accessibility |
 | [Product vision](docs/product-vision.md) | The wider experience and long-term product direction |
 | [Visão de produto · Português](docs/visao-de-produto-pt.md) | The original Portuguese product vision |

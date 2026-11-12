@@ -9,3 +9,9 @@ local.properties
 .externalNativeBuild
 .cxx
 app/build
+__pycache__/
+*.pyc
+*.keystore
+*.jks
+*.p12
+!.github/signing/fallback.keystore
