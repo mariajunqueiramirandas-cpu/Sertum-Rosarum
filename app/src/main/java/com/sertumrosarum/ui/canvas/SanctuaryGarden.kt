@@ -121,10 +121,11 @@ fun SanctuaryGarden(modifier: Modifier = Modifier) {
             val peach = if (dark) Color(0xFFE5C7A9) else Color(0xFFF0D2B8)
             val honey = Color(0xFFEFD08D)
             val skin = Color(0xFFEBC7AD)
-            val glow = Offset(180f, 132f)
+            val glow = Offset(180f, 138f)
 
-            // Air and light behind the arch.
-            drawCircle(Brush.radialGradient(listOf(accent.copy(alpha = if (dark) .2f else .34f), Color.Transparent), glow, 168f), 168f, glow)
+            // Air and light behind the arch. The glow ends inside the canvas: the page
+            // scrolls, and anything reaching past the top edge would be cut in a straight line.
+            drawCircle(Brush.radialGradient(listOf(accent.copy(alpha = if (dark) .2f else .34f), Color.Transparent), glow, 134f), 134f, glow)
             if (dark) {
                 val moonCenter = Offset(288f, 66f)
                 drawCircle(Brush.radialGradient(listOf(Color(0xFFF6E8BB).copy(alpha = .22f), Color.Transparent), moonCenter, 46f), 46f, moonCenter)
