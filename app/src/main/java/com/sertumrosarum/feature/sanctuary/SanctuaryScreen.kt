@@ -31,6 +31,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.draw.shadow
@@ -40,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
@@ -82,16 +84,19 @@ fun SanctuaryScreen(state: PrayerUiState, model: PrayerSessionViewModel) {
                 SacredText("Respire. Há um lugar de paz esperando por você.", Modifier.fillMaxWidth().padding(top = 8.dp), type.body, colors.secondary, TextAlign.Center)
                 SacredFlourish(Modifier.align(Alignment.CenterHorizontally).padding(top = 26.dp, bottom = 26.dp))
 
-                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                Row(Modifier.fillMaxWidth().heightIn(min = 32.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     SacredText("O que vamos contemplar?", Modifier.weight(1f), type.section)
-                    if (state.selectedSet == MysterySet.forDay(state.today.dayOfWeek)) {
-                        Row(
-                            Modifier.clip(CircleShape).background(colors.marian.copy(alpha = .13f)).padding(horizontal = 12.dp, vertical = 5.dp),
-                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
-                        ) {
-                            Box(Modifier.size(6.dp).background(colors.marian, CircleShape))
-                            SacredText("Hoje", style = type.micro, color = colors.marian)
-                        }
+                    val isToday = state.selectedSet == MysterySet.forDay(state.today.dayOfWeek)
+                    // Reserve the badge's width and height for every set so changing
+                    // mysteries never reflows the heading or moves the selector.
+                    Row(
+                        Modifier.then(if (isToday) Modifier else Modifier.clearAndSetSemantics {})
+                            .alpha(if (isToday) 1f else 0f)
+                            .clip(CircleShape).background(colors.marian.copy(alpha = .13f)).padding(horizontal = 12.dp, vertical = 5.dp),
+                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
+                    ) {
+                        Box(Modifier.size(6.dp).background(colors.marian, CircleShape))
+                        SacredText("Hoje", style = type.micro, color = colors.marian)
                     }
                 }
                 Spacer(Modifier.height(14.dp))
@@ -178,7 +183,7 @@ private fun SanctuaryHeader(mode: ThemeMode, onTheme: (ThemeMode) -> Unit) {
 internal fun MysterySelector(selected: MysterySet, onSelect: (MysterySet) -> Unit) {
     val colors = SertumTheme.colors
     val track = RoundedCornerShape(26.dp)
-    Row(Modifier.fillMaxWidth().clip(track).background(colors.surface).border(1.dp, colors.border.copy(alpha = .7f), track).padding(5.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+    Row(Modifier.fillMaxWidth().testTag("mystery-selector").clip(track).background(colors.surface).border(1.dp, colors.border.copy(alpha = .7f), track).padding(5.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
         MysterySet.entries.forEach { set ->
             val active = set == selected
             val fill by animateColorAsState(if (active) colors.elevated else colors.elevated.copy(alpha = 0f), label = "mystery-fill")
@@ -201,7 +206,7 @@ internal fun MysterySelector(selected: MysterySet, onSelect: (MysterySet) -> Uni
 private fun MysteryCard(set: MysterySet) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
-    SacredCard(Modifier.fillMaxWidth()) {
+    SacredCard(Modifier.fillMaxWidth().testTag("mystery-card")) {
         Column(Modifier.padding(start = 18.dp, end = 18.dp, top = 20.dp, bottom = 10.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
                 Box(Modifier.size(50.dp).background(SertumTheme.atmosphere.accent.copy(alpha = if (colors.isDark) .2f else .26f), CircleShape), contentAlignment = Alignment.Center) {

@@ -191,7 +191,7 @@ The visual system is **O Jardim de Maria**: a comforting place of shelter, with 
 | The garden | Bundled model-generated sacred paintings for day and Vigil: Mary and the Child, a rose-covered arch and stone path, with Canvas light and pollen |
 | Living beads | Painted blush and ivory roses, buds that blend into blooms, sage leaves, a growing stem, fine gold selection rings, and gentle spring animations |
 | Offered crown | Fifty painted roses woven with sage leaves, five ivory mystery markers, and a central rose in a quiet gold setting |
-| Typography | Bundled Fraunces (soft serif, for the wordmark and prayers) and Nunito (controls), with explicit variable-font axes |
+| Typography | Bundled fixed-weight Fraunces and Nunito instances, with the soft serif axes baked in for consistent rendering across devices |
 | Day | Warm cream `#FBF8F2`, sage `#789A81`, rose `#C07A72`, and blush petal actions |
 | Vigil | Deep forest `#162A27`, cream `#F3EFE3`, and muted rose `#E0A99C` |
 | Controls | Custom Foundation buttons, filled icon controls, press indications, mystery selectors, and appearance menu |

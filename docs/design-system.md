@@ -7,7 +7,7 @@ The experience should feel welcoming, familiar, and unhurried. The garden is par
 ## Visual language
 
 - The home garden is a bundled, model-generated sacred painting: an ivory arch, climbing roses, Mary holding the Child, and a stone path. Classical naturalistic faces, a flowing blue mantle, fine gold embroidery, and a radiant halo convey Mary's holiness and grace. Matching day and moonlit paintings share the same composition. Canvas adds restrained moving light and pollen; the painted figures stay still. The [artwork notes, masters, and prompts](artwork/garden/README.md) preserve the chosen direction.
-- Bundled **Fraunces** is the voice of the garden. Its softness axis is fully open, so every serif ends rounded. It sets the wordmark, headings, and every prayer. **Nunito** carries controls and small supporting copy.
+- Bundled **Fraunces** is the voice of the garden. Its softness axis is baked fully open into fixed-weight font files, so every serif ends rounded consistently across devices. It sets the wordmark, headings, and every prayer. **Nunito** carries controls and small supporting copy, with separate regular, medium, semibold, and bold resources. [Font sources and regeneration](fonts/README.md) preserve the exact cuts.
 - Type is sentence case, with generous line spacing. Headings are regular weight, never bold.
 - Surfaces are soft, generously rounded, and edged with a hairline in place of a heavy shadow. Shadows are tinted sage or rose, never grey.
 - Actions are petals: a pale blush fill with a rosewood label. Nothing on screen is a dark slab.
@@ -28,8 +28,8 @@ The experience should feel welcoming, familiar, and unhurried. The garden is par
 | Muted text | `#8A968B` | `#8CA594` |
 | Honey accent | `#B8935A` | `#D8BE84` |
 | Rose (flowers and accents) | `#C07A72` | `#E0A99C` |
-| Petal action fill | `#F8E3DA` to `#EFCDC2` | `#EDC6BA` to `#DFA99C` |
-| Petal action label | `#7A433D` | `#4A2925` |
+| Petal action fill | `#F6DED5` to `#EDC7BC` | `#EDC6BA` to `#DFA99C` |
+| Petal action label | `#713F39` | `#4A2925` |
 | Botanical accent | `#789A81` | `#9DBE9D` |
 | Soft border | `#E6E9DD` | `#314D40` |
 
@@ -61,7 +61,7 @@ Outside Início, the rose and the place's name sit where the wordmark sits at ho
 
 ### Sanctuary
 
-The Marian garden opens the screen, under a small floral wordmark and the appearance control. A centered greeting follows. Four soft mystery controls lead to one card that holds the chosen mysteries: their invitation, then five moments joined by a stem. A quiet link beneath it leads to Roteiros. The page dissolves into the primary prayer action, which stays within reach above the shelf. A paused crown offers a gentle continuation card.
+The Marian garden opens the screen, under a small floral wordmark and the appearance control. A centered greeting follows. Four soft mystery controls lead to one card that holds the chosen mysteries: their invitation, then five moments joined by a stem. The section heading always reserves the space for its “Hoje” badge, so selecting another set does not shift the controls or card. The hidden badge is excluded from accessibility. A quiet link beneath it leads to Roteiros. The page dissolves into the primary prayer action, which stays within reach above the shelf. A paused crown offers a gentle continuation card.
 
 ### Roteiros
 
