@@ -23,14 +23,14 @@ fun RoseMark(modifier: Modifier = Modifier, alpha: Float = 1f) {
     Canvas(modifier) { paintBotanical(art.rose, center, size.minDimension, alpha) }
 }
 
-/** Fifty painted roses: five ivory blooms mark the mysteries within the woven crown. */
+/** The offered crown adapts to the groups and small beads of the prayer just completed. */
 @Composable
-fun RoseCrownEmblem(modifier: Modifier = Modifier) {
+fun RoseCrownEmblem(modifier: Modifier = Modifier, groups: Int = 5, beads: Int = 50) {
     val colors = SertumTheme.colors
     val accent = SertumTheme.atmosphere.accent
     val art = LocalBotanicalArtwork.current
     val breath = rememberGardenBreath("rose-crown", 7000)
-    Canvas(modifier.semantics { contentDescription = "Coroa de cinquenta rosas, uma por Ave-Maria" }) {
+    Canvas(modifier.semantics { contentDescription = "Coroa de $beads rosas em $groups grupos" }) {
         val radius = size.minDimension * .405f
         val warmth = .5f + .5f * sin(breath.value)
         fun onRing(degrees: Float, distance: Float): Offset {
@@ -51,17 +51,17 @@ fun RoseCrownEmblem(modifier: Modifier = Modifier) {
             }
             drawPath(vine, colors.marian.copy(alpha = if (strand == 0) .65f else .3f), style = Stroke(radius * .009f, cap = StrokeCap.Round))
         }
-        repeat(50) { index ->
-            val degrees = -90f + index * 7.2f + 2f
+        repeat(beads) { index ->
+            val degrees = -90f + index * 360f / beads + 2f
             val reach = if (index % 2 == 0) 1.14f else .88f
             val sway = .3f * sin(breath.value + index * .7f)
             paintLeaf(art.leaf, onRing(degrees, radius), onRing(degrees + 5f + sway, radius * reach), if (colors.isDark) .82f else .9f)
         }
-        repeat(50) { index ->
-            val mystery = index % 10 == 0
+        repeat(beads) { index ->
+            val mystery = (0 until groups).any { index == it * (beads / groups) }
             paintBotanical(
                 if (mystery) art.ivoryRose else art.rose,
-                onRing(-90f + index * 7.2f, radius * (1f + .008f * sin(index * 1.7f))),
+                onRing(-90f + index * 360f / beads, radius * (1f + .008f * sin(index * 1.7f))),
                 radius * (if (mystery) .195f else .125f),
                 alpha = if (index % 3 == 0 || mystery) 1f else .88f,
                 turn = index * 137.5f % 50f - 25f,

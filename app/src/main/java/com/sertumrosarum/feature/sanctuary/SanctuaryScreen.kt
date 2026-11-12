@@ -124,7 +124,7 @@ fun SanctuaryScreen(state: PrayerUiState, model: PrayerSessionViewModel) {
                     RoseMark(Modifier.size(28.dp))
                     Column(Modifier.weight(1f)) {
                         SacredText("Sua oração espera por você", style = type.label)
-                        SacredText("Continuar de onde parou", style = type.micro.copy(fontWeight = FontWeight.Normal), color = colors.secondary)
+                        SacredText("${state.sessionGuide.title} · ${state.stepIndex + 1}/${state.sequence.size}", style = type.micro.copy(fontWeight = FontWeight.Normal), color = colors.secondary)
                     }
                     SacredIcon(SacredIcon.CHEVRON, Modifier.size(15.dp), colors.marian)
                 }

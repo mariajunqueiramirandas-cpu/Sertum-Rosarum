@@ -9,6 +9,7 @@ import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performClick
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -57,7 +58,7 @@ class SanctuaryShellTest {
         compose.onNodeWithTag("resume").assertIsDisplayed()
     }
 
-    @Test fun `a crown still in bud shows its own shape and offers nothing to begin`() {
+    @Test fun `each devotional crown shows its shape and can start from its sheet`() {
         tap("tab-GUIDES")
         tap("guide-TEARS")
         compose.onNodeWithTag("guide-title").assertTextEquals("Coroa das Lágrimas")
@@ -68,8 +69,8 @@ class SanctuaryShellTest {
         compose.onNodeWithTag("bead-7").assertDoesNotExist()
         tap("bead-5")
         compose.onNodeWithTag("bead-5").assertIsSelected()
-        compose.onNodeWithTag("guide-budding").assertExists()
-        compose.onNodeWithTag("guide-start").assertDoesNotExist()
+        compose.onNodeWithTag("guide-budding").assertDoesNotExist()
+        compose.onNodeWithTag("guide-start").assertExists()
         back()
         compose.onNodeWithTag("guide-sheet").assertDoesNotExist()
         compose.onNodeWithTag("guides").assertIsDisplayed()
@@ -82,7 +83,7 @@ class SanctuaryShellTest {
 
         tap("guide-COMPLETE")
         compose.onNodeWithTag("litany-verses").assertExists()
-        compose.onNodeWithTag("guide-start").assertDoesNotExist()
+        compose.onNodeWithTag("guide-start").assertExists()
     }
 
     @Test fun `the catechetical guide begins from its sheet with the chosen mysteries and its notes`() {
@@ -130,13 +131,92 @@ class SanctuaryShellTest {
         compose.onNodeWithTag("mystery-sheet").assertDoesNotExist()
         compose.onNodeWithTag("bead-counter", useUnmergedTree = true).assertTextEquals("Ave-Maria 3 de 10")
 
-        // A mystery without written lines keeps its sheet and simply shows no bead line.
+        // The following mystery also has its own complete bead meditations.
         tap("decade-1")
         tap("bead-0")
-        compose.onNodeWithTag("bead-meditation", useUnmergedTree = true).assertDoesNotExist()
-        compose.onNodeWithTag("prayer-title").assertTextEquals("Ave-Maria")
+        compose.onNodeWithTag("bead-meditation", useUnmergedTree = true).assertTextEquals("Maria se põe a caminho com prontidão.")
         tap("mystery-chip")
         compose.onNodeWithTag("mystery-sheet-title").assertTextEquals("A Visitação")
-        compose.onNodeWithTag("bead-by-bead").assertDoesNotExist()
+        compose.onNodeWithTag("bead-by-bead").assertExists()
+    }
+
+    @Test fun `Crown of Tears prays seven actual setenas and resumes its seventh bead`() {
+        tap("tab-GUIDES")
+        tap("guide-TEARS")
+        tap("guide-start")
+        compose.onNodeWithTag("bottom-bar").assertDoesNotExist()
+        tap("decade-6")
+        compose.onNodeWithTag("decade-7").assertDoesNotExist()
+        compose.onNodeWithTag("prayer-title").assertTextEquals("Vede, ó Jesus")
+        tap("bead-6")
+        compose.onNodeWithTag("bead-counter", useUnmergedTree = true).assertTextEquals("Conta 7 de 7")
+        compose.onNodeWithTag("bead-7").assertDoesNotExist()
+        compose.onNodeWithTag("prayer-text").assertTextEquals("Meu Jesus, ouvi os nossos rogos, pelas lágrimas de Vossa Mãe Santíssima.")
+        tap("pause-prayer")
+        tap("tab-HOME")
+        tap("resume")
+        compose.onNodeWithTag("bead-counter", useUnmergedTree = true).assertTextEquals("Conta 7 de 7")
+        repeat(4) { tap("next-prayer") }
+        compose.onNodeWithTag("prayer-title").assertTextEquals("Ó Maria, Mãe de amor")
+        tap("next-prayer")
+        compose.onNodeWithTag("crown-delivered").assertIsDisplayed()
+        compose.onNodeWithTag("delivered-guide").assertTextEquals("Coroa das Lágrimas")
+    }
+
+    @Test fun `Franciscan crown prays its seventh joy and the two final Ave Marias`() {
+        tap("tab-GUIDES")
+        tap("guide-FRANCISCAN")
+        tap("guide-start")
+        tap("decade-6")
+        compose.onNodeWithTag("prayer-title").assertTextEquals("A Assunção e Coroação de Maria")
+        tap("bead-9")
+        compose.onNodeWithTag("bead-counter", useUnmergedTree = true).assertTextEquals("Ave-Maria 10 de 10")
+        repeat(2) { tap("next-prayer") }
+        compose.onNodeWithTag("bead-counter", useUnmergedTree = true).assertTextEquals("Ave-Maria 1 de 2")
+        compose.onNodeWithTag("bead-2").assertDoesNotExist()
+        tap("bead-1")
+        compose.onNodeWithTag("bead-counter", useUnmergedTree = true).assertTextEquals("Ave-Maria 2 de 2")
+        tap("next-prayer")
+        compose.onNodeWithTag("prayer-title").assertTextEquals("Sinal da Cruz")
+        tap("next-prayer")
+        compose.onNodeWithTag("crown-delivered").assertIsDisplayed()
+        compose.onNodeWithTag("delivered-guide").assertTextEquals("Coroa Franciscana")
+    }
+
+    @Test fun `complete script continues from Salve Rainha through responsive litany and final collect`() {
+        tap("tab-GUIDES")
+        tap("guide-COMPLETE")
+        tap("guide-start")
+        tap("decade-4")
+        tap("bead-9")
+        repeat(6) { tap("next-prayer") }
+        compose.onNodeWithTag("prayer-title").assertTextEquals("Ladainha de Nossa Senhora")
+        compose.onNodeWithTag("litany-call", useUnmergedTree = true).assertTextEquals("Senhor, tende piedade de nós.")
+        compose.onNodeWithTag("litany-response", useUnmergedTree = true).assertTextEquals("Senhor, tende piedade de nós.")
+        tap("next-prayer")
+        compose.onNodeWithTag("litany-response", useUnmergedTree = true).assertTextEquals("Cristo, tende piedade de nós.")
+        tap("previous-prayer")
+        compose.onNodeWithTag("litany-call", useUnmergedTree = true).assertTextEquals("Senhor, tende piedade de nós.")
+        repeat(67) { tap("next-prayer") }
+        compose.onNodeWithTag("prayer-title").assertTextEquals("Oremos")
+        compose.onNodeWithTag("crown-delivered").assertDoesNotExist()
+        tap("next-prayer")
+        compose.onNodeWithTag("crown-delivered").assertIsDisplayed()
+    }
+
+    @Test
+    @Config(qualifiers = "w320dp-h640dp-xxhdpi")
+    fun `seven group and seven bead controls can be touched on a narrow screen`() {
+        tap("tab-GUIDES")
+        tap("guide-TEARS")
+        tap("guide-start")
+        repeat(7) { group ->
+            compose.onNodeWithTag("decade-$group").performClick().assertIsSelected()
+            repeat(7) { bead ->
+                compose.onNodeWithTag("bead-$bead").performClick().assertIsSelected()
+                compose.onNodeWithTag("bead-counter", useUnmergedTree = true).assertTextEquals("Conta ${bead + 1} de 7")
+            }
+        }
+        compose.onNodeWithTag("next-prayer").assertIsDisplayed()
     }
 }

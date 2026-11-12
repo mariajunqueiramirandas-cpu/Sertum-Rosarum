@@ -40,6 +40,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sertumrosarum.domain.prayer.Mystery
+import com.sertumrosarum.domain.prayer.MysteryContemplation
 import com.sertumrosarum.ui.canvas.LocalBotanicalArtwork
 import com.sertumrosarum.ui.canvas.paintBotanical
 import com.sertumrosarum.ui.components.SacredCard
@@ -79,6 +80,7 @@ internal fun MysteryDimensions(
                     when (index) {
                         0 -> {
                             SacredChip(mystery.scripture, Modifier.padding(bottom = 8.dp))
+                            SacredText("“${contemplation.scriptureQuote}”", Modifier.padding(bottom = 10.dp).testTag("scripture-quote"), type.whisper, colors.marian)
                             SacredText(contemplation.scene, style = type.whisper)
                         }
                         1 -> SacredText(contemplation.meaning, style = type.whisper)
@@ -223,10 +225,10 @@ internal fun LitanyVerses(verses: List<Pair<String, String>>, modifier: Modifier
     Column(modifier.fillMaxWidth().testTag("litany-verses"), verticalArrangement = Arrangement.spacedBy(10.dp)) {
         verses.forEach { (call, response) ->
             Column(Modifier.fillMaxWidth().semantics(mergeDescendants = true) {}) {
-                SacredText(call, style = type.whisper)
+                SacredText(call, Modifier.testTag("litany-call"), style = type.whisper)
                 Row(Modifier.padding(start = 22.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
                     Box(Modifier.size(5.dp).background(answer.copy(alpha = .7f), CircleShape))
-                    SacredText(response, style = type.whisper, color = answer)
+                    SacredText(response, Modifier.testTag("litany-response"), style = type.whisper, color = answer)
                 }
             }
         }

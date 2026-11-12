@@ -4,8 +4,9 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.sertumrosarum.domain.prayer.FixedPrayer
 import com.sertumrosarum.domain.prayer.MysterySet
+import com.sertumrosarum.domain.prayer.MysteryContent
 import com.sertumrosarum.domain.prayer.PrayerPhase
-import com.sertumrosarum.domain.prayer.RosarySequenceBuilder
+import com.sertumrosarum.domain.prayer.ThemedMeditations
 import com.sertumrosarum.feature.guides.PrayerGuide
 import java.time.Clock
 import java.time.LocalDate
@@ -38,20 +39,32 @@ data class PrayerUiState(
     val eyesClosed: Boolean = false,
     val hapticsEnabled: Boolean = true,
 ) {
-    val sequence = RosarySequenceBuilder.build(sessionSet)
+    val script get() = sessionGuide.script
+    val sequence = script.build(sessionSet)
     val step get() = sequence[stepIndex]
+    val groupCount get() = script.groupCount
+    val sessionTitle get() = if (script.isRosary) "Mistérios ${sessionSet.label.lowercase()}" else sessionGuide.title
+    val groupLabel get() = script.groupLabel
+    val crownBeadCount get() = script.chaplet?.let { crown ->
+        crown.groups.sumOf { it.beadCount } + crown.closing.count { it.isSmallBead }
+    } ?: 50
+    /** The small beads of this actual group, including the Franciscan closing pair. */
+    val groupBeads get() = sequence.filter { it.phase == step.phase && it.decadeIndex == step.decadeIndex && it.isSmallBead }
+    val beadLabel get() = if (groupBeads.firstOrNull()?.prayer == FixedPrayer.HAIL_MARY) "Ave-Maria" else script.beadLabel
+    val beadsComplete get() = groupBeads.lastOrNull()?.let { stepIndex > sequence.indexOf(it) } ?: false
     val hasSession get() = startedAt != null && finishedAt == null
     val completedDecades get() = when (step.phase) {
         PrayerPhase.INTRODUCTION -> 0
         PrayerPhase.DECADE -> requireNotNull(step.decadeIndex)
-        PrayerPhase.CLOSING -> 5
+        PrayerPhase.CLOSING -> groupCount
     }
     val progress get() = if (finishedAt != null) 1f else stepIndex.toFloat() / sequence.size
     /** The written layers of the mystery being prayed, when the step belongs to a decade. */
-    val contemplation get() = step.decadeIndex?.let { ContemplationSamples.contemplationFor(sessionSet, it) }
+    val contemplation get() = step.decadeIndex?.takeIf { script.isRosary }?.let { MysteryContent.contemplationFor(sessionSet, it) }
+    val themedMeditation get() = step.decadeIndex?.let { ThemedMeditations.forMystery(script, sessionSet, it) }
     /** One line for the current Ave-Maria, shown only while the bead-by-bead rosary is on. */
     val beadMeditation get() = if (meditated && step.prayer == FixedPrayer.HAIL_MARY) contemplation?.beads?.getOrNull(step.beadIndex ?: -1) else null
-    val catecheticalNote get() = if (sessionGuide.catechetical) ContemplationSamples.catecheticalNote(step) else null
+    val catecheticalNote get() = if (sessionGuide.catechetical) MysteryContent.catecheticalNote(step) else null
     val durationSeconds get() = ((finishedAt ?: startedAt ?: 0L) - (startedAt ?: 0L)).coerceAtLeast(0L) / 1000L
 }
 
@@ -63,19 +76,23 @@ class PrayerSessionViewModel(
 
     private val today = LocalDate.now(clock)
     private val initialSet = if (savedState.get<String>("selectionDate") == today.toString()) {
-        savedState.get<String>("selectedSet")?.let(MysterySet::valueOf) ?: MysterySet.forDay(today.dayOfWeek)
+        savedEnum<MysterySet>("selectedSet") ?: MysterySet.forDay(today.dayOfWeek)
     } else MysterySet.forDay(today.dayOfWeek)
+    private val initialGuide = savedEnum<PrayerGuide>("sessionGuide") ?: PrayerGuide.TRADITIONAL
+    private val initialSessionSet = savedEnum<MysterySet>("sessionSet") ?: initialSet
+    private inline fun <reified T : Enum<T>> savedEnum(key: String): T? =
+        savedState.get<String>(key)?.let { name -> enumValues<T>().firstOrNull { it.name == name } }
     private val mutableState = MutableStateFlow(
         PrayerUiState(
             today = today,
             selectedSet = initialSet,
-            sessionSet = savedState.get<String>("sessionSet")?.let(MysterySet::valueOf) ?: initialSet,
-            themeMode = savedState.get<String>("themeMode")?.let(ThemeMode::valueOf) ?: ThemeMode.SYSTEM,
-            screen = savedState.get<String>("screen")?.let(SanctuaryScreen::valueOf) ?: SanctuaryScreen.HOME,
-            tab = savedState.get<String>("tab")?.let(SanctuaryTab::valueOf) ?: SanctuaryTab.HOME,
-            sessionGuide = savedState.get<String>("sessionGuide")?.let(PrayerGuide::valueOf) ?: PrayerGuide.TRADITIONAL,
+            sessionSet = initialSessionSet,
+            themeMode = savedEnum<ThemeMode>("themeMode") ?: ThemeMode.SYSTEM,
+            screen = savedEnum<SanctuaryScreen>("screen") ?: SanctuaryScreen.HOME,
+            tab = savedEnum<SanctuaryTab>("tab") ?: SanctuaryTab.HOME,
+            sessionGuide = initialGuide,
             meditated = savedState["meditated"] ?: false,
-            stepIndex = (savedState.get<Int>("stepIndex") ?: 0).coerceIn(0, 79),
+            stepIndex = (savedState.get<Int>("stepIndex") ?: 0).coerceIn(0, initialGuide.script.build(initialSessionSet).lastIndex),
             startedAt = savedState["startedAt"],
             finishedAt = savedState["finishedAt"],
             eyesClosed = savedState["eyesClosed"] ?: false,
@@ -114,9 +131,8 @@ class PrayerSessionViewModel(
     fun toggleMeditated() = update { it.copy(meditated = !it.meditated) }
     fun start() = start(PrayerGuide.TRADITIONAL)
 
-    /** Begins a crown with the chosen guide. Guides whose prayer is not ready yet are ignored. */
+    /** Begins a crown with its own sequence and keeps the previous tab for the return. */
     fun start(guide: PrayerGuide) {
-        if (!guide.ready) return
         update {
             it.copy(screen = SanctuaryScreen.PRAYER, sessionSet = it.selectedSet, sessionGuide = guide, stepIndex = 0, startedAt = clock.millis(), finishedAt = null)
         }
@@ -131,7 +147,7 @@ class PrayerSessionViewModel(
             update { it.copy(screen = SanctuaryScreen.DELIVERED, finishedAt = clock.millis()) }
             return PrayerPulse.COMPLETION
         }
-        val pulse = if (current.step.prayer == FixedPrayer.HAIL_MARY && current.step.beadIndex != current.step.beadCount - 1) {
+        val pulse = if (current.step.isSmallBead && current.step.beadIndex != current.step.beadCount - 1) {
             PrayerPulse.SOFT
         } else PrayerPulse.TRANSITION
         update { it.copy(stepIndex = it.stepIndex + 1) }
@@ -143,18 +159,15 @@ class PrayerSessionViewModel(
     }
 
     fun jumpToDecade(decade: Int) {
-        if (decade !in 0..4 || state.value.screen != SanctuaryScreen.PRAYER) return
+        if (decade !in 0 until state.value.groupCount || state.value.screen != SanctuaryScreen.PRAYER) return
         update { state -> state.copy(stepIndex = state.sequence.indexOfFirst { it.decadeIndex == decade }) }
     }
 
     fun jumpToBead(bead: Int) {
         val current = state.value
-        if (current.screen != SanctuaryScreen.PRAYER || current.step.phase == PrayerPhase.CLOSING) return
-        val count = if (current.step.phase == PrayerPhase.INTRODUCTION) 3 else 10
-        if (bead !in 0 until count) return
-        val target = current.sequence.indexOfFirst {
-            it.decadeIndex == current.step.decadeIndex && it.prayer == FixedPrayer.HAIL_MARY && it.beadIndex == bead
-        }
+        if (current.screen != SanctuaryScreen.PRAYER) return
+        val targetStep = current.groupBeads.firstOrNull { it.beadIndex == bead } ?: return
+        val target = current.sequence.indexOf(targetStep)
         if (target >= 0) update { it.copy(stepIndex = target) }
     }
 }

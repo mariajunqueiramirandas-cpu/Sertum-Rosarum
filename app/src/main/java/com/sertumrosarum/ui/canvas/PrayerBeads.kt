@@ -41,17 +41,17 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 @Composable
-fun CompactMysteries(completed: Int, current: Int?, onSelect: (Int) -> Unit, groups: Int = 5) {
+fun CompactMysteries(completed: Int, current: Int?, onSelect: (Int) -> Unit, groups: Int = 5, groupLabel: String = "mistério") {
     val colors = SertumTheme.colors
     val art = LocalBotanicalArtwork.current
     Row(Modifier.fillMaxWidth()) {
         repeat(groups) { index ->
             val reached = index < completed || index == current
             Box(Modifier.weight(1f).height(48.dp).testTag("decade-$index")
-                .semantics { contentDescription = "Ir ao ${index + 1}º mistério"; selected = current == index }
+                .semantics { contentDescription = "Ir para ${groupLabel} ${index + 1} de $groups"; selected = current == index }
                 .clickable(role = Role.Button, onClick = { onSelect(index) }), contentAlignment = Alignment.Center) {
                 Row(
-                    Modifier.width(if (groups > 5) 42.dp else 48.dp).height(30.dp).clip(RoundedCornerShape(16.dp))
+                    Modifier.width(if (groups > 5) 36.dp else 48.dp).height(30.dp).clip(RoundedCornerShape(16.dp))
                         .background(if (index == current) colors.petal else if (reached) colors.marian.copy(alpha = .16f) else colors.surface)
                         .border(1.dp, if (index == current) colors.gold.copy(alpha = .55f) else colors.border, RoundedCornerShape(16.dp)),
                     verticalAlignment = Alignment.CenterVertically,
@@ -72,7 +72,7 @@ fun CompactMysteries(completed: Int, current: Int?, onSelect: (Int) -> Unit, gro
  * Mysteries already prayed are roses; those ahead are buds.
  */
 @Composable
-fun FiveMysteriesArc(completed: Int, current: Int?, onSelect: (Int) -> Unit, modifier: Modifier = Modifier, groups: Int = 5) {
+fun FiveMysteriesArc(completed: Int, current: Int?, onSelect: (Int) -> Unit, modifier: Modifier = Modifier, groups: Int = 5, groupLabel: String = "mistério") {
     val colors = SertumTheme.colors
     val art = LocalBotanicalArtwork.current
     val breath = rememberGardenBreath("mystery-stem", 5200)
@@ -114,7 +114,7 @@ fun FiveMysteriesArc(completed: Int, current: Int?, onSelect: (Int) -> Unit, mod
             val opened = index < completed || index == current || completed == groups
             val bloom by animateFloatAsState(if (opened) 1f else 0f, spring(dampingRatio = .75f, stiffness = 85f), label = "mystery-bloom-$index")
             Box(Modifier.offset(stemX(u) - 24.dp, stemY(u) - 24.dp).size(48.dp).clip(CircleShape).testTag("decade-$index")
-                .semantics { contentDescription = "Ir ao ${index + 1}º mistério"; selected = current == index }
+                .semantics { contentDescription = "Ir para ${groupLabel} ${index + 1} de $groups"; selected = current == index }
                 .clickable(role = Role.Button, onClick = { onSelect(index) })) {
                 Canvas(Modifier.fillMaxSize()) {
                     val glow = .5f + .5f * sin(breath.value)

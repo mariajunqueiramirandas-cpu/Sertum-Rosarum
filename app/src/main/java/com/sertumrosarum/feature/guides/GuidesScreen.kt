@@ -117,12 +117,11 @@ private fun GuideRow(guide: PrayerGuide, onOpen: (PrayerGuide) -> Unit) {
         Column(Modifier.weight(1f)) {
             SacredText(guide.title, style = type.label.copy(fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold))
             SacredText(guide.summary, Modifier.padding(top = 2.dp), type.body.copy(fontSize = 14.sp, lineHeight = 20.sp), colors.secondary)
-            if (guide.shelf == GuideShelf.CROWN || guide.catechetical || guide.litany || !guide.ready) Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+            if (guide.shelf == GuideShelf.CROWN || guide.catechetical || guide.litany) Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                 // Every rosary has the same five decades, so only the other crowns state their shape.
                 if (guide.shelf == GuideShelf.CROWN) SacredChip(guide.shape.badge)
                 if (guide.catechetical) SacredChip("Iniciante")
                 if (guide.litany) SacredChip("Ladainha")
-                if (!guide.ready) SacredChip("Em botão", tint = lerp(colors.gold, colors.ink, if (colors.isDark) 0f else .3f))
             }
         }
         SacredIcon(SacredIcon.CHEVRON, Modifier.size(13.dp), colors.muted)

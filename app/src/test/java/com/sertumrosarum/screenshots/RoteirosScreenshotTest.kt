@@ -59,6 +59,10 @@ class RoteirosScreenshotTest {
         tap("tab-GUIDES")
         tap("guide-TEARS")
         shot("guide-tears")
+        tap("guide-start")
+        tap("decade-6")
+        tap("bead-6")
+        shot("prayer-tears")
     }
 
     @Test fun franciscanCrownSheetAtNight() {
@@ -66,6 +70,11 @@ class RoteirosScreenshotTest {
         tap("tab-GUIDES")
         tap("guide-FRANCISCAN")
         shot("guide-franciscan-vigil")
+        tap("guide-start")
+        tap("decade-6")
+        tap("bead-9")
+        repeat(2) { tap("next-prayer") }
+        shot("prayer-franciscan-final-pair")
     }
 
     @Test fun completeRosarySheetShowsTheLitany() {
@@ -74,6 +83,11 @@ class RoteirosScreenshotTest {
         tap("guide-COMPLETE")
         compose.onNodeWithTag("litany-verses").performScrollTo()
         shot("guide-litany")
+        tap("guide-start")
+        tap("decade-4")
+        tap("bead-9")
+        repeat(6) { tap("next-prayer") }
+        shot("prayer-litany")
     }
 
     @Test fun catecheticalGuideFromSheetToFirstPrayer() {

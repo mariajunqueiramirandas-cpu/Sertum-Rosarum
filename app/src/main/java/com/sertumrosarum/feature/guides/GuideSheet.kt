@@ -33,7 +33,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sertumrosarum.domain.prayer.MysterySet
-import com.sertumrosarum.feature.prayer.LitanySample
+import com.sertumrosarum.domain.prayer.LitanyOfLoreto
 import com.sertumrosarum.feature.prayer.LitanyVerses
 import com.sertumrosarum.feature.sanctuary.MysterySelector
 import com.sertumrosarum.ui.canvas.BloomingBeadsArc
@@ -66,7 +66,7 @@ internal fun ColumnScope.GuideSheetContent(
     if (guide.litany) {
         SheetSection("Duas vozes na ladainha")
         Panel {
-            LitanyVerses(LitanySample)
+            LitanyVerses(LitanyOfLoreto.invocations.filter { it.text in listOf("Senhor, tende piedade de nós.", "Santa Maria,", "Rosa mística,", "Rainha da paz,") }.map { it.text to requireNotNull(it.response) })
             SacredText("Uma voz chama, e todos respondem.", Modifier.padding(top = 14.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.secondary)
         }
     }
@@ -89,7 +89,7 @@ internal fun ColumnScope.GuideSheetContent(
         }
     }
 
-    if (guide.ready && guide.isRosary) {
+    if (guide.isRosary) {
         SheetSection("Quais mistérios?")
         MysterySelector(selectedSet, onSelectSet)
         SacredText(selectedSet.contemplation, Modifier.fillMaxWidth().padding(top = 10.dp), type.body.copy(fontSize = 14.sp, lineHeight = 21.sp), colors.secondary, TextAlign.Center)
@@ -98,27 +98,10 @@ internal fun ColumnScope.GuideSheetContent(
     }
 }
 
-/** The sheet's standing action: begin, or an honest word that this crown has not opened yet. */
+/** The standing action remains visible while the explanation scrolls. */
 @Composable
-internal fun GuideSheetFooter(guide: PrayerGuide, onStart: () -> Unit) {
-    val colors = SertumTheme.colors
-    val type = SertumTheme.typography
-    if (guide.ready) {
-        SacredPrimaryButton("Começar esta oração", onStart, tag = "guide-start")
-    } else {
-        val art = LocalBotanicalArtwork.current
-        val shape = RoundedCornerShape(26.dp)
-        Row(
-            Modifier.fillMaxWidth().clip(shape).background(colors.surface).border(1.dp, colors.border, shape).testTag("guide-budding").padding(horizontal = 16.dp, vertical = 13.dp),
-            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
-        ) {
-            Canvas(Modifier.size(30.dp)) { paintBotanical(art.bud, center, size.minDimension) }
-            Column(Modifier.weight(1f)) {
-                SacredText("Este roteiro ainda está em botão", style = type.label)
-                SacredText("A oração guiada, conta a conta, chega em breve.", style = type.micro.copy(fontWeight = FontWeight.Normal), color = colors.secondary)
-            }
-        }
-    }
+internal fun GuideSheetFooter(onStart: () -> Unit) {
+    SacredPrimaryButton("Começar esta oração", onStart, tag = "guide-start")
 }
 
 @Composable

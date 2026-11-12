@@ -88,6 +88,8 @@ Deliver a **breathtaking, contemplative user interface** ("Santuário Silencioso
 
 ## Phase 2: The 4-Dimensional Mysteries & Prayer Scripts (`Roteiros`)
 
+**Implemented.** All ten scripts, the complete twenty-mystery dataset, 200 bead meditations, responsive Loreto litany, and four devotional crowns are available offline. See [implementation and content notes](docs/phase-2.md).
+
 ### Goal & Milestone Vision
 Transform the app from a beautiful Rosary counter into a **school of contemplative prayer**. Phase 2 introduces the **4-tab navigation architecture**, enriches every Rosary decade with the **4 Dimensions of the Mysteries** (including the optional **Bead-by-Bead Meditated Rosary**), and builds the **Roteiros (Prayer Scripts & Devotional Crowns)** tab so beginners and experienced faithful alike can choose tailored ways to pray.
 

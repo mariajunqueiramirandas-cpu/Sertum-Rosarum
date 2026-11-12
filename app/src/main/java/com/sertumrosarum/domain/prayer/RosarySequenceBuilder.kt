@@ -2,6 +2,9 @@ package com.sertumrosarum.domain.prayer
 
 enum class PrayerPhase { INTRODUCTION, DECADE, CLOSING }
 
+/** An immutable reading or a responsive invocation, separate from fixed prayer texts. */
+data class PrayerReading(val title: String, val text: String, val response: String? = null)
+
 data class PrayerStep(
     val prayer: FixedPrayer? = null,
     val phase: PrayerPhase,
@@ -10,10 +13,14 @@ data class PrayerStep(
     val beadCount: Int = 0,
     val mystery: Mystery? = null,
     val intention: String? = null,
+    val reading: PrayerReading? = null,
+    val physicalBead: Boolean = prayer == FixedPrayer.OUR_FATHER || prayer == FixedPrayer.HAIL_MARY,
 ) {
-    val title: String get() = prayer?.title ?: requireNotNull(mystery).title
-    val text: String get() = prayer?.text ?: "Contemple ${requireNotNull(mystery).titleInSentence}.\n\nFruto deste mistério: ${mystery.fruitInSentence}."
-    val isPhysicalBead: Boolean get() = prayer == FixedPrayer.OUR_FATHER || prayer == FixedPrayer.HAIL_MARY
+    val title: String get() = prayer?.title ?: reading?.title ?: requireNotNull(mystery).title
+    val text: String get() = prayer?.text ?: reading?.text ?: "Contemple ${requireNotNull(mystery).titleInSentence}.\n\nFruto deste mistério: ${mystery.fruitInSentence}."
+    val isPhysicalBead: Boolean get() = physicalBead
+    val isSmallBead: Boolean get() = beadIndex != null
+    val isAnnouncement: Boolean get() = mystery != null && prayer == null && reading == null
 }
 
 object RosarySequenceBuilder {
