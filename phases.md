@@ -1,5 +1,7 @@
 # 🌹 Sertum Rosarum — Development Phases & Milestone Plan (`phases.md`)
 
+> Current visual direction: **O Jardim de Maria** — a quiet garden in sage, warm cream, and rose, with rounded type and original soft botanical illustrations. The current [design system](docs/design-system.md) supersedes the earlier visual descriptions below.
+
 > **"Teça a sua coroa diária de contemplação."**  
 > This document defines the phased engineering roadmap for building **Sertum Rosarum: O Santo Terço**.  
 > Every phase is a **complete, vertical-slice milestone** that delivers user-visible value, adheres strictly to the **no-Material custom Compose design system**, and leaves the codebase green (`./gradlew testDebugUnitTest lintDebug`).

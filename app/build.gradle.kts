@@ -49,6 +49,12 @@ kotlin {
     jvmToolchain(17)
 }
 
+// Tooling can bring Material transitively; the sanctuary uses only our Foundation controls.
+configurations.configureEach {
+    exclude(group = "androidx.compose.material")
+    exclude(group = "androidx.compose.material3")
+}
+
 dependencies {
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.activity.compose)

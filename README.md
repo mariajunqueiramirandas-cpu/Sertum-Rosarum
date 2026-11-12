@@ -1,66 +1,245 @@
-# 🌹 Sertum Rosarum: O Santo Terço
+<div align="center">
 
-> **"Teça a sua coroa diária de contemplação."**  
-> *Sertum Rosarum* (*"Crown of Roses"*, the original Latin expression that gave rise to the word *Rosary*) is a contemplative Catholic prayer and Rosary application for Android—designed as a **silent sanctuary in your pocket** and a **school of contemplative prayer**.
+<img src="docs/assets/sertum-mark.svg" width="96" height="96" alt="Sertum's rose and rosary beads" />
 
----
+# Sertum Rosarum
 
-## 📚 Documentation & Development Plan
+### Um jardim de oração, uma rosa de cada vez.
 
-All product, design, architectural, liturgical, and AI specifications for the application are documented in the repository:
+A quiet Marian garden for the Holy Rosary.<br />
+Native Android, original botanical artwork, and a complete prayer experience that works offline.
 
-| Document | Description |
-| :--- | :--- |
-| **[`phases.md`](phases.md)** | **Phased Development & Milestone Plan** — 5 balanced, end-to-end feature milestones starting with Phase 1 (Silent Sanctuary UI & Interactive Rosary Counter). |
-| **[`docs/product-vision.md`](docs/product-vision.md)** | **Product Vision & Experience Architecture** — Brand identity, user personas, "Crown of Roses" metaphor, "Eyes Closed" tactile navigation, and screen inventory. |
-| **[`docs/design-system.md`](docs/design-system.md)** | **"Santuário Silencioso" Design System** — Day (`Pergaminho Quente`) & Vigil (`Azul Vigília`) palettes, 4 Dynamic Mystery Atmospheres, typography, custom non-Material Compose primitives, Canvas bead/arc specs, and haptic patterns. |
-| **[`docs/architecture.md`](docs/architecture.md)** | **Technical & Software Architecture** — Package structure, Unidirectional Data Flow, Navigation graph, deterministic Prayer Engine State Machine, persistence (`Room` + `DataStore`), and testing strategy. |
-| **[`docs/domain-and-liturgical-content.md`](docs/domain-and-liturgical-content.md)** | **Domain Models & Liturgical Content** — The 20 Mysteries in 4 Dimensions, immutable fixed prayers in Portuguese & Latin, *"Toque para Entender"* theological annotations, and Devotional Crowns (*Divina Misericórdia, São José, Coroa das Lágrimas, Coroa Franciscana*). |
-| **[`docs/lumen-ai.md`](docs/lumen-ai.md)** | **Lumen Contemplative AI Engine** — Custom Rosary generation (*Intenção Viva*), Contextual Catechist, Mood Curation, Contemplative Memory, doctrinal guardrails, JSON schemas, and offline fallback. |
-| **[`docs/visao-de-produto-pt.md`](docs/visao-de-produto-pt.md)** | **Documento de Visão e Produto (PT-BR)** — Original Portuguese product vision and experience architecture specification. |
+[![Android CI](https://github.com/mariajunqueiramirandas-cpu/Sertum-Rosarum/actions/workflows/android-ci.yml/badge.svg)](https://github.com/mariajunqueiramirandas-cpu/Sertum-Rosarum/actions/workflows/android-ci.yml)
+![Android 13+](https://img.shields.io/badge/Android-13%2B-789A81?labelColor=172C29)
+![Kotlin 2.1.20](https://img.shields.io/badge/Kotlin-2.1.20-AB625C?labelColor=172C29)
+![Compose Foundation](https://img.shields.io/badge/Compose-Foundation-BA9655?labelColor=172C29)
 
----
+**[The experience](#the-experience) · [Screenshots](#a-garden-in-every-screen) · [Run locally](#run-it-locally) · [Validation](#validation) · [Roadmap](#roadmap)**
 
-## ✨ Key Highlights
-
-* **"Santuário Silencioso" Custom UI (Zero Material Libraries):** Built purely on `androidx.compose.ui` and `androidx.compose.foundation` with warm parchment (`#F9F6F0`) and vigil blue (`#0F172A`) palettes, dynamic Mystery-of-the-Day atmospheres, and editorial serif typography (`Cinzel`, `Cormorant Garamond`, `Lora`, `Plus Jakarta Sans`).
-* **Interactive "Crown of Roses" Counter:** Custom Compose `Canvas` visualizations featuring **10 Blooming Rose Beads (`Contas que Florescem`)** per decade, a **5-Mystery Crown Arc (`O Arco dos 5 Mistérios`)**, and the **"Eyes Closed" Mode (`Modo Olhos Fechados`)** with a wide lower-screen touch zone and differentiated haptic pulses.
-* **Progressive Contemplative Formation:** The **20 Mysteries in 4 Dimensions** (Biblical Narrative, Contemplative Meaning, Spiritual Fruit, and optional Bead-by-Bead Meditations), **Portuguese/Latin Bilingual Mode**, **"Touch to Understand" (`Anatomia da Oração`)** bottom sheets, and multiple Devotional Crowns.
-* **Lumen Contemplative AI:** Seamlessly integrated into sacred editorial cards to craft custom Rosary offerings and Gospel-anchored meditations for the user's daily intentions while strictly preserving the immutability of fixed Church prayers.
+</div>
 
 ---
 
-## 🛠️ Tech Stack
+## The experience
 
-* **Language:** Kotlin 2.1.20 (JDK 17 toolchain)
-* **UI Framework:** Jetpack Compose (Compose BOM `2025.04.00`, Compose Compiler Gradle plugin)
-  * **Strict No-Material Policy:** Uses `androidx.compose.ui` and `androidx.compose.foundation` only—no `material` or `material3` dependencies.
-* **Build System:** Android Gradle Plugin (AGP) `8.9.1`, Gradle `8.11.1`, Kotlin DSL + Version Catalog (`gradle/libs.versions.toml`)
-* **Android SDK:** `compileSdk 35`, `targetSdk 35`, **`minSdk 33`** (Android 13+ only), edge-to-edge enabled
+Open Sertum and arrive in a small garden: warm cream, sage leaves, clay-colored roses, and Mary holding the Child. Choose the mysteries, settle into prayer, and watch each bead blossom. After dusk, the same garden becomes a forest sanctuary lit by a crescent moon.
 
----
+*Sertum Rosarum* means “crown of roses.” That image shapes the whole app: each prayer becomes a rose, five mysteries form a crown, and the completed rosary is gently offered at the end.
 
-## 📁 Project Structure
+**Phase 1 is implemented.** The interface and fixed prayers are in Brazilian Portuguese. Prayer content, fonts, and artwork are bundled; the prayer experience needs no network connection.
 
-```text
-app/                    # Single application module (namespace com.sertumrosarum)
-docs/                   # Comprehensive product, design, liturgical, and technical documentation
-gradle/                 # Version catalog + wrapper config
-.github/workflows/      # CI (unit tests + lint on push/PR)
-phases.md               # Phased implementation roadmap & milestones
-```
+## A garden in every screen
 
----
+These are captures from the running Android app. Every illustration, flower, bead, icon, and control is drawn or composed specifically for Sertum.
 
-## 🚀 Getting Started
+<table>
+  <tr>
+    <th>Day · a place to arrive</th>
+    <th>Vigil · the garden after dusk</th>
+    <th>Prayer · one rose at a time</th>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/sanctuary-day.png" width="250" alt="Day sanctuary: a Marian garden in cream, sage, and rose, with the mystery selector and prayer action" /></td>
+    <td><img src="docs/screenshots/sanctuary-vigil.png" width="250" alt="Vigil sanctuary: the same garden in deep forest green, with a crescent moon and soft rose accents" /></td>
+    <td><img src="docs/screenshots/prayer-day.png" width="250" alt="The Ave-Maria prayer, five-mystery botanical arc, ten interactive beads, and next and previous controls" /></td>
+  </tr>
+</table>
+
+<table align="center">
+  <tr>
+    <th>Eyes closed · let touch guide you</th>
+    <th>Delivered · carry the peace with you</th>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/prayer-eyes-closed.png" width="250" alt="Eyes-closed prayer mode with a large tactile surface, the current bead, and accessible navigation" /></td>
+    <td><img src="docs/screenshots/crown-delivered.png" width="250" alt="The delivered crown of fifty flowers, a gentle closing message, and elapsed prayer time" /></td>
+  </tr>
+</table>
+
+<details>
+<summary><strong>See the compact landscape prayer view</strong></summary>
+
+Prayer position survives rotation. Compact mystery controls preserve access to the next and previous prayers, while longer text scrolls.
+
+<img src="docs/screenshots/prayer-landscape.png" width="820" alt="Landscape prayer layout with the current bead preserved and navigation controls visible" />
+
+</details>
+
+## A complete rosary
+
+### Arrive, contemplate, pray, and offer
+
+1. **Find a little quiet.** The sanctuary shows today's date and automatically selects the traditional mystery set. Day, Vigil, and System appearance are available from the custom light control.
+2. **Choose your contemplation.** Switch between Gozosos, Luminosos, Dolorosos, and Gloriosos. Each set includes its five mysteries, Scripture references, and spiritual fruits.
+3. **Pray the whole rosary.** Follow every opening prayer, all five decades, and the closing thanksgiving and Salve Rainha. The sequence contains **59 physical beads across 80 prayer and announcement steps**.
+4. **Follow the roses.** Beads bloom with a gentle spring animation. Move forward or backward, tap a particular bead, or select a mystery directly from the botanical arc.
+5. **Offer the crown.** Fifty flowers surround a central rose. The closing screen shows elapsed prayer time and a peaceful return to the sanctuary.
+
+The traditional opening includes the Sign of the Cross, offering, Apostles' Creed, Our Father, three Hail Marys for faith, hope, and charity, and Glory Be. Each decade includes its mystery announcement, Our Father, ten Hail Marys, Glory Be, and the Fatima prayer. The rosary closes with Infinitas Graças and Salve Rainha.
+
+### Pray with your eyes closed
+
+A large tactile surface occupies half the prayer screen. You can keep your attention on prayer while touch guides the sequence.
+
+| Gesture | Action |
+| --- | --- |
+| Tap | Advance one prayer or bead |
+| Swipe left or up | Advance |
+| Swipe right | Return to the previous prayer or bead |
+
+Haptics distinguish a small bead, a prayer or decade boundary, and the completed crown with single, double, and triple pulses. Vibration can be disabled. The tactile surface also exposes a screen-reader action.
+
+### Pause and return gently
+
+Returning to the sanctuary keeps the active crown available to continue. `SavedStateHandle` preserves the prayer position, mystery set, appearance selection, and tactile preferences through Android activity and saved-state recreation.
+
+Durable history, a persistent preference store, and the intention notebook belong to Phase 4. They are separate from the current session recovery.
+
+## Designed as a quiet garden
+
+The visual system is **O Jardim de Maria**: a comforting place of shelter, with rounded lettering, soft shapes, and an original Marian illustration.
+
+| Element | How it is made |
+| --- | --- |
+| The garden | Original Compose Canvas artwork: ceramic arch, Mary and the Child, leaves, roses, sun, and moon |
+| Living beads | Custom six-petal flowers, growing buds, botanical stems, breathing halos, and spring animations |
+| Typography | Bundled Nunito and Plus Jakarta Sans, with explicit variable-font weights |
+| Day | Warm cream `#FAF8F1`, sage `#789A81`, and rose `#AB625C` |
+| Vigil | Deep forest `#172C29`, cream `#F4F1E5`, and muted rose `#DFA79A` |
+| Controls | Custom Foundation buttons, filled icon controls, press indications, mystery selectors, and appearance menu |
+| Atmosphere | Peach, honey, lavender, and soft sky tints tied to the selected mystery set |
+
+**Zero Material or Material3 components.** Both dependency groups are excluded from every configuration, including preview tooling. Colors, typography, spacing, shapes, and mystery atmosphere are provided through custom composition locals.
+
+Read the [full design system](docs/design-system.md) for tokens, interaction rules, and accessibility details.
+
+## Run it locally
+
+### Requirements
+
+- **JDK 17**.
+- **Android SDK 35**, including Build Tools and Platform Tools.
+- An **Android 13 / API 33 or newer** device or emulator to run the app and instrumented tests.
+- `ANDROID_HOME` pointing to your SDK, or an untracked `local.properties` containing `sdk.dir=/path/to/Android/Sdk`.
+
+### Build and install
 
 ```bash
-gradle wrapper          # one-time: generates gradlew and the wrapper jar
+git clone https://github.com/mariajunqueiramirandas-cpu/Sertum-Rosarum.git
+cd Sertum-Rosarum
+
+# Build the development APK with the included Gradle wrapper.
 ./gradlew assembleDebug
-./gradlew testDebugUnitTest
-./gradlew lintDebug
+
+# Install on a connected Android device or emulator.
+adb install -r app/build/outputs/apk/debug/app-debug.apk
 ```
 
-## 🔄 Continuous Integration
+You can also open the repository root in Android Studio, select JDK 17 for Gradle, sync, and run the `app` configuration. On Windows, use `gradlew.bat`.
 
-GitHub Actions ([`.github/workflows/android-ci.yml`](.github/workflows/android-ci.yml)) runs unit tests and Android Lint on every push and pull request.
+The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. Each successful CI build job uploads it in the **android-build-and-reports** artifact on the [Android CI workflow](https://github.com/mariajunqueiramirandas-cpu/Sertum-Rosarum/actions/workflows/android-ci.yml).
+
+## Validation
+
+Phase 1 has been verified with **18 JVM unit tests**, **5 instrumented Compose UI tests on Android 13 / API 33**, a successful debug build, and **zero Android Lint findings**.
+
+```bash
+# Build, verify the prayer engine and session state, and run lint.
+./gradlew assembleDebug testDebugUnitTest lintDebug
+
+# Run the complete device UI suite with a connected Android 13+ device.
+./gradlew connectedDebugAndroidTest
+```
+
+| Coverage | Verified behavior |
+| --- | --- |
+| Prayer sequence · 5 unit tests | All four mystery sets; 59 beads and 80 steps; correct opening, decade, and closing order; all seven weekdays; the twenty mysteries' metadata |
+| Session state · 13 unit tests | Forward/backward boundaries; decade and bead jumps; completion timing; differentiated pulse events; pause/resume; saved-state restoration; day changes |
+| Device UI · 5 tests | Appearance and mystery selection; the complete rosary; bead and decade navigation with pause/resume; eyes-closed taps and swipes; landscape recreation |
+
+The UI suite also captures all six views shown above. To retrieve fresh captures after a device test run:
+
+```bash
+adb pull /sdcard/Android/data/com.sertumrosarum/files/screenshots app/build/outputs/screenshots
+```
+
+[GitHub Actions](.github/workflows/android-ci.yml) runs the build, unit tests, and lint in one job, and the Compose flow on an accelerated API 33 emulator in another. Both jobs upload their available reports; the UI job also uploads screen captures.
+
+## Inside the app
+
+The prayer sequence is pure Kotlin. A lifecycle-aware view model exposes immutable state, and Compose renders the garden, prayer, and delivered crown from that state.
+
+```mermaid
+flowchart LR
+    UI["Garden · Prayer · Crown"] -->|User actions| VM["PrayerSessionViewModel"]
+    VM -->|Immutable StateFlow| UI
+    VM --> Engine["RosarySequenceBuilder"]
+    Engine --> Content["MysterySet · FixedPrayer"]
+    VM <-->|Save and restore| Saved["SavedStateHandle"]
+    classDef garden fill:#EEF0E6,stroke:#789A81,color:#2F493E
+    classDef rose fill:#F5E5DF,stroke:#AB625C,color:#2F493E
+    class UI,Engine,Content,Saved garden
+    class VM rose
+    linkStyle default stroke:#789A81,stroke-width:2px
+```
+
+| Layer | Location | Responsibility |
+| --- | --- | --- |
+| App host | [`MainActivity.kt`](app/src/main/java/com/sertumrosarum/MainActivity.kt), [`SertumApp.kt`](app/src/main/java/com/sertumrosarum/SertumApp.kt) | Edge-to-edge hosting, lifecycle-aware state, route transitions, system bars, and haptic dispatch |
+| Prayer domain | [`domain/prayer`](app/src/main/java/com/sertumrosarum/domain/prayer) | Immutable fixed prayers, twenty mysteries, weekday resolution, and deterministic sequence construction |
+| Prayer session | [`feature/prayer`](app/src/main/java/com/sertumrosarum/feature/prayer) | State transitions, saved-state recovery, immersive prayer, and crown delivery |
+| Sanctuary | [`feature/sanctuary`](app/src/main/java/com/sertumrosarum/feature/sanctuary) | Greeting, garden, mystery controls, appearance, and session continuation |
+| Design system | [`ui/theme`](app/src/main/java/com/sertumrosarum/ui/theme), [`ui/components`](app/src/main/java/com/sertumrosarum/ui/components) | Custom tokens, fonts, controls, and press feedback |
+| Original artwork | [`ui/canvas`](app/src/main/java/com/sertumrosarum/ui/canvas) | Marian garden, roses, living bead arcs, and the completed crown |
+| Tactile feedback | [`core/haptics`](app/src/main/java/com/sertumrosarum/core/haptics) | Android `VibratorManager` and differentiated `VibrationEffect` patterns |
+
+### Toolchain
+
+| Component | Version |
+| --- | --- |
+| Kotlin / Compose compiler plugin | 2.1.20 |
+| Compose BOM | 2025.04.00 |
+| Android Gradle Plugin | 8.9.1 |
+| Gradle wrapper | 8.11.1 |
+| Java toolchain | 17 |
+| Android | Minimum 33 · Compile / Target 35 |
+
+Versions live in [`gradle/libs.versions.toml`](gradle/libs.versions.toml). The app's package is `com.sertumrosarum`.
+
+## Roadmap
+
+The current app is the complete **Phase 1 vertical slice**. The following phases are planned and are not represented as shipping features.
+
+| Phase | Milestone | Status |
+| --- | --- | --- |
+| **1** | Garden sanctuary, custom design system, complete rosary counter, living roses, tactile navigation, and crown delivery | **Implemented** |
+| **2** | Four-dimensional mysteries, bead-by-bead meditations, prayer scripts, and devotional chaplets | Planned |
+| **3** | Prayer treasury, Portuguese / Latin mode, prayer annotations, and a mystery study guide | Planned |
+| **4** | Persistent intentions, prayer history, preference storage, and the personal garden | Planned |
+| **5** | Lumen catechist and custom rosary supplements with doctrinal guardrails | Planned |
+
+See [`phases.md`](phases.md) for the milestone definitions and acceptance criteria.
+
+## Explore further
+
+| Document | What you will find |
+| --- | --- |
+| [Design system](docs/design-system.md) | The current quiet garden: palette, type, artwork, motion, and accessibility |
+| [Product vision](docs/product-vision.md) | The wider experience and long-term product direction |
+| [Visão de produto · Português](docs/visao-de-produto-pt.md) | The original Portuguese product vision |
+| [Architecture](docs/architecture.md) | The broader architecture blueprint, including later phases |
+| [Liturgical content](docs/domain-and-liturgical-content.md) | Domain references, mysteries, prayers, and planned devotional content |
+| [Lumen](docs/lumen-ai.md) | The planned AI catechist, content boundaries, and guardrails |
+
+### Artwork and font credits
+
+The Marian garden, flowers, rosary visualizations, launcher icon, and interface icons are original vector and Canvas artwork for Sertum. Nunito and Plus Jakarta Sans are bundled from Google Fonts under their [SIL Open Font Licenses](docs/fonts).
+
+---
+
+<div align="center">
+
+**Com Maria, um passo de cada vez.**<br />
+*Uma oração de cada vez. Sem pressa.*
+
+</div>
