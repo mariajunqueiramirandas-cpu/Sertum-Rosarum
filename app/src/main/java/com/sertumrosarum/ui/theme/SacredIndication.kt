@@ -11,7 +11,7 @@ import androidx.compose.ui.node.DrawModifierNode
 import androidx.compose.ui.node.invalidateDraw
 import kotlinx.coroutines.launch
 
-/** Quiet gold press feedback replaces Foundation's stock debug indication everywhere. */
+/** Quiet sage press feedback replaces Foundation's stock debug indication everywhere. */
 internal data class SacredIndication(val color: Color) : IndicationNodeFactory {
     override fun create(interactionSource: InteractionSource): DelegatableNode = SacredPressNode(color, interactionSource)
 }
@@ -36,6 +36,6 @@ private class SacredPressNode(private val color: Color, private val source: Inte
 
     override fun ContentDrawScope.draw() {
         drawContent()
-        if (presses.isNotEmpty()) drawRect(color.copy(alpha = .1f))
+        if (presses.isNotEmpty()) drawRect(color.copy(alpha = .09f))
     }
 }

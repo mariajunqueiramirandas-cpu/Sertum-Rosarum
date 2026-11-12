@@ -48,7 +48,6 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.sertumrosarum.ui.components.SacredIcon
 import com.sertumrosarum.ui.components.SacredText
 import com.sertumrosarum.ui.theme.SertumTheme
@@ -132,16 +131,16 @@ internal fun PrayerTextReader(
                     ) {
                         Row(
                             Modifier.clip(RoundedCornerShape(50))
-                                .background(colors.marian.copy(alpha = .08f))
-                                .border(1.dp, colors.marian.copy(alpha = .18f), RoundedCornerShape(50))
-                                .padding(horizontal = 12.dp, vertical = 5.dp),
+                                .background(colors.marian.copy(alpha = .1f))
+                                .border(1.dp, colors.marian.copy(alpha = .2f), RoundedCornerShape(50))
+                                .padding(horizontal = 14.dp, vertical = 6.dp),
                             horizontalArrangement = Arrangement.spacedBy(7.dp),
                             verticalAlignment = Alignment.CenterVertically,
                         ) {
                             SacredText(
                                 if (hasMoreBelow) "Continue lendo" else "Voltar ao início",
                                 Modifier.weight(1f, fill = false),
-                                style = type.micro.copy(fontSize = 12.sp),
+                                style = type.micro,
                                 color = cueInk,
                             )
                             SacredIcon(

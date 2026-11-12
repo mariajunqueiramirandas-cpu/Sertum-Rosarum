@@ -82,11 +82,10 @@ The traditional opening includes the Sign of the Cross, offering, Apostles' Cree
 Long prayers show a custom sage position rail, soft fades at edges with hidden text, and a **Continue lendo** cue. Tap to read the next portion with overlap, or scroll normally. At the end, **Voltar ao início** returns to the top. Reading never advances the rosary, and prayers that fit keep the entire reading area free of scroll cues.
 
 <table>
-<tr><th>More text below</th><th>Reading through the prayer</th><th>End of the text</th></tr>
+<tr><th>More text below</th><th>End of the text</th></tr>
 <tr>
 <td><img src="docs/screenshots/prayer-scroll-start.png" width="235" alt="The Creed with a sage scroll marker and Continue lendo cue below the text" /></td>
-<td><img src="docs/screenshots/prayer-scroll-middle.png" width="235" alt="The Creed midway through, with soft fades showing text above and below" /></td>
-<td><img src="docs/screenshots/prayer-scroll-end.png" width="235" alt="The last lines of the Creed, the scroll marker at the bottom, and Voltar ao início" /></td>
+<td><img src="docs/screenshots/prayer-scroll-end.png" width="235" alt="The last lines of the Creed with a soft fade above, the scroll marker at the bottom, and Voltar ao início" /></td>
 </tr>
 </table>
 
@@ -110,15 +109,15 @@ Durable history, a persistent preference store, and the intention notebook belon
 
 ## Designed as a quiet garden
 
-The visual system is **O Jardim de Maria**: a comforting place of shelter, with rounded lettering, soft shapes, and an original Marian illustration.
+The visual system is **O Jardim de Maria**: a comforting place of shelter, with a soft rounded serif, gentle shapes, and an original Marian illustration.
 
 | Element | How it is made |
 | --- | --- |
-| The garden | Original Compose Canvas artwork: ceramic arch, Mary and the Child, leaves, roses, sun, and moon |
-| Living beads | Custom six-petal flowers, growing buds, botanical stems, breathing halos, and spring animations |
-| Typography | Bundled Nunito and Plus Jakarta Sans, with explicit variable-font weights |
-| Day | Warm cream `#FAF8F1`, sage `#789A81`, and rose `#AB625C` |
-| Vigil | Deep forest `#172C29`, cream `#F4F1E5`, and muted rose `#DFA79A` |
+| The garden | Original Compose Canvas artwork: ceramic arch and climbing vine, Mary and the Child, swaying roses, sun, and moon |
+| Living beads | Custom soft roses, closed buds that open as you pray, a growing stem, breathing halos, and spring animations |
+| Typography | Bundled Fraunces (soft serif, for the wordmark and prayers) and Nunito (controls), with explicit variable-font axes |
+| Day | Warm cream `#FBF8F2`, sage `#789A81`, rose `#C07A72`, and blush petal actions |
+| Vigil | Deep forest `#162A27`, cream `#F3EFE3`, and muted rose `#E0A99C` |
 | Controls | Custom Foundation buttons, filled icon controls, press indications, mystery selectors, and appearance menu |
 | Atmosphere | Peach, honey, lavender, and soft sky tints tied to the selected mystery set |
 
@@ -254,7 +253,7 @@ See [`phases.md`](phases.md) for the milestone definitions and acceptance criter
 
 ### Artwork and font credits
 
-The Marian garden, flowers, rosary visualizations, launcher icon, and interface icons are original vector and Canvas artwork for Sertum. Nunito and Plus Jakarta Sans are bundled from Google Fonts under their [SIL Open Font Licenses](docs/fonts).
+The Marian garden, flowers, rosary visualizations, launcher icon, and interface icons are original vector and Canvas artwork for Sertum. Fraunces and Nunito are bundled from Google Fonts under their [SIL Open Font Licenses](docs/fonts).
 
 ---
 

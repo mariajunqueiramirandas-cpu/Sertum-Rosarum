@@ -1,20 +1,16 @@
 package com.sertumrosarum.ui.components
 
 import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -30,6 +26,7 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
@@ -40,6 +37,7 @@ import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -57,13 +55,13 @@ fun SacredText(
     align: TextAlign? = null,
 ) = BasicText(text, modifier, style.copy(color = color, textAlign = align ?: style.textAlign))
 
-enum class SacredIcon { SUN, MOON, SYSTEM, ARROW, BACK, CLOSE, EYE, HAPTIC, CHEVRON, CROSS, CHECK, ROSE }
+enum class SacredIcon { SUN, MOON, SYSTEM, BACK, CLOSE, EYE, HAPTIC, CHEVRON, CROSS, CHECK, ROSE }
 
 @Composable
 fun SacredIcon(icon: SacredIcon, modifier: Modifier = Modifier, color: Color = SertumTheme.colors.ink) {
     Canvas(modifier.size(22.dp)) {
         val unit = size.minDimension / 24f
-        val stroke = 1.35f * unit
+        val stroke = 1.5f * unit
         fun point(x: Float, y: Float) = Offset(x * unit, y * unit)
         fun line(x1: Float, y1: Float, x2: Float, y2: Float) = drawLine(color, point(x1, y1), point(x2, y2), stroke, StrokeCap.Round)
         when (icon) {
@@ -88,7 +86,6 @@ fun SacredIcon(icon: SacredIcon, modifier: Modifier = Modifier, color: Color = S
                 drawCircle(color, 8f * unit, center, style = Stroke(stroke))
                 drawArc(color, -90f, 180f, true, point(4f, 4f), Size(16 * unit, 16 * unit))
             }
-            SacredIcon.ARROW -> { line(4f, 12f, 20f, 12f); line(15f, 7f, 20f, 12f); line(15f, 17f, 20f, 12f) }
             SacredIcon.BACK -> { line(5f, 12f, 20f, 12f); line(5f, 12f, 10f, 7f); line(5f, 12f, 10f, 17f) }
             SacredIcon.CLOSE -> { line(6f, 6f, 18f, 18f); line(6f, 18f, 18f, 6f) }
             SacredIcon.CROSS -> { line(12f, 3f, 12f, 21f); line(6f, 9f, 18f, 9f) }
@@ -129,48 +126,74 @@ fun SacredIconButton(
     enabled: Boolean = true,
 ) {
     val colors = SertumTheme.colors
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (pressed) .94f else 1f, label = "sacred-icon-press")
     Box(
-        modifier.size(48.dp).clip(CircleShape)
-            .background(if (active) colors.marian.copy(alpha = .17f) else colors.surface)
+        modifier.size(48.dp).scale(scale).clip(CircleShape)
+            .background(if (active) colors.marian.copy(alpha = .16f) else colors.elevated.copy(alpha = if (colors.isDark) .7f else .85f))
+            .border(1.dp, if (active) colors.marian.copy(alpha = .28f) else colors.border, CircleShape)
             .semantics { contentDescription = label }
-            .clickable(enabled = enabled, role = Role.Button, onClick = onClick),
+            .clickable(interaction, LocalIndication.current, enabled = enabled, role = Role.Button, onClick = onClick),
         contentAlignment = Alignment.Center,
-    ) { SacredIcon(icon, color = if (!enabled) colors.muted.copy(alpha = .4f) else if (active) colors.marian else colors.ink) }
+    ) { SacredIcon(icon, Modifier.size(20.dp), if (!enabled) colors.muted.copy(alpha = .4f) else if (active) colors.marian else colors.ink.copy(alpha = .82f)) }
 }
 
+/** The one action of each screen: a pale petal with a rosewood label, never a slab. */
 @Composable
-fun SacredPrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, tag: String = "primary", icon: SacredIcon = SacredIcon.ARROW) {
+fun SacredPrimaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, tag: String = "primary", compact: Boolean = false) {
     val colors = SertumTheme.colors
+    val shape = RoundedCornerShape(SertumTheme.shapes.control)
     val interaction = remember { MutableInteractionSource() }
     val pressed by interaction.collectIsPressedAsState()
     val scale by animateFloatAsState(if (pressed) .975f else 1f, label = "sacred-button-press")
-    Row(
-        modifier.fillMaxWidth().scale(scale).shadow(5.dp, RoundedCornerShape(SertumTheme.shapes.control), ambientColor = colors.ruby.copy(alpha = .12f), spotColor = colors.ruby.copy(alpha = .18f)).clip(RoundedCornerShape(SertumTheme.shapes.control))
-            .background(colors.ruby)
+    Box(
+        modifier.fillMaxWidth().scale(scale)
+            .shadow(if (colors.isDark) 0.dp else 14.dp, shape, ambientColor = colors.ruby.copy(alpha = .28f), spotColor = colors.ruby.copy(alpha = .34f))
+            .clip(shape)
+            .background(Brush.verticalGradient(listOf(colors.petal, colors.petalDeep)))
+            .border(1.dp, Brush.verticalGradient(listOf(Color.White.copy(alpha = if (colors.isDark) .28f else .75f), colors.ruby.copy(alpha = .16f))), shape)
             .testTag(tag).clickable(interactionSource = interaction, indication = null, role = Role.Button, onClick = onClick)
-            .padding(horizontal = 23.dp, vertical = 19.dp),
-        horizontalArrangement = Arrangement.SpaceBetween,
-        verticalAlignment = Alignment.CenterVertically,
+            .heightIn(min = if (compact) 48.dp else 60.dp).padding(horizontal = 24.dp, vertical = if (compact) 10.dp else 17.dp),
+        contentAlignment = Alignment.Center,
     ) {
-        SacredText(text, Modifier.weight(1f), SertumTheme.typography.label.copy(fontSize = 14.sp), colors.onRuby)
-        SacredIcon(icon, Modifier.padding(start = 10.dp), colors.onRuby)
+        SacredText(text, style = SertumTheme.typography.label.copy(fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.Bold), color = colors.onPetal, align = TextAlign.Center)
     }
 }
 
+/** A small sprig that marks a pause in the text: two leaves around a closed bud. */
 @Composable
-fun SacredRule(modifier: Modifier = Modifier) {
+fun SacredFlourish(modifier: Modifier = Modifier) {
     val colors = SertumTheme.colors
-    Row(modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-        Box(Modifier.weight(1f).height(1.dp).background(colors.border))
-        Canvas(Modifier.size(5.dp)) {
-            rotate(45f) { drawRect(colors.gold.copy(alpha = .8f)) }
+    Canvas(modifier.size(width = 76.dp, height = 14.dp)) {
+        val mid = center
+        val reach = size.width / 2f
+        val leaf = colors.marian.copy(alpha = .55f)
+        listOf(-1f, 1f).forEach { side ->
+            drawLine(
+                Brush.horizontalGradient(listOf(leaf, Color.Transparent), mid.x + side * reach * .3f, mid.x + side * reach),
+                Offset(mid.x + side * reach * .3f, mid.y), Offset(mid.x + side * reach, mid.y), 1.dp.toPx(), StrokeCap.Round,
+            )
+            val tip = Offset(mid.x + side * reach * .36f, mid.y - size.height * .32f)
+            val root = Offset(mid.x + side * reach * .1f, mid.y + size.height * .1f)
+            val bend = Offset((tip.x + root.x) / 2f, mid.y + size.height * .5f)
+            val lift = Offset((tip.x + root.x) / 2f, mid.y - size.height * .5f)
+            drawPath(Path().apply {
+                moveTo(root.x, root.y); quadraticTo(bend.x, bend.y, tip.x, tip.y); quadraticTo(lift.x, lift.y, root.x, root.y)
+            }, leaf)
         }
-        Box(Modifier.weight(1f).height(1.dp).background(colors.border))
+        drawCircle(colors.ruby.copy(alpha = .75f), size.height * .26f, mid)
+        drawCircle(colors.gold, size.height * .1f, mid)
     }
 }
 
 @Composable
-fun SacredCard(modifier: Modifier = Modifier, content: @Composable () -> Unit) {
-    Box(modifier.clip(RoundedCornerShape(SertumTheme.shapes.card))
-        .background(SertumTheme.colors.elevated)) { content() }
+fun SacredCard(modifier: Modifier = Modifier, lifted: Boolean = false, content: @Composable () -> Unit) {
+    val colors = SertumTheme.colors
+    val shape = RoundedCornerShape(SertumTheme.shapes.card)
+    Box(
+        modifier
+            .shadow(if (colors.isDark) 0.dp else if (lifted) 18.dp else 8.dp, shape, ambientColor = colors.marian.copy(alpha = .16f), spotColor = colors.marian.copy(alpha = .22f))
+            .clip(shape).background(colors.elevated).border(1.dp, colors.border.copy(alpha = if (colors.isDark) .9f else .7f), shape),
+    ) { content() }
 }

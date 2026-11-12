@@ -7,6 +7,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.lerp
 import com.sertumrosarum.ui.theme.SertumTheme
 import kotlin.math.PI
 import kotlin.math.cos
@@ -18,24 +19,35 @@ fun RoseMark(modifier: Modifier = Modifier, color: Color = SertumTheme.colors.ru
     Canvas(modifier) { drawGardenFlower(center, size.minDimension * .46f, color, heart) }
 }
 
+/** The finished crown: fifty small roses, five larger ones, woven with leaves around one blossom. */
 @Composable
 fun RoseCrownEmblem(modifier: Modifier = Modifier) {
     val colors = SertumTheme.colors
+    val accent = SertumTheme.atmosphere.accent
+    val breath = rememberGardenBreath("rose-crown", 7000)
     Canvas(modifier) {
-        val radius = size.minDimension * .39f
-        drawCircle(Brush.radialGradient(listOf(colors.gold.copy(alpha = .12f), Color.Transparent), center, radius * 1.25f), radius * 1.25f, center)
-        drawCircle(colors.marian.copy(alpha = .2f), radius, center, style = Stroke(1.5f))
+        val radius = size.minDimension * .4f
+        val warmth = .5f + .5f * sin(breath.value)
+        fun onRing(degrees: Float, distance: Float): Offset {
+            val angle = degrees * PI / 180
+            return center + Offset(cos(angle).toFloat(), sin(angle).toFloat()) * distance
+        }
+        drawCircle(Brush.radialGradient(listOf(accent.copy(alpha = .2f + .1f * warmth), Color.Transparent), center, radius * 1.25f), radius * 1.25f, center)
+        drawCircle(Brush.radialGradient(listOf(colors.ruby.copy(alpha = .14f), Color.Transparent), center, radius * .78f), radius * .78f, center)
+        drawCircle(colors.marian.copy(alpha = .35f), radius, center, style = Stroke(radius * .012f))
         repeat(50) { index ->
-            val angle = (-90 + index * 7.2f) * PI / 180
-            val position = center + Offset(cos(angle).toFloat(), sin(angle).toFloat()) * radius
-            drawGardenFlower(position, radius * (if (index % 10 == 0) .075f else .042f), if (index % 10 == 0) colors.ruby else colors.gold.copy(alpha = .6f), colors.gold)
+            val degrees = -90f + index * 7.2f + 3.6f
+            val leaf = colors.marian.copy(alpha = if (index % 2 == 0) .55f else .38f)
+            val reach = if (index % 2 == 0) 1.085f else .915f
+            gardenLeaf(onRing(degrees - 1.4f, radius), onRing(degrees + 2.2f, radius * reach), radius * .022f, leaf)
         }
-        drawCircle(colors.ruby.copy(alpha = .055f), radius * .68f, center)
-        drawGardenFlower(center, radius * .4f, colors.ruby.copy(alpha = .7f), colors.gold)
-        repeat(5) { index ->
-            val angle = (-90 + index * 72f) * PI / 180
-            val point = center + Offset(cos(angle).toFloat(), sin(angle).toFloat()) * (radius * .77f)
-            drawCircle(colors.marian.copy(alpha = .5f), radius * .02f, point)
+        repeat(50) { index ->
+            val decade = index % 10 == 0
+            drawGardenFlower(
+                onRing(-90f + index * 7.2f, radius), radius * (if (decade) .085f else .045f),
+                if (decade) colors.ruby else colors.ruby.copy(alpha = .55f), colors.gold,
+            )
         }
+        drawGardenFlower(center, radius * .4f, lerp(colors.background, colors.ruby, .82f), colors.gold)
     }
 }
