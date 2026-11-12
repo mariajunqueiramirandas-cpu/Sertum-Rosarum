@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
@@ -61,82 +62,94 @@ internal fun PrayerTextReader(
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val scroll = rememberScrollState()
-    val hasOverflow by remember { derivedStateOf { scroll.maxValue in 1 until Int.MAX_VALUE } }
     val hasMoreBelow by remember { derivedStateOf { scroll.canScrollForward } }
     val scope = rememberCoroutineScope()
     val colors = SertumTheme.colors
+    val cueInk = lerp(colors.secondary, colors.ink, .3f)
     val type = SertumTheme.typography
     val lineOverlap = with(LocalDensity.current) { type.prayer.lineHeight.toPx() }
 
-    Column(modifier.testTag("prayer-reader"), horizontalAlignment = Alignment.CenterHorizontally) {
-        Box(Modifier.weight(1f).fillMaxWidth()) {
-            Column(
-                Modifier.fillMaxSize().padding(horizontal = 12.dp)
-                    .readingEdgeFades(scroll)
-                    .verticalScroll(scroll)
-                    .testTag("prayer-scroll")
-                    .padding(vertical = 18.dp),
-                verticalArrangement = Arrangement.Center,
-                horizontalAlignment = Alignment.CenterHorizontally,
-                content = content,
-            )
-            if (hasOverflow) {
-                ReadingPositionRail(
-                    scroll,
-                    Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(vertical = 12.dp).width(6.dp),
-                )
+    BoxWithConstraints(modifier.testTag("prayer-reader")) {
+        val availableHeight = with(LocalDensity.current) { maxHeight.roundToPx() }
+        // Compare the content against the whole reader, before the cue takes space.
+        // This prevents the cue from creating its own overflow near the fit boundary.
+        val hasOverflow by remember(scroll, availableHeight) {
+            derivedStateOf {
+                scroll.maxValue in 1 until Int.MAX_VALUE &&
+                    scroll.viewportSize.toLong() + scroll.maxValue > availableHeight
             }
         }
+        Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                Column(
+                    Modifier.fillMaxSize().padding(horizontal = 12.dp)
+                        .readingEdgeFades(scroll)
+                        .verticalScroll(scroll)
+                        .testTag("prayer-scroll")
+                        .padding(vertical = 18.dp),
+                    verticalArrangement = Arrangement.Center,
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    content = content,
+                )
+                if (hasOverflow) {
+                    ReadingPositionRail(
+                        scroll,
+                        Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(vertical = 12.dp).width(6.dp),
+                    )
+                }
+            }
 
-        // A stable slot prevents the cue from covering text or changing the scroll
-        // range as it appears. It also leaves a full 48 dp touch target.
-        Box(Modifier.fillMaxWidth().heightIn(min = 48.dp), contentAlignment = Alignment.Center) {
+            // Keep a full touch target outside the reading viewport. Text that fits
+            // uses the entire reader instead of reserving an empty cue slot.
             if (hasOverflow) {
-                Row(
-                    Modifier.testTag("prayer-scroll-cue")
-                        .clip(RoundedCornerShape(50))
-                        .clickable(
-                            role = Role.Button,
-                            onClickLabel = if (hasMoreBelow) "Ler a próxima parte da oração" else "Voltar ao início da oração",
-                        ) {
-                            scope.launch {
-                                if (scroll.canScrollForward) {
-                                    // Retain at least a line where space permits,
-                                    // even when the system font size is enlarged.
-                                    val viewport = scroll.viewportSize.toFloat()
-                                    val overlap = max(viewport * .2f, lineOverlap).coerceAtMost(viewport * .5f)
-                                    scroll.animateScrollBy(viewport - overlap, tween(380))
-                                } else {
-                                    scroll.animateScrollTo(0, tween(380))
+                Box(Modifier.fillMaxWidth().heightIn(min = 48.dp), contentAlignment = Alignment.Center) {
+                    Row(
+                        Modifier.testTag("prayer-scroll-cue")
+                            .clip(RoundedCornerShape(50))
+                            .clickable(
+                                role = Role.Button,
+                                onClickLabel = if (hasMoreBelow) "Ler a próxima parte da oração" else "Voltar ao início da oração",
+                            ) {
+                                scope.launch {
+                                    if (scroll.canScrollForward) {
+                                        // Retain at least a line where space permits,
+                                        // even when the system font size is enlarged.
+                                        val viewport = scroll.viewportSize.toFloat()
+                                        val overlap = max(viewport * .2f, lineOverlap).coerceAtMost(viewport * .5f)
+                                        scroll.animateScrollBy(viewport - overlap, tween(380))
+                                    } else {
+                                        scroll.animateScrollTo(0, tween(380))
+                                    }
                                 }
                             }
-                        }
-                        .semantics {
-                            stateDescription = if (hasMoreBelow) "Há mais texto abaixo" else "Fim do texto"
-                        }
-                        .heightIn(min = 48.dp)
-                        .padding(horizontal = 14.dp, vertical = 7.dp),
-                    horizontalArrangement = Arrangement.spacedBy(7.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                ) {
-                    Row(
-                        Modifier.clip(RoundedCornerShape(50))
-                            .background(colors.marian.copy(alpha = .08f))
-                            .border(1.dp, colors.marian.copy(alpha = .18f), RoundedCornerShape(50))
-                            .padding(horizontal = 12.dp, vertical = 5.dp),
+                            .semantics {
+                                stateDescription = if (hasMoreBelow) "Há mais texto abaixo" else "Fim do texto"
+                            }
+                            .heightIn(min = 48.dp)
+                            .padding(horizontal = 14.dp, vertical = 7.dp),
                         horizontalArrangement = Arrangement.spacedBy(7.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        SacredText(
-                            if (hasMoreBelow) "Continue lendo" else "Voltar ao início",
-                            style = type.micro.copy(fontSize = 12.sp),
-                            color = colors.secondary,
-                        )
-                        SacredIcon(
-                            SacredIcon.CHEVRON,
-                            Modifier.size(13.dp).rotate(if (hasMoreBelow) 90f else -90f),
-                            colors.secondary,
-                        )
+                        Row(
+                            Modifier.clip(RoundedCornerShape(50))
+                                .background(colors.marian.copy(alpha = .08f))
+                                .border(1.dp, colors.marian.copy(alpha = .18f), RoundedCornerShape(50))
+                                .padding(horizontal = 12.dp, vertical = 5.dp),
+                            horizontalArrangement = Arrangement.spacedBy(7.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            SacredText(
+                                if (hasMoreBelow) "Continue lendo" else "Voltar ao início",
+                                Modifier.weight(1f, fill = false),
+                                style = type.micro.copy(fontSize = 12.sp),
+                                color = cueInk,
+                            )
+                            SacredIcon(
+                                SacredIcon.CHEVRON,
+                                Modifier.size(13.dp).rotate(if (hasMoreBelow) 90f else -90f),
+                                cueInk,
+                            )
+                        }
                     }
                 }
             }

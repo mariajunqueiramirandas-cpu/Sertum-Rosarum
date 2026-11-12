@@ -151,7 +151,7 @@ The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. Build t
 
 ## Validation
 
-Phase 1 has been verified with **18 JVM unit tests**, **5 instrumented Compose UI tests on Android 13 / API 33**, a successful debug build, and **zero Android Lint findings**.
+Phase 1 has been verified with **18 JVM unit tests**, **9 instrumented Compose UI tests on Android 13 / API 33**, successful debug and optimized release builds, and **zero Android Lint findings**.
 
 ```bash
 # Build, verify the prayer engine and session state, and run lint.
@@ -165,7 +165,8 @@ Phase 1 has been verified with **18 JVM unit tests**, **5 instrumented Compose U
 | --- | --- |
 | Prayer sequence · 5 unit tests | All four mystery sets; 59 beads and 80 steps; correct opening, decade, and closing order; all seven weekdays; the twenty mysteries' metadata |
 | Session state · 13 unit tests | Forward/backward boundaries; decade and bead jumps; completion timing; differentiated pulse events; pause/resume; saved-state restoration; day changes |
-| Device UI · 5 tests | Appearance and mystery selection; the complete rosary; bead and decade navigation with pause/resume; eyes-closed taps and swipes; landscape recreation |
+| Device UI · 6 flows | Appearance and mystery selection; the complete rosary; bead and decade navigation with pause/resume; eyes-closed taps and swipes; landscape recreation; long-prayer reading without advancing the rosary |
+| Reader accessibility · 3 tests | Paging and return to start at 180% font size; no false scroll cues for short text in Vigil mode or content near the viewport's fit boundary |
 
 The UI suite also captures all six views shown above. CI collects them in the **compose-ui-results** artifact before removing the test app. For fresh local captures and the same optimized release launch check, follow the [device verification instructions](docs/build-and-releases.md#local-verification); the helper saves screenshots under `app/build/outputs/screenshots`.
 

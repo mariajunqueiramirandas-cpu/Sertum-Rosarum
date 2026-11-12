@@ -3,7 +3,9 @@ package com.sertumrosarum
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.Box
 import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.SemanticsActions
@@ -60,6 +62,22 @@ class PrayerTextReaderTest {
     @Test fun text_that_fits_has_no_scroll_cues_even_in_vigil_mode() {
         reader("Amém.", largeFont = false)
         compose.onNodeWithText("Amém.").assertIsDisplayed()
+        compose.onNodeWithTag("prayer-scroll-position").assertDoesNotExist()
+        compose.onNodeWithTag("prayer-scroll-cue").assertDoesNotExist()
+    }
+
+    @Test fun a_nearly_full_viewport_does_not_gain_overflow_from_the_hint_itself() {
+        val contentHeight = mutableStateOf(320.dp)
+        compose.setContent {
+            SertumTheme(ThemeMode.DAY, MysterySet.LUMINOUS) {
+                PrayerTextReader(Modifier.fillMaxWidth().height(220.dp)) {
+                    // Fits the full viewport, but would not fit with a cue slot.
+                    Box(Modifier.fillMaxWidth().height(contentHeight.value))
+                }
+            }
+        }
+        compose.onNodeWithTag("prayer-scroll-cue").assertIsDisplayed()
+        compose.runOnIdle { contentHeight.value = 170.dp }
         compose.onNodeWithTag("prayer-scroll-position").assertDoesNotExist()
         compose.onNodeWithTag("prayer-scroll-cue").assertDoesNotExist()
     }
