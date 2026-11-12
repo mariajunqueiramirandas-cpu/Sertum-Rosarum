@@ -10,8 +10,8 @@
         <item name="android:navigationBarColor">@android:color/transparent</item>
         <item name="android:enforceNavigationBarContrast">false</item>
         <item name="android:windowActionModeOverlay">true</item>
-        <item name="android:windowBackground">#FAF8F1</item>
-        <item name="android:colorAccent">#BA9655</item>
+        <item name="android:windowBackground">#FBF8F2</item>
+        <item name="android:colorAccent">#789A81</item>
         <item name="android:windowSplashScreenBackground">#172C29</item>
         <item name="android:windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
     </style>

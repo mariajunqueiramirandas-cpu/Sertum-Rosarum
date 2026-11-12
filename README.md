@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="docs/assets/sertum-mark.svg" width="96" height="96" alt="Sertum's rose and rosary beads" />
+<img src="docs/assets/sertum-mark.png" width="96" height="96" alt="Sertum's painted rose and ten golden rosary beads" />
 
 # Sertum Rosarum
 
@@ -30,7 +30,7 @@ Open Sertum and arrive in a small garden: warm cream, sage leaves, clay-colored 
 
 ## A garden in every screen
 
-These are captures from the running Android app. Every illustration, flower, bead, icon, and control is drawn or composed specifically for Sertum.
+These previews are rendered from the Android Compose screens using Robolectric native graphics. The sacred garden and coordinated botanical paintings are bundled with the app; Canvas and Foundation compose the flowers, stems, crown, icons, and controls.
 
 <table>
   <tr>
@@ -65,6 +65,23 @@ Prayer position survives rotation. Compact mystery controls preserve access to t
 
 </details>
 
+<details>
+<summary><strong>See the painted roses in Vigil and their bloom animation</strong></summary>
+
+<table>
+<tr><th>Prayer in moonlight</th><th>The offered crown</th></tr>
+<tr>
+<td><img src="docs/screenshots/prayer-vigil.png" width="250" alt="Painted roses and buds on the Vigil prayer screen, with fine gold selection rings" /></td>
+<td><img src="docs/screenshots/crown-delivered-vigil.png" width="250" alt="Fifty painted roses and sage leaves around the central offered rose in Vigil" /></td>
+</tr>
+</table>
+
+<img src="docs/artwork/botanical/demos/bloom.gif" width="600" alt="A closed rosebud gently opening into the next active prayer bead" />
+
+The animation is rendered from the Android Compose UI at controlled frame times. Ambient light and leaf movement stop when system animations are disabled.
+
+</details>
+
 ## A complete rosary
 
 ### Arrive, contemplate, pray, and offer
@@ -82,11 +99,10 @@ The traditional opening includes the Sign of the Cross, offering, Apostles' Cree
 Long prayers show a custom sage position rail, soft fades at edges with hidden text, and a **Continue lendo** cue. Tap to read the next portion with overlap, or scroll normally. At the end, **Voltar ao início** returns to the top. Reading never advances the rosary, and prayers that fit keep the entire reading area free of scroll cues.
 
 <table>
-<tr><th>More text below</th><th>Reading through the prayer</th><th>End of the text</th></tr>
+<tr><th>More text below</th><th>End of the text</th></tr>
 <tr>
 <td><img src="docs/screenshots/prayer-scroll-start.png" width="235" alt="The Creed with a sage scroll marker and Continue lendo cue below the text" /></td>
-<td><img src="docs/screenshots/prayer-scroll-middle.png" width="235" alt="The Creed midway through, with soft fades showing text above and below" /></td>
-<td><img src="docs/screenshots/prayer-scroll-end.png" width="235" alt="The last lines of the Creed, the scroll marker at the bottom, and Voltar ao início" /></td>
+<td><img src="docs/screenshots/prayer-scroll-end.png" width="235" alt="The last lines of the Creed with a soft fade above, the scroll marker at the bottom, and Voltar ao início" /></td>
 </tr>
 </table>
 
@@ -110,15 +126,16 @@ Durable history, a persistent preference store, and the intention notebook belon
 
 ## Designed as a quiet garden
 
-The visual system is **O Jardim de Maria**: a comforting place of shelter, with rounded lettering, soft shapes, and an original Marian illustration.
+The visual system is **O Jardim de Maria**: a comforting place of shelter, with a soft rounded serif, gentle shapes, and an original Marian illustration.
 
 | Element | How it is made |
 | --- | --- |
-| The garden | Original Compose Canvas artwork: ceramic arch, Mary and the Child, leaves, roses, sun, and moon |
-| Living beads | Custom six-petal flowers, growing buds, botanical stems, breathing halos, and spring animations |
-| Typography | Bundled Nunito and Plus Jakarta Sans, with explicit variable-font weights |
-| Day | Warm cream `#FAF8F1`, sage `#789A81`, and rose `#AB625C` |
-| Vigil | Deep forest `#172C29`, cream `#F4F1E5`, and muted rose `#DFA79A` |
+| The garden | Bundled model-generated sacred paintings for day and Vigil: Mary and the Child, a rose-covered arch and stone path, with Canvas light and pollen |
+| Living beads | Painted blush and ivory roses, buds that blend into blooms, sage leaves, a growing stem, fine gold selection rings, and gentle spring animations |
+| Offered crown | Fifty painted roses woven with sage leaves, five ivory mystery markers, and a central rose in a quiet gold setting |
+| Typography | Bundled Fraunces (soft serif, for the wordmark and prayers) and Nunito (controls), with explicit variable-font axes |
+| Day | Warm cream `#FBF8F2`, sage `#789A81`, rose `#C07A72`, and blush petal actions |
+| Vigil | Deep forest `#162A27`, cream `#F3EFE3`, and muted rose `#E0A99C` |
 | Controls | Custom Foundation buttons, filled icon controls, press indications, mystery selectors, and appearance menu |
 | Atmosphere | Peach, honey, lavender, and soft sky tints tied to the selected mystery set |
 
@@ -254,7 +271,7 @@ See [`phases.md`](phases.md) for the milestone definitions and acceptance criter
 
 ### Artwork and font credits
 
-The Marian garden, flowers, rosary visualizations, launcher icon, and interface icons are original vector and Canvas artwork for Sertum. Nunito and Plus Jakarta Sans are bundled from Google Fonts under their [SIL Open Font Licenses](docs/fonts).
+The home garden uses original model-generated sacred paintings, inspired by the grace and light of classical Marian art. [Full-resolution garden masters, final prompts, and the seven-round exploration](docs/artwork/garden/README.md) are preserved with the project. The [coordinated botanical paintings and prompts](docs/artwork/botanical/README.md) extend its roses, buds, and leaves through the prayer beads, crown, ornaments, and launcher. Canvas handles composition and motion; interface symbols and the themed launcher use custom vector artwork. Fraunces and Nunito are bundled from Google Fonts under their [SIL Open Font Licenses](docs/fonts).
 
 ---
 

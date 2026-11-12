@@ -6,67 +6,73 @@ The experience should feel welcoming, familiar, and unhurried. The garden is par
 
 ## Visual language
 
-- Original Canvas artwork shows a small ceramic arch, Mary holding the Child, a sheltered garden, leaves, roses, and changing daylight.
-- Bundled **Nunito** provides rounded, friendly titles and prayer text. **Plus Jakarta Sans** provides concise control labels.
-- Type is mostly sentence case, with comfortable line spacing and modest headings.
-- Surfaces use soft, generously rounded shapes and quiet color fields.
-- Controls use matte rose and sage, custom press feedback, and gentle scale animations.
+- The home garden is a bundled, model-generated sacred painting: an ivory arch, climbing roses, Mary holding the Child, and a stone path. Classical naturalistic faces, a flowing blue mantle, fine gold embroidery, and a radiant halo convey Mary's holiness and grace. Matching day and moonlit paintings share the same composition. Canvas adds restrained moving light and pollen; the painted figures stay still. The [artwork notes, masters, and prompts](artwork/garden/README.md) preserve the chosen direction.
+- Bundled **Fraunces** is the voice of the garden. Its softness axis is fully open, so every serif ends rounded. It sets the wordmark, headings, and every prayer. **Nunito** carries controls and small supporting copy.
+- Type is sentence case, with generous line spacing. Headings are regular weight, never bold.
+- Surfaces are soft, generously rounded, and edged with a hairline in place of a heavy shadow. Shadows are tinted sage or rose, never grey.
+- Actions are petals: a pale blush fill with a rosewood label. Nothing on screen is a dark slab.
+- A small sprig (two leaves around a closed bud) marks each pause in the text.
 - Night is the same garden at dusk: deep forest, cream, muted rose, moonlight, and honey accents.
+- All botanical details share four painted textures derived from the garden: a layered blush rose, an ivory rose, a closed bud, and a sage leaf. They appear in the mark, prayer beads, mystery stem, dividers, eyes-closed surface, and delivered crown. The [botanical masters and prompts](artwork/botanical/README.md) preserve the family.
 - Scripture and fixed Catholic prayers retain their traditional wording. Friendly supporting copy surrounds the prayer without changing it.
 
 ## Color tokens
 
 | Token | Day | Vigil |
 | --- | --- | --- |
-| Background | `#FAF8F1` | `#172C29` |
-| Surface | `#EEF0E6` | `#233D35` |
-| Elevated surface | `#FFFEFA` | `#2C493E` |
-| Primary text | `#2F493E` | `#F4F1E5` |
-| Supporting text | `#6A7C70` | `#BDCEBD` |
-| Muted text | `#839084` | `#8EA896` |
-| Honey accent | `#BA9655` | `#D4B879` |
-| Rose action | `#AB625C` | `#DFA79A` |
+| Background | `#FBF8F2` | `#162A27` |
+| Surface | `#F1F0E6` | `#1F3731` |
+| Elevated surface | `#FFFDF9` | `#27433A` |
+| Primary text | `#324B40` | `#F3EFE3` |
+| Supporting text | `#667A6E` | `#BACBBB` |
+| Muted text | `#8A968B` | `#8CA594` |
+| Honey accent | `#B8935A` | `#D8BE84` |
+| Rose (flowers and accents) | `#C07A72` | `#E0A99C` |
+| Petal action fill | `#F8E3DA` to `#EFCDC2` | `#EDC6BA` to `#DFA99C` |
+| Petal action label | `#7A433D` | `#4A2925` |
 | Botanical accent | `#789A81` | `#9DBE9D` |
-| Soft border | `#DFE5D8` | `#365246` |
+| Soft border | `#E6E9DD` | `#314D40` |
 
-Mystery atmospheres gently tint the opaque garden background and its flowers: peach for Gozosos, honey for Luminosos, lavender for Dolorosos, and soft sky for Gloriosos. The selected mystery set always retains its correct five mysteries and day-of-week resolution.
+Mystery atmospheres gently wash the top of the page and the light around the garden: peach for Gozosos, honey for Luminosos, lavender for Dolorosos, and soft sky for Gloriosos. The painting retains its original rose colors. The selected mystery set always retains its correct five mysteries and day-of-week resolution.
 
 ## Typography and shape
 
 | Role | Family | Size / line height |
 | --- | --- | --- |
-| Wordmark | Nunito Bold | 25 / 30 sp |
-| Welcome | Nunito Bold | 27 / 34 sp |
-| Prayer heading | Nunito Bold | 26 / 32 sp |
-| Section heading | Nunito Bold | 17–19 / 26 sp |
-| Prayer text | Nunito Regular | 20 / 31 sp |
-| Supporting copy | Nunito Regular | 14–16 / 24 sp |
-| Controls | Plus Jakarta Sans Semibold | 13–14 / 20 sp |
-| Small labels | Nunito Semibold | 11 / 16 sp |
+| Wordmark | Fraunces Medium | 24 / 30 sp |
+| Welcome and closing title | Fraunces Regular | 31 / 39 sp |
+| Prayer heading | Fraunces Regular | 28 / 35 sp |
+| Section heading | Fraunces Medium | 20 / 27 sp |
+| Prayer text | Fraunces Regular | 21 / 34 sp |
+| Quiet lines | Fraunces Regular | 17 / 27 sp |
+| Supporting copy | Nunito Regular | 14–15 / 21–23 sp |
+| Controls | Nunito Semibold–Bold | 15–16 / 21 sp |
+| Small labels | Nunito Semibold | 13 / 18 sp |
 
-Cards use 24–28 dp corners; primary actions use 22 dp corners. Icon controls are soft filled circles. All are built from Compose UI and Foundation, with custom Canvas icons, indications, and animations. Material and Material3 groups are excluded from every dependency configuration, including preview tooling.
+Cards and primary actions use 30 dp corners; selectors and icon controls are full pills and circles. All are built from Compose UI and Foundation, with custom Canvas icons, indications, and animations. Material and Material3 groups are excluded from every dependency configuration, including preview tooling.
 
 ## Screens
 
 ### Sanctuary
 
-A small floral wordmark and appearance control introduce a personal greeting. The original Marian garden is the visual center. Below it, four soft mystery controls and a concise mystery card lead into the five moments of contemplation. The primary prayer action remains easy to reach. A paused crown offers a gentle continuation card.
+The Marian garden opens the screen, under a small floral wordmark and the appearance control. A centered greeting follows. Four soft mystery controls lead to one card that holds the chosen mysteries: their invitation, then five moments joined by a stem. The page dissolves into the primary prayer action, which stays within reach. A paused crown offers a gentle continuation card.
 
 ### Prayer
 
-Five buds and roses show mystery progress along a botanical arc. Full prayer text has generous space and scrolls for longer prayers. The ten beads are separate, directly selectable buds, blooming with a spring animation. Previous and next actions remain visible on short screens.
+Five painted buds and roses show mystery progress along a leafed stem that grows as the prayer advances. The current mystery is an ivory bloom in a fine gold setting. Compact layouts pair the botanical marks with mystery numbers. Full prayer text has generous space and scrolls for longer prayers. The ten beads are separate, directly selectable closed buds on a garland; each blends into a layered blush rose with a spring animation and a fine selection ring. Previous and next actions remain visible on short screens.
 
 Overflowing prayers show a persistent sage reading-position rail. Soft alpha fades appear only at edges with hidden text, revealing the actual garden background. A separate 48 dp touch target says **Continue lendo** and advances by most of a viewport, retaining an overlap for reading continuity. At the end it becomes **Voltar ao início**. These cues disappear when the complete text fits. Each new prayer starts at the top; scrolling never advances the rosary. Native accessibility scrolling remains available, and the reading cue exposes its action and whether more text remains.
 
-Eyes-closed mode replaces the reading area with a concise prayer heading and calm supporting copy. A large tactile garden surface occupies half the available height. Tap or swipe left/up to advance; swipe right to return. Its accessibility action also advances the prayer.
+Eyes-closed mode replaces the reading area with a concise prayer heading and calm supporting copy. A large tactile garden surface occupies half the available height, with slow rings breathing around a single rose. Tap or swipe left/up to advance; swipe right to return. Its accessibility action also advances the prayer.
 
 ### Crown delivered
 
-A floral crown of fifty roses surrounds a large central blossom. The screen names the delivered crown, offers a gentle closing message, shows prayer duration, and returns to the sanctuary. There are no streaks, scores, or urgency cues.
+A crown of fifty roses woven with leaves surrounds a large central blossom. The screen names the delivered crown, offers a gentle closing message, records the time in prayer in one quiet line, and returns to the sanctuary. There are no streaks, scores, or urgency cues.
 
 ## Motion, haptics, and accessibility
 
-- Active roses breathe slowly; completed roses bloom with a damped spring.
+- The home garden's surrounding light and pollen move on one slow breath; the sacred painting stays at rest. Active prayer roses have a slow surrounding glow; completed roses open with a damped spring. Leaves move by less than a dp along the mystery stem and subtly around the crown.
+- Ambient motion stays still when system animations are turned off, including when the setting changes while the app is open.
 - Prayer routes crossfade; buttons gently compress on press.
 - Small beads use a soft single pulse. Prayer and decade boundaries use two pulses; completion uses three growing pulses.
 - Every icon control has a Portuguese description. Mystery and bead controls expose their selected state and position.

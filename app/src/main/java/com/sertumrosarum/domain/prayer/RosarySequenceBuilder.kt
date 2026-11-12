@@ -12,7 +12,7 @@ data class PrayerStep(
     val intention: String? = null,
 ) {
     val title: String get() = prayer?.title ?: requireNotNull(mystery).title
-    val text: String get() = prayer?.text ?: "Contemple ${requireNotNull(mystery).title.replaceFirstChar { it.lowercase() }}.\n\nFruto deste mistério: ${mystery.fruit.lowercase()}."
+    val text: String get() = prayer?.text ?: "Contemple ${requireNotNull(mystery).titleInSentence}.\n\nFruto deste mistério: ${mystery.fruitInSentence}."
     val isPhysicalBead: Boolean get() = prayer == FixedPrayer.OUR_FATHER || prayer == FixedPrayer.HAIL_MARY
 }
 
