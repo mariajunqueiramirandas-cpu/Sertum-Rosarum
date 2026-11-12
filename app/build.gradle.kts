@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    alias(libs.plugins.roborazzi)
 }
 
 val releaseStore = providers.environmentVariable("ANDROID_KEYSTORE_FILE").orNull
@@ -17,6 +18,14 @@ val buildVersionCode = providers.environmentVariable("SERTUM_VERSION_CODE").map 
 }.orElse(1)
 val buildVersionName = providers.environmentVariable("SERTUM_VERSION_NAME")
     .orElse(providers.gradleProperty("sertum.versionName"))
+
+// Must match the SDK 35 artifact of the Robolectric version in libs.versions.toml.
+val robolectricAndroidAll by configurations.creating { isCanBeConsumed = false }
+val robolectricJarsDir = layout.buildDirectory.dir("robolectric-jars")
+val stageRobolectricAndroidAll by tasks.registering(Sync::class) {
+    from(robolectricAndroidAll)
+    into(robolectricJarsDir)
+}
 
 android {
     namespace = "com.sertumrosarum"
@@ -78,8 +87,13 @@ android {
         resValues = false
     }
 
+    testOptions.unitTests.isIncludeAndroidResources = true
     testOptions.unitTests.all {
         it.maxHeapSize = providers.gradleProperty("sertum.testHeap").orElse("1g").get()
+        // Robolectric runs offline against the jar staged below, so it never hits Maven Central directly.
+        it.dependsOn(stageRobolectricAndroidAll)
+        it.systemProperty("robolectric.offline", "true")
+        it.systemProperty("robolectric.dependency.dir", robolectricJarsDir.get().asFile.absolutePath)
     }
 
     packaging {
@@ -127,6 +141,13 @@ dependencies {
     debugImplementation(libs.androidx.ui.test.manifest)
 
     testImplementation(libs.junit)
+    testImplementation(libs.robolectric)
+    robolectricAndroidAll("org.robolectric:android-all-instrumented:15-robolectric-12650502-i7")
+    testImplementation(libs.roborazzi)
+    testImplementation(libs.roborazzi.compose)
+    testImplementation(platform(libs.androidx.compose.bom))
+    testImplementation(libs.androidx.ui.test.junit4)
+    testImplementation(libs.androidx.junit)
 
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
