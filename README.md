@@ -26,7 +26,7 @@ Open Sertum and arrive in a small garden: warm cream, sage leaves, clay-colored 
 
 *Sertum Rosarum* means “crown of roses.” That image shapes the whole app: each prayer becomes a rose, five mysteries form a crown, and the completed rosary is gently offered at the end.
 
-**Phase 1 is implemented.** The interface and fixed prayers are in Brazilian Portuguese. Prayer content, fonts, and artwork are bundled; the prayer experience needs no network connection.
+**Phase 1 is implemented, and the Phase 2 interface is in place.** The interface and fixed prayers are in Brazilian Portuguese. Prayer content, fonts, and artwork are bundled; the prayer experience needs no network connection.
 
 ## A garden in every screen
 
@@ -81,6 +81,58 @@ Prayer position survives rotation. Compact mystery controls preserve access to t
 The animation is rendered from the Android Compose UI at controlled frame times. Ambient light and leaf movement stop when system animations are disabled.
 
 </details>
+
+## Phase 2 interface: four places and a mystery in its dimensions
+
+The interface of Phase 2 is built and navigable. Its written content and the guided prayer of the other crowns are still to come, and the screens say so where it matters.
+
+<table>
+  <tr>
+    <th>Roteiros · every way of praying</th>
+    <th>Other crowns · each with its shape</th>
+    <th>A crown's sheet · seven of seven</th>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/roteiros-day.png" width="250" alt="The Roteiros tab: three rosary guides on one card, themed rosaries as small painted cards, and the four-place bar" /></td>
+    <td><img src="docs/screenshots/roteiros-crowns.png" width="250" alt="Devotional crowns, each with a small glyph of its own bead layout and a pill saying it is still in bud" /></td>
+    <td><img src="docs/screenshots/guide-tears.png" width="250" alt="The sheet for the Crown of Tears: seven flowers on the stem, seven beads on the garland, and the path of the prayer" /></td>
+  </tr>
+</table>
+
+<table>
+  <tr>
+    <th>The mystery, layer by layer</th>
+    <th>Bead by bead</th>
+    <th>Contemplation sheet</th>
+  </tr>
+  <tr>
+    <td><img src="docs/screenshots/mystery-dimensions.png" width="250" alt="The Annunciation announced as a card of three layers joined by a stem, with the biblical scene open" /></td>
+    <td><img src="docs/screenshots/prayer-meditated.png" width="250" alt="An Ave-Maria led by a soft card with the mystery's name and one line to contemplate" /></td>
+    <td><img src="docs/screenshots/mystery-sheet.png" width="250" alt="A sheet over the prayer with the scene, the meaning, and the fruit of the mystery laid out to read" /></td>
+  </tr>
+</table>
+
+<details>
+<summary><strong>See the catechetical notes, the litany's two voices, Vigil, and the places still in bud</strong></summary>
+
+<table>
+<tr><th>Why we pray this way</th><th>Two voices</th><th>Roteiros at dusk</th><th>Tesouro, in bud</th></tr>
+<tr>
+<td><img src="docs/screenshots/prayer-catechetical.png" width="200" alt="The Sign of the Cross with a honey-tinted note explaining why the rosary begins with it" /></td>
+<td><img src="docs/screenshots/guide-litany.png" width="200" alt="The complete rosary's sheet, showing the litany as a call and its answer in rose" /></td>
+<td><img src="docs/screenshots/roteiros-vigil.png" width="200" alt="The Roteiros tab in deep forest green" /></td>
+<td><img src="docs/screenshots/tesouro.png" width="200" alt="The Treasury tab as a flowerbed in bud, naming what will grow there" /></td>
+</tr>
+</table>
+
+</details>
+
+| Part of Phase 2 | In the interface now | Still to come |
+| --- | --- | --- |
+| Four-place navigation | Início, Roteiros, Tesouro, and Meu Jardim on a custom floating bar that leaves during prayer | Tesouro and Meu Jardim open in Phases 3 and 4 |
+| Mysteries in four dimensions | The layered mystery card before each decade, the contemplation sheet during it, and the bead-by-bead switch and line | Written layers and bead lines exist for the first mystery of each set, as sample copy; the other sixteen show a gentle invitation built from their passage and fruit |
+| Roteiros | Ten guides on three shelves, each with a sheet. The traditional, catechetical, and three themed rosaries can be prayed | Themed meditations, the litany as a prayed sequence, and the guided prayer of the four other crowns |
+| Any crown's shape | The stem and garland draw five or seven groups and three, seven, or ten beads; each crown's sheet shows its own | A prayer engine and delivered crown for seven-group crowns |
 
 ## A complete rosary
 
@@ -181,7 +233,7 @@ The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. Build t
 
 ## Validation
 
-Phase 1 has been verified with **18 JVM unit tests**, **9 instrumented Compose UI tests on Android 13 / API 33**, successful debug and optimized release builds, and **zero Android Lint findings**.
+Phase 1 has been verified with **18 JVM unit tests**, **9 instrumented Compose UI tests on Android 13 / API 33**, successful debug and optimized release builds, and **zero Android Lint findings**. The Phase 2 interface adds **6 state tests**, **6 JVM interaction tests** that drive the real activity through Robolectric, and **9 JVM screenshot tests**.
 
 ```bash
 # Build, verify the prayer engine and session state, and run lint.
@@ -197,6 +249,8 @@ Phase 1 has been verified with **18 JVM unit tests**, **9 instrumented Compose U
 | Session state · 13 unit tests | Forward/backward boundaries; decade and bead jumps; completion timing; differentiated pulse events; pause/resume; saved-state restoration; day changes |
 | Device UI · 6 flows | Appearance and mystery selection; the complete rosary; bead and decade navigation with pause/resume; eyes-closed taps and swipes; landscape recreation; long-prayer reading without advancing the rosary |
 | Reader accessibility · 3 tests | Paging and return to start at 180% font size; no false scroll cues for short text in Vigil mode or content near the viewport's fit boundary |
+| Phase 2 state · 6 unit tests | Tabs leave the selection and a paused crown untouched; ready guides start and guides in bud do not; bead lines follow only the Ave-Marias of a meditated rosary; every mystery has its three layers; catechetical notes are not repeated on every bead |
+| Phase 2 interface · 6 JVM flows | Four tabs and back; the bar leaving and returning around prayer; seven-of-seven and seven-of-ten crowns in their sheets; closing a sheet by back and by its veil; starting the catechetical and themed rosaries from a sheet; the mystery's layers, bead line, and contemplation sheet |
 
 The UI suite also captures all six views shown above. CI collects them in the **compose-ui-results** artifact before removing the test app. For fresh local captures and the same optimized release launch check, follow the [device verification instructions](docs/build-and-releases.md#local-verification); the helper saves screenshots under `app/build/outputs/screenshots`.
 
@@ -226,6 +280,8 @@ flowchart LR
 | Prayer domain | [`domain/prayer`](app/src/main/java/com/sertumrosarum/domain/prayer) | Immutable fixed prayers, twenty mysteries, weekday resolution, and deterministic sequence construction |
 | Prayer session | [`feature/prayer`](app/src/main/java/com/sertumrosarum/feature/prayer) | State transitions, saved-state recovery, immersive prayer, and crown delivery |
 | Sanctuary | [`feature/sanctuary`](app/src/main/java/com/sertumrosarum/feature/sanctuary) | Greeting, garden, mystery controls, appearance, and session continuation |
+| Roteiros | [`feature/guides`](app/src/main/java/com/sertumrosarum/feature/guides) | The guide catalogue's interface copy and crown shapes, the three shelves, and each guide's sheet |
+| Places in bud | [`feature/treasury`](app/src/main/java/com/sertumrosarum/feature/treasury), [`feature/garden`](app/src/main/java/com/sertumrosarum/feature/garden) | The Tesouro and Meu Jardim tabs, ready for Phases 3 and 4 |
 | Design system | [`ui/theme`](app/src/main/java/com/sertumrosarum/ui/theme), [`ui/components`](app/src/main/java/com/sertumrosarum/ui/components) | Custom tokens, fonts, controls, and press feedback |
 | Original artwork | [`ui/canvas`](app/src/main/java/com/sertumrosarum/ui/canvas) | Marian garden, roses, living bead arcs, and the completed crown |
 | Tactile feedback | [`core/haptics`](app/src/main/java/com/sertumrosarum/core/haptics) | Android `VibratorManager` and differentiated `VibrationEffect` patterns |
@@ -245,12 +301,12 @@ Versions live in [`gradle/libs.versions.toml`](gradle/libs.versions.toml). The a
 
 ## Roadmap
 
-The current app is the complete **Phase 1 vertical slice**. The following phases are planned and are not represented as shipping features.
+The current app is the complete **Phase 1 vertical slice** with the **Phase 2 interface** on top of it. The remaining work is planned and is not represented as shipping features.
 
 | Phase | Milestone | Status |
 | --- | --- | --- |
 | **1** | Garden sanctuary, custom design system, complete rosary counter, living roses, tactile navigation, and crown delivery | **Implemented** |
-| **2** | Four-dimensional mysteries, bead-by-bead meditations, prayer scripts, and devotional chaplets | Planned |
+| **2** | Four-dimensional mysteries, bead-by-bead meditations, prayer scripts, and devotional chaplets | **Interface implemented**; the complete written content, the litany, and the chaplet engine are planned |
 | **3** | Prayer treasury, Portuguese / Latin mode, prayer annotations, and a mystery study guide | Planned |
 | **4** | Persistent intentions, prayer history, preference storage, and the personal garden | Planned |
 | **5** | Lumen catechist and custom rosary supplements with doctrinal guardrails | Planned |
