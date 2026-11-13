@@ -33,6 +33,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sertumrosarum.domain.prayer.MysterySet
+import com.sertumrosarum.domain.prayer.PrayerMode
+import com.sertumrosarum.feature.prayer.PrayerModeSelector
 import com.sertumrosarum.domain.prayer.LitanyOfLoreto
 import com.sertumrosarum.feature.prayer.LitanyVerses
 import com.sertumrosarum.feature.sanctuary.MysterySelector
@@ -54,6 +56,8 @@ internal fun ColumnScope.GuideSheetContent(
     onSelectSet: (MysterySet) -> Unit,
     meditated: Boolean,
     onToggleMeditated: () -> Unit,
+    mode: PrayerMode,
+    onSelectMode: (PrayerMode) -> Unit,
 ) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
@@ -62,13 +66,14 @@ internal fun ColumnScope.GuideSheetContent(
     SacredText(guide.title, Modifier.fillMaxWidth().padding(top = 10.dp).testTag("guide-title").semantics { heading() }, type.heading, align = TextAlign.Center)
     SacredText(guide.about, Modifier.fillMaxWidth().padding(top = 10.dp), type.body, colors.secondary, TextAlign.Center)
 
+    PrayerModeSelector(mode, onSelectMode, Modifier.padding(top = 18.dp))
     CrownPreview(guide, Modifier.padding(top = 22.dp))
 
     if (guide.litany) {
-        SheetSection("Duas vozes na ladainha")
+        SheetSection(if (mode == PrayerMode.SOLO) "A ladainha na oração a sós" else "Duas vozes na ladainha")
         Panel {
             LitanyVerses(LitanyOfLoreto.invocations.filter { it.text in listOf("Senhor, tende piedade de nós.", "Santa Maria,", "Rosa mística,", "Rainha da paz,") }.map { it.text to requireNotNull(it.response) })
-            SacredText("Uma voz chama, e todos respondem.", Modifier.padding(top = 14.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.secondary)
+            SacredText(if (mode == PrayerMode.SOLO) "Reze a invocação e a resposta, no seu ritmo." else "Uma voz chama, e todos respondem.", Modifier.padding(top = 14.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.secondary)
         }
     }
 

@@ -145,7 +145,7 @@ See [Phase 2 implementation and content notes](docs/phase-2.md) for the exact st
 ### Arrive, contemplate, pray, and offer
 
 1. **Find a little quiet.** The sanctuary shows today's date and automatically selects the traditional mystery set. Day, Vigil, and System appearance are available from the custom light control.
-2. **Choose your contemplation.** Switch between Gozosos, Luminosos, Dolorosos, and Gloriosos. Each set includes its five mysteries, Scripture references, and spiritual fruits.
+2. **Choose how to pray.** Start **A sós** (solo, the default) or **Em grupo**, from the sanctuary or any guide sheet. Solo prayer uses a personal offering and thanksgiving, including themed intentions. The Our Father, Hail Mary, and other shared traditional prayers keep their familiar wording. Switch between Gozosos, Luminosos, Dolorosos, and Gloriosos; each set includes its five mysteries, Scripture references, and spiritual fruits.
 3. **Pray the whole rosary.** Follow every opening prayer, all five decades, and the closing thanksgiving and Salve Rainha. The sequence contains **59 physical beads across 80 prayer and announcement steps**.
 4. **Follow the roses.** Beads bloom with a gentle spring animation. Move forward or backward, tap a particular bead, or select a mystery directly from the botanical arc.
 5. **Offer the crown.** Fifty flowers surround a central rose. The closing screen shows elapsed prayer time and a peaceful return to the sanctuary.
@@ -178,7 +178,7 @@ Haptics distinguish a small bead, a prayer or decade boundary, and the completed
 
 ### Pause and return gently
 
-Returning to the sanctuary keeps the active crown available to continue. `SavedStateHandle` preserves the prayer position, mystery set, appearance selection, and tactile preferences through Android activity and saved-state recreation.
+Returning to the sanctuary keeps the active crown available to continue. `SavedStateHandle` preserves the prayer position, mystery set, prayer mode, appearance selection, and tactile preferences through Android activity and saved-state recreation. Choosing a mode for a new crown keeps the paused crown's original mode; sessions saved before this choice existed retain their group wording. In solo mode, the complete guide invites you to pray both the litany's invocation and response.
 
 Durable history, a persistent preference store, and the intention notebook belong to Phase 4. They are separate from the current session recovery.
 
@@ -239,7 +239,7 @@ The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. Build t
 
 ## Validation
 
-All **66 JVM tests** pass, covering the prayer engine, all ten scripts, complete mystery content, saved-state restoration, and real Compose activity interactions through Robolectric. Lint passes with dependency-version and catalog notices only. The device UI suite covers the original rosary and reading accessibility; run it separately on an Android 13+ device or emulator.
+The JVM suite covers the prayer engine, all ten scripts, complete mystery content, saved-state restoration, solo/group prayer modes, and real Compose activity interactions through Robolectric. Lint reports dependency-version and catalog notices only. The device UI suite covers the rosary, mode selection and restoration, and reading accessibility; run it separately on an Android 13+ device or emulator.
 
 ```bash
 # Build, verify the prayer engine and session state, and run lint.
@@ -253,8 +253,8 @@ All **66 JVM tests** pass, covering the prayer engine, all ten scripts, complete
 | --- | --- |
 | Rosary sequence | All mystery sets, weekdays, 59 beads, 80 steps, and the fixed prayer order. |
 | Phase 2 domain | All script structures; 20 complete mysteries and 200 meditations; 60 themed intentions; the full responsive litany; 49-bead and 72-Ave-Maria crowns; custom group sizes. |
-| Session state | Every script traversed forward and backward; dynamic group and bead jumps; pulses; saved-state recovery beyond step 80; Franciscan final pair; meditation indexing for all 200 beads. |
-| Compose activity | Four tabs, sheets, catechesis, meditations, themed scripts, seventh-setena pause/resume and delivery, Franciscan final pair, and the litany through its final collect. |
+| Session state | Every script traversed forward and backward; dynamic group and bead jumps; pulses; saved-state recovery beyond step 80; Franciscan final pair; meditation indexing for all 200 beads; independent solo/group selection and recovery, including older sessions. |
+| Compose activity | Four tabs, sheets, catechesis, meditations, themed scripts, seventh-setena pause/resume and delivery, Franciscan final pair, litany through its final collect, solo/group prayer with recreation and pause/resume, and mode controls in landscape. |
 | Device UI and reading accessibility | Original rosary flow, tactile gestures, rotation, and long-text reading at enlarged font sizes. |
 
 The UI suite also captures all six views shown above. CI collects them in the **compose-ui-results** artifact before removing the test app. For fresh local captures and the same optimized release launch check, follow the [device verification instructions](docs/build-and-releases.md#local-verification); the helper saves screenshots under `app/build/outputs/screenshots`.

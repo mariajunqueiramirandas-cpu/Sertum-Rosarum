@@ -3,7 +3,9 @@ package com.sertumrosarum.domain.prayer
 enum class PrayerPhase { INTRODUCTION, DECADE, CLOSING }
 
 /** An immutable reading or a responsive invocation, separate from fixed prayer texts. */
-data class PrayerReading(val title: String, val text: String, val response: String? = null)
+data class PrayerReading(val title: String, val text: String, val response: String? = null, val soloText: String = text) {
+    fun textFor(mode: PrayerMode): String = if (mode == PrayerMode.SOLO) soloText else text
+}
 
 data class PrayerStep(
     val prayer: FixedPrayer? = null,

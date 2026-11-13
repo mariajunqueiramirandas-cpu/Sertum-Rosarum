@@ -105,7 +105,7 @@ fun SertumApp(model: PrayerSessionViewModel = viewModel()) {
                 SacredBottomSheet(
                     openGuide != null && tabbed, { openGuide = null }, shownGuide.title, tag = "guide-sheet",
                     footer = { GuideSheetFooter { openGuide = null; model.start(shownGuide) } },
-                ) { GuideSheetContent(shownGuide, state.selectedSet, model::selectMystery, state.meditated, model::toggleMeditated) }
+                ) { GuideSheetContent(shownGuide, state.selectedSet, model::selectMystery, state.meditated, model::toggleMeditated, state.selectedMode, model::selectPrayerMode) }
             }
         }
     }
