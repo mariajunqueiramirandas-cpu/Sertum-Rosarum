@@ -31,11 +31,13 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -54,6 +56,7 @@ import com.sertumrosarum.ui.components.PageWelcome
 import com.sertumrosarum.ui.components.SacredCard
 import com.sertumrosarum.ui.components.SacredIcon
 import com.sertumrosarum.ui.components.SacredText
+import com.sertumrosarum.ui.components.SteadySlot
 import com.sertumrosarum.ui.theme.SertumTheme
 
 /** The library: a search, the moments of life, and one shelf for each moment that has prayers. */
@@ -71,12 +74,14 @@ internal fun PrayerLibrary(state: TreasuryUiState, actions: TreasuryActions, scr
             if (state.query.isBlank()) item("welcome") {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
                     val category = state.category
-                    if (category == null) {
-                        DevotionalArtwork(DevotionalIllustration.TREASURY_ENTRANCE, Modifier.padding(top = 10.dp).size(width = 256.dp, height = 144.dp))
-                    } else {
-                        TreasuryArtwork(category, Modifier.padding(top = 12.dp).size(120.dp))
+                    // One frame for every painting and one slot for every greeting, so choosing a moment never moves the search and choices below.
+                    Box(Modifier.padding(top = 10.dp).size(width = 256.dp, height = 144.dp), contentAlignment = Alignment.Center) {
+                        if (category == null) DevotionalArtwork(DevotionalIllustration.TREASURY_ENTRANCE, Modifier.fillMaxSize())
+                        else TreasuryArtwork(category, Modifier.size(120.dp))
                     }
-                    PageWelcome(category?.label ?: "Rezar e compreender.", category?.caption ?: "Orações para cada momento, e o sentido de cada palavra.", Modifier.padding(top = 10.dp))
+                    SteadySlot(listOf<PrayerCategory?>(null) + PrayerCategory.entries, category, Modifier.padding(top = 10.dp).fillMaxWidth()) { moment, _ ->
+                        PageWelcome(moment?.label ?: "Rezar e compreender.", moment?.caption ?: "Orações para cada momento, e o sentido de cada palavra.")
+                    }
                 }
             }
             item("search") { PrayerSearchField(state.query, actions::search, Modifier.padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, top = 22.dp)) }
@@ -176,7 +181,13 @@ private fun CategoryChoices(selected: PrayerCategory?, onSelect: (PrayerCategory
                     .testTag("category-${category?.name ?: "ALL"}").heightIn(min = 48.dp).padding(horizontal = 10.dp),
                 horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
             ) {
-                SacredText(category?.label ?: "Todas", style = type.label.copy(fontSize = 14.sp, fontWeight = if (active) FontWeight.Bold else FontWeight.Medium), color = if (active) colors.ink else colors.secondary, maxLines = 1)
+                val label = category?.label ?: "Todas"
+                val style = type.label.copy(fontSize = 14.sp)
+                // The word keeps the width of its bold form, so choosing it never nudges its neighbours.
+                Box(contentAlignment = Alignment.Center) {
+                    SacredText(label, Modifier.alpha(0f).clearAndSetSemantics {}, style.copy(fontWeight = FontWeight.Bold), maxLines = 1)
+                    SacredText(label, style = style.copy(fontWeight = if (active) FontWeight.Bold else FontWeight.Medium), color = if (active) colors.ink else colors.secondary, maxLines = 1)
+                }
                 Box(Modifier.padding(top = 4.dp).size(5.dp).background(colors.marian.copy(alpha = if (active) 1f else 0f), CircleShape))
             }
         }
