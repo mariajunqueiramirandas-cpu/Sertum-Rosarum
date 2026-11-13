@@ -72,9 +72,9 @@ internal fun PrayerReadingPage(prayer: TreasuryPrayer, language: PrayerLanguage,
     // A prayer without Latin is always read in Portuguese, whatever was chosen before.
     val shown = if (latin == null) PrayerLanguage.PORTUGUESE else language
     SanctuaryPage(SanctuaryTab.TREASURY.label, "treasury-reading", onBack = actions::backToLibrary) {
-        Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Column(Modifier.fillMaxWidth().padding(horizontal = SertumTheme.spacing.page), horizontalAlignment = Alignment.CenterHorizontally) {
             TreasuryArtwork(prayer.category, Modifier.padding(top = 12.dp).size(88.dp))
-            SacredText(prayer.category.label, Modifier.padding(top = 8.dp), type.micro, colors.marian, TextAlign.Center)
+            SacredText(prayer.category.label, Modifier.padding(top = 8.dp), type.micro, colors.accentInk, TextAlign.Center)
             val latinTitle = prayer.latinTitle
             if (shown == PrayerLanguage.LATIN && latinTitle != null) {
                 SacredText(latinTitle, Modifier.padding(top = 6.dp).testTag("reading-title").semantics { heading() }, type.heading.inLatin, align = TextAlign.Center)
@@ -113,7 +113,7 @@ internal fun PrayerReadingPage(prayer: TreasuryPrayer, language: PrayerLanguage,
             prayer.sourceUrls.forEachIndexed { index, url ->
                 SacredText("Consultar fonte ${index + 1}", Modifier.widthIn(max = 480.dp).fillMaxWidth()
                     .clickable(role = Role.Button, onClickLabel = "Abrir referência no navegador") { runCatching { uri.openUri(url) } }
-                    .heightIn(min = 48.dp).padding(vertical = 12.dp), type.label, colors.marian)
+                    .heightIn(min = 48.dp).padding(vertical = 12.dp), type.label, colors.accentInk)
             }
             Box(Modifier.height(44.dp))
         }

@@ -60,7 +60,7 @@ fun CompactMysteries(completed: Int, current: Int?, onSelect: (Int) -> Unit, gro
                     Canvas(Modifier.size(20.dp)) {
                         paintBotanical(if (reached) art.rose else art.bud, center, size.minDimension, if (reached) 1f else .78f)
                     }
-                    SacredText("${index + 1}", style = SertumTheme.typography.label.copy(fontSize = 13.sp), color = if (index == current) colors.onPetal else if (reached) colors.marian else colors.muted)
+                    SacredText("${index + 1}", style = SertumTheme.typography.label.copy(fontSize = 13.sp), color = if (index == current) colors.onPetal else if (reached) colors.accentInk else colors.muted)
                 }
             }
         }

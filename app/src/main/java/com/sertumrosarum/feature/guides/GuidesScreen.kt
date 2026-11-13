@@ -59,14 +59,14 @@ fun GuidesScreen(onOpen: (PrayerGuide) -> Unit) {
 
         ShelfHeading(GuideShelf.THEMED, Modifier.padding(top = 34.dp))
         // This row runs from edge to edge, so the next card is always glimpsed.
-        Row(Modifier.horizontalScroll(rememberScrollState()).height(IntrinsicSize.Max).padding(horizontal = 24.dp).padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+        Row(Modifier.horizontalScroll(rememberScrollState()).height(IntrinsicSize.Max).padding(horizontal = SertumTheme.spacing.page).padding(bottom = 8.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             PrayerGuide.on(GuideShelf.THEMED).forEach { ThemedGuideCard(it, onOpen) }
         }
 
         ShelfHeading(GuideShelf.CROWN, Modifier.padding(top = 26.dp))
         GuideList(GuideShelf.CROWN, onOpen)
 
-        SacredText("“Fazei tudo o que ele vos disser.”", Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 34.dp), type.whisper, colors.secondary, TextAlign.Center)
+        SacredText("“Fazei tudo o que ele vos disser.”", Modifier.fillMaxWidth().padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, top = 34.dp), type.whisper, colors.secondary, TextAlign.Center)
         SacredText("João 2, 5", Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 44.dp), type.micro, colors.muted, TextAlign.Center)
     }
 }
@@ -81,7 +81,7 @@ private fun ShelfHeading(shelf: GuideShelf, modifier: Modifier = Modifier) {
 private fun GuideList(shelf: GuideShelf, onOpen: (PrayerGuide) -> Unit) {
     val colors = SertumTheme.colors
     val guides = PrayerGuide.on(shelf)
-    SacredCard(Modifier.padding(horizontal = 24.dp).fillMaxWidth()) {
+    SacredCard(Modifier.padding(horizontal = SertumTheme.spacing.page).fillMaxWidth()) {
         Column(Modifier.padding(vertical = 6.dp)) {
             guides.forEachIndexed { index, guide ->
                 if (index > 0) Box(Modifier.padding(start = 86.dp, end = 20.dp).fillMaxWidth().height(1.dp).background(colors.border.copy(alpha = .8f)))
@@ -112,7 +112,7 @@ private fun GuideRow(guide: PrayerGuide, onOpen: (PrayerGuide) -> Unit) {
                 if (guide.litany) add("Ladainha")
             }
             if (details.isNotEmpty()) {
-                SacredText(details.joinToString(" · "), Modifier.padding(top = 7.dp), type.micro.copy(fontWeight = FontWeight.Medium), colors.marian)
+                SacredText(details.joinToString(" · "), Modifier.padding(top = 7.dp), type.micro.copy(fontWeight = FontWeight.Medium), colors.accentInk)
             }
         }
         SacredIcon(SacredIcon.CHEVRON, Modifier.size(13.dp), colors.muted)

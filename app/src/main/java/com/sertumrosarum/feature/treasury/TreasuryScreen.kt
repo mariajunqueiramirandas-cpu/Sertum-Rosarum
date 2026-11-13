@@ -75,7 +75,7 @@ fun TreasurySheets(state: TreasuryUiState, actions: TreasuryActions, visible: Bo
             val (set, index) = studied
             val mystery = set.mysteries[index]
             val contemplation = MysteryContent.contemplationFor(set, index)
-            SacredText("${ordinal(index)} mistério ${set.singular.lowercase()}", Modifier.fillMaxWidth(), type.micro, colors.marian, TextAlign.Center)
+            SacredText("${ordinal(index)} mistério ${set.singular.lowercase()}", Modifier.fillMaxWidth(), type.micro, colors.accentInk, TextAlign.Center)
             SacredText(mystery.title, Modifier.fillMaxWidth().padding(top = 6.dp).testTag("study-sheet-title").semantics { heading() }, type.heading, align = TextAlign.Center)
             SacredFlourish(Modifier.align(Alignment.CenterHorizontally).padding(top = 14.dp, bottom = 18.dp))
             MysteryDimensions(mystery, contemplation, meditated = false, onToggleMeditated = {}, unfolded = true, showMeditatedToggle = false)

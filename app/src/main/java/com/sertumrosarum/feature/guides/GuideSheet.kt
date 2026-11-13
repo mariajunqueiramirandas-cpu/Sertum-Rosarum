@@ -62,7 +62,7 @@ internal fun ColumnScope.GuideSheetContent(
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     DevotionalArtwork(guide.illustration, Modifier.align(Alignment.CenterHorizontally).size(128.dp))
-    SacredText(guide.kicker, Modifier.fillMaxWidth(), type.micro, colors.marian, TextAlign.Center)
+    SacredText(guide.kicker, Modifier.fillMaxWidth(), type.micro, colors.accentInk, TextAlign.Center)
     SacredText(guide.title, Modifier.fillMaxWidth().padding(top = 10.dp).testTag("guide-title").semantics { heading() }, type.heading, align = TextAlign.Center)
     SacredText(guide.about, Modifier.fillMaxWidth().padding(top = 10.dp), type.body, colors.secondary, TextAlign.Center)
 

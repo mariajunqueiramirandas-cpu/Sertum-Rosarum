@@ -5,20 +5,13 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.BackHandler
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.SideEffect
@@ -53,7 +46,6 @@ import com.sertumrosarum.feature.treasury.TreasurySheets
 import com.sertumrosarum.feature.treasury.TreasuryViewModel
 import com.sertumrosarum.ui.components.SacredBottomSheet
 import com.sertumrosarum.ui.components.SertumBottomBar
-import com.sertumrosarum.ui.components.SertumBottomBarSpace
 import com.sertumrosarum.ui.components.SertumScaffold
 import com.sertumrosarum.ui.theme.SertumTheme
 
@@ -93,7 +85,9 @@ fun SertumApp(model: PrayerSessionViewModel = viewModel()) {
                                     SanctuaryTab.GARDEN -> GardenScreen()
                                 }
                             }
-                            Spacer(Modifier.height(SertumBottomBarSpace))
+                            // Measure the shelf with the page: wrapped labels at larger
+                            // font sizes reserve their actual height above the system bar.
+                            SertumBottomBar(state.tab, model::selectTab)
                         }
                         SanctuaryScreen.PRAYER -> ImmersivePrayerScreen(state, model, state.language, model::selectLanguage, TreasuryCatalog.latinFor(state.step.prayer)) {
                             model.next()?.let { if (state.hapticsEnabled) haptics.play(it) }
@@ -101,12 +95,6 @@ fun SertumApp(model: PrayerSessionViewModel = viewModel()) {
                         SanctuaryScreen.DELIVERED -> CrownDeliveredScreen(state, model::returnHome)
                     }
                 }
-                // The tabs rest over the page and slip away below it when prayer begins.
-                AnimatedVisibility(
-                    tabbed, Modifier.align(Alignment.BottomCenter),
-                    enter = slideInVertically(tween(420, delayMillis = 120)) { it } + fadeIn(tween(300, delayMillis = 120)),
-                    exit = slideOutVertically(tween(320)) { it } + fadeOut(tween(240)),
-                ) { SertumBottomBar(state.tab, model::selectTab) }
                 SacredBottomSheet(
                     openGuide != null && tabbed, { openGuide = null }, shownGuide.title, tag = "guide-sheet",
                     footer = { GuideSheetFooter { openGuide = null; model.start(shownGuide) } },

@@ -38,11 +38,11 @@ internal fun MysteriesStudyPage(set: MysterySet, actions: TreasuryActions) {
     val type = SertumTheme.typography
     SanctuaryPage(SanctuaryTab.TREASURY.label, "treasury-mysteries", onBack = actions::backToLibrary) {
         PageWelcome("Os vinte mistérios", "Cada cena do rosário, para ler com calma fora da oração.", Modifier.padding(top = 14.dp))
-        Box(Modifier.padding(start = 24.dp, end = 24.dp, top = 22.dp)) { MysterySelector(set, actions::selectStudySet) }
-        SacredText(set.days.lowercase().replaceFirstChar { it.uppercase() }, Modifier.fillMaxWidth().padding(top = 18.dp).testTag("study-days"), type.micro, colors.marian, TextAlign.Center)
+        Box(Modifier.padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, top = 22.dp)) { MysterySelector(set, actions::selectStudySet) }
+        SacredText(set.days.lowercase().replaceFirstChar { it.uppercase() }, Modifier.fillMaxWidth().padding(top = 18.dp).testTag("study-days"), type.micro, colors.accentInk, TextAlign.Center)
         SacredText(set.invitation, Modifier.fillMaxWidth().padding(start = 32.dp, end = 32.dp, top = 4.dp), type.whisper, colors.secondary, TextAlign.Center)
 
-        SacredCard(Modifier.padding(start = 24.dp, end = 24.dp, top = 20.dp).fillMaxWidth()) {
+        SacredCard(Modifier.padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, top = 20.dp).fillMaxWidth()) {
             Column(Modifier.padding(vertical = 6.dp)) {
                 set.mysteries.forEachIndexed { index, mystery ->
                     if (index > 0) Box(Modifier.padding(start = 62.dp, end = 20.dp).fillMaxWidth().height(1.dp).background(colors.border.copy(alpha = .8f)))
@@ -52,7 +52,7 @@ internal fun MysteriesStudyPage(set: MysterySet, actions: TreasuryActions) {
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
                         Box(Modifier.size(28.dp).background(colors.marian.copy(alpha = .14f), CircleShape), contentAlignment = Alignment.Center) {
-                            SacredText("${index + 1}", style = type.label.copy(fontSize = 13.5.sp), color = colors.marian)
+                            SacredText("${index + 1}", style = type.label.copy(fontSize = 13.5.sp), color = colors.accentInk)
                         }
                         Column(Modifier.weight(1f)) {
                             SacredText(mystery.title, style = type.label.copy(fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold))

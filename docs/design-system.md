@@ -8,7 +8,7 @@ The experience should feel welcoming, familiar, and unhurried. The garden is par
 
 - The home garden is a bundled, model-generated sacred painting: an ivory arch, climbing roses, Mary holding the Child, and a stone path. Classical naturalistic faces, a flowing blue mantle, fine gold embroidery, and a radiant halo convey Mary's holiness and grace. Matching day and moonlit paintings share the same composition. Canvas adds restrained moving light and pollen; the painted figures stay still. The [artwork notes, masters, and prompts](artwork/garden/README.md) preserve the chosen direction.
 - Bundled **Fraunces** is the voice of the garden. Its softness axis is baked fully open into fixed-weight font files, so every serif ends rounded consistently across devices. It sets the wordmark, headings, and every prayer. **Nunito** carries controls and small supporting copy, with separate regular, medium, semibold, and bold resources. [Font sources and regeneration](fonts/README.md) preserve the exact cuts.
-- Type is sentence case, with generous line spacing. Headings are regular weight, never bold.
+- Type is sentence case, with generous line spacing. Headings use balanced line breaking; Portuguese paragraphs use high-quality line breaking. Android fallback-font padding is disabled and outer line leading is trimmed so visible letterforms align consistently. Headings are regular weight, never bold.
 - Surfaces are soft, generously rounded, and edged with a hairline in place of a heavy shadow. Shadows are tinted sage or rose, never grey.
 - Pill shapes are discouraged and used sparingly where they clearly communicate selection or the main action. Status, categories, counts, Scripture citations, and other supporting labels use plain typography. Secondary actions use open text with a small directional icon and a generous touch target. Give every enclosed shape a functional reason to exist.
 - Actions are petals: a pale blush fill with a rosewood label. Nothing on screen is a dark slab.
@@ -25,8 +25,8 @@ The experience should feel welcoming, familiar, and unhurried. The garden is par
 | Surface | `#F1F0E6` | `#1F3731` |
 | Elevated surface | `#FFFDF9` | `#27433A` |
 | Primary text | `#324B40` | `#F3EFE3` |
-| Supporting text | `#667A6E` | `#BACBBB` |
-| Muted text | `#8A968B` | `#8CA594` |
+| Supporting text | `#5C6E61` | `#BACBBB` |
+| Muted text | `#5E7062` | `#8CA594` |
 | Honey accent | `#B8935A` | `#D8BE84` |
 | Rose (flowers and accents) | `#C07A72` | `#E0A99C` |
 | Petal action fill | `#F6DED5` to `#EDC7BC` | `#EDC6BA` to `#DFA99C` |
@@ -34,7 +34,7 @@ The experience should feel welcoming, familiar, and unhurried. The garden is par
 | Botanical accent | `#789A81` | `#9DBE9D` |
 | Soft border | `#E6E9DD` | `#314D40` |
 
-Mystery atmospheres gently wash the top of the page and the light around the garden: peach for Gozosos, honey for Luminosos, lavender for Dolorosos, and soft sky for Gloriosos. The painting retains its original rose colors. The selected mystery set always retains its correct five mysteries and day-of-week resolution.
+Mystery atmospheres gently wash the top of the page and the light around the garden: peach for Gozosos, honey for Luminosos, lavender for Dolorosos, and soft sky for Gloriosos. The painting retains its original rose colors. The selected mystery set always retains its correct five mysteries and day-of-week resolution. Small sage captions use a darker blend of botanical sage and primary ink in Day; supporting and muted text retain at least 4.5:1 contrast on the three base Day surfaces.
 
 ## Typography and shape
 
@@ -56,7 +56,7 @@ Cards and primary actions use 30 dp corners. The main prayer action, mystery sel
 
 ### The four places
 
-A soft floating shelf at the foot of the screen holds four places: **Início**, **Roteiros**, **Tesouro**, and **Meu Jardim**. Each has a custom line icon (the garden's niche, a small open rosary, an open book, a sprout) and a label. The chosen place rests on a sage tint; nothing is underlined or badged. Pages leave room for the shelf and fade into it, so it never sits on their words. When prayer begins the shelf slips away below the screen, and returns with the sanctuary. Back returns from any place to Início.
+A soft floating shelf at the foot of the screen holds four places: **Início**, **Roteiros**, **Tesouro**, and **Meu Jardim**. Each has a custom line icon (the garden's niche, a small open rosary, an open book, a sprout) and a label. The chosen place rests on a sage tint; nothing is underlined or badged. Pages reserve the shelf’s measured height and fade into it, so it never sits on their words. Destination labels wrap at word boundaries; when four columns would split a word, they reflow into two rows with icons beside the labels. Every destination in a row grows to the same height. The shelf crossfades away with the sanctuary when prayer begins and returns with it. Back returns from any place to Início.
 
 Outside Início, the rose and the place's name sit where the wordmark sits at home.
 
@@ -64,7 +64,7 @@ Once content scrolls beneath a fixed header, its first 32 dp fade to reveal the 
 
 ### Sanctuary
 
-The Marian garden opens the screen, under a small floral wordmark and the appearance control. A centered greeting follows. Four soft mystery controls lead to one card that holds the chosen mysteries: their invitation, then five moments joined by a stem. The section heading always reserves the space for its plain “Hoje” label and small dot, so selecting another set does not shift the controls or card. The hidden label is excluded from accessibility. Below the mysteries, **A sós** and **Em grupo** appear as small text choices with a check beside the selected mode, without a filled track or border. New users begin in **A sós**. The mode choice scrolls with the page and keeps a 48 dp touch target. A quiet link beneath it leads to Roteiros. The page dissolves into the primary prayer action, which stays within reach above the shelf. A faint downward chevron invites scrolling and advances part of a page when touched; it disappears at the end. A paused crown offers a gentle continuation card.
+The Marian garden opens the screen, under a small floral wordmark and the appearance control. A centered greeting follows. The painting scales with the available page height. Four soft mystery controls normally share one row. Each reserves its own label's selected width and modest side padding, keeping normal and modestly enlarged text together without shrinking the type. Larger text can reflow into two columns, or one when necessary. They lead to one card that holds the chosen mysteries: their invitation, then five moments joined by a stem. The section heading always reserves the space for its plain “Hoje” label and small dot, so selecting another set does not shift the controls or card. The hidden label is excluded from accessibility. Below the mysteries, **A sós** and **Em grupo** appear as small text choices with a check beside the selected mode, without a filled track or border. New users begin in **A sós**. The mode choice scrolls with the page and keeps a 48 dp touch target. A quiet link beneath it leads to Roteiros. The page dissolves into the primary prayer action, which stays within reach above the shelf. A faint downward chevron invites scrolling and advances part of a page when touched; it disappears at the end. A paused crown offers a gentle continuation card.
 
 ### Roteiros
 
@@ -98,13 +98,13 @@ Until its own phase, this place remains in bud: a single painted bud in slow rin
 
 Reading occupies most of the prayer screen. The header centers the session title above its prayer mode; meaningful guide names get their own wrapping line. The generic “Minha oração” caption is omitted. Five painted buds and roses show mystery progress along a shallow, curved 66 dp stem; the current mystery is an ivory bloom in a fine gold setting. Landscape layouts pair botanical marks with mystery numbers. The lower bead garland keeps its curve in 58 dp. Guide sheets retain the original larger arcs. Both sizes keep the painted textures, spring blooms, breathing glows, swaying leaves, and growing stem.
 
-Prayer and contemplation text keep their 21 / 34 sp and 17 / 27 sp sizes. Longer passages are aligned to the start with a natural ragged edge, using Android's paragraph line breaking. The Sign of the Cross and Glory Be retain a centered setting. Text columns are capped at 480 dp. Titles and the painted sprig remain centered, with prayer headings at 28 / 35 sp. No prayer wording or paragraph breaks are changed.
+Prayer and contemplation text keep their 21 / 34 sp and 17 / 27 sp sizes. Longer passages are aligned to the start with a natural ragged edge, using Android's paragraph line breaking. The Sign of the Cross and Glory Be retain a centered setting. Text columns are capped at 480 dp. Titles and the painted sprig remain horizontally centered, with prayer headings at 28 / 35 sp. Reading starts at a consistent top edge for short and long prayers, so the heading and first line do not move when paging controls appear. The concise eyes-closed introduction retains vertical centering. No prayer wording or paragraph breaks are changed.
 
 The progress counter and a labeled **Olhos fechados** switch share one row above the previous and next actions. The switch, paging action, and navigation targets stay at least 48 dp high. The next action retains its full 60 dp petal form in portrait. The delivered crown has its own screen, leaving closing prayers room to breathe.
 
 Overflowing prayers show a sage reading-position rail and 18 dp alpha fades only at edges with hidden text, revealing the actual garden background. **Continue lendo** has a separate, right-aligned 48 dp touch target and advances by most of a viewport with a line of overlap. At the end it becomes **Voltar ao início**. Readers that fit reserve no paging row. Each prayer starts at the top; scrolling never advances the rosary. Native accessibility scrolling remains available.
 
-A rounded meditation card holds three numbered tabs, **Cena**, **Sentido**, and **Fruto**, joined by a fine stem. Their full names are exposed to accessibility. The active node gains a honey edge as the stem extends to it. The section body crossfades while its height settles with a damped spring. The surrounding heading and tabs stay anchored to the top of the reading area rather than recentering when the body changes. Choosing a section returns its reading to the top. Reduced motion removes these transitions.
+A rounded meditation card holds three numbered tabs, **Cena**, **Sentido**, and **Fruto**, joined by a fine stem. Their full names are exposed to accessibility. The active node gains a honey edge as the stem extends to it. Only the newly selected section fades in, at its final height; there is no outgoing paragraph underneath it and no height spring. The surrounding heading and tabs stay anchored to the top of the reading area rather than recentering when the body changes. Choosing a section resets its reading before layout, so switching from the bottom never carries an old offset into the new text. Paging gestures from the previous section are cancelled. Reduced motion removes these transitions.
 
 Inside the card, the small prayer book and Scripture citation share one line above the quote. Quote, scene, meaning, fruit, and practice use the same left edge, with no indented text gutter or repeated section heading. The contemplation sheet lays out all three sections vertically with full-width bodies. Beneath a hairline, the **terço meditado conta a conta** switch retains its explanatory caption and its bud-to-rose animation.
 
@@ -130,5 +130,7 @@ A crown of roses woven with leaves surrounds a large central blossom or the chos
 - The eyes-closed surface exposes a screen-reader action as well as touch gestures.
 - Larger text and long prayers scroll. Compact layouts preserve navigation and prayer position through rotation.
 - Fonts, artwork, and all prayer content are bundled and available offline.
+
+The [POCO X8 Pro display notes](poco-x8-pro.md) record the device specifications, adaptive margins, and portrait, enlarged-text, and landscape validation profiles.
 
 Implementation lives in `ui/theme`, `ui/components`, `ui/canvas`, `feature/sanctuary`, `feature/guides`, `feature/treasury`, `feature/garden`, and `feature/prayer`.

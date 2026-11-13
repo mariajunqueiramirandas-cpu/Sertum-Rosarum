@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -54,7 +55,7 @@ fun SanctuaryPage(
     val colors = SertumTheme.colors
     Column(Modifier.fillMaxSize().testTag(tag)) {
         Row(
-            Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 10.dp, bottom = 2.dp).height(48.dp),
+            Modifier.fillMaxWidth().padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, top = 10.dp, bottom = 2.dp).heightIn(min = 48.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp),
         ) {
             if (onBack != null) SacredIconButton(SacredIcon.BACK, "Voltar", onBack, Modifier.testTag("$tag-back"))
@@ -72,7 +73,7 @@ fun SanctuaryPage(
 /** The opening words of a page: one welcoming line, and a sentence beneath it. */
 @Composable
 fun PageWelcome(title: String, lead: String, modifier: Modifier = Modifier, align: TextAlign = TextAlign.Start) {
-    Column(modifier.fillMaxWidth().padding(horizontal = 24.dp)) {
+    Column(modifier.fillMaxWidth().padding(horizontal = SertumTheme.spacing.page)) {
         SacredText(title, Modifier.fillMaxWidth().semantics { heading() }, SertumTheme.typography.display, align = align)
         SacredText(lead, Modifier.fillMaxWidth().padding(top = 8.dp), SertumTheme.typography.body, SertumTheme.colors.secondary, align)
     }
@@ -81,7 +82,7 @@ fun PageWelcome(title: String, lead: String, modifier: Modifier = Modifier, alig
 /** The name of a shelf and one line about what rests on it. */
 @Composable
 fun ShelfHeading(title: String, caption: String, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, bottom = 14.dp)) {
+    Column(modifier.fillMaxWidth().padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, bottom = 14.dp)) {
         SacredText(title, Modifier.semantics { heading() }, SertumTheme.typography.section)
         SacredText(caption, Modifier.padding(top = 2.dp), SertumTheme.typography.body.copy(fontSize = 14.sp, lineHeight = 21.sp), SertumTheme.colors.secondary)
     }
@@ -111,10 +112,10 @@ fun BuddingBed(title: String, lead: String, promiseTitle: String, promises: List
             paintLeaf(art.leaf, foot - Offset(0f, 12.dp.toPx()), foot + Offset(34.dp.toPx(), -30.dp.toPx()), .92f)
             paintBotanical(art.bud, center - Offset(0f, 14.dp.toPx()), 62.dp.toPx())
         }
-        SacredText("Ainda em botão", Modifier.padding(top = 4.dp), type.micro, colors.marian)
+        SacredText("Ainda em botão", Modifier.padding(top = 4.dp), type.micro, colors.accentInk)
         PageWelcome(title, lead, Modifier.padding(top = 14.dp), TextAlign.Center)
         SacredFlourish(Modifier.padding(vertical = 24.dp))
-        SacredCard(Modifier.padding(horizontal = 24.dp).fillMaxWidth()) {
+        SacredCard(Modifier.padding(horizontal = SertumTheme.spacing.page).fillMaxWidth()) {
             Column(Modifier.padding(start = 20.dp, end = 20.dp, top = 20.dp, bottom = 12.dp)) {
                 SacredText(promiseTitle, Modifier.padding(bottom = 6.dp).semantics { heading() }, type.section)
                 val stem = colors.marian.copy(alpha = .3f)

@@ -16,7 +16,6 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.PathEffect
 import androidx.compose.ui.graphics.StrokeCap
-import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -96,7 +95,7 @@ internal fun AnnotatedPrayerText(
 internal fun ColumnScope.TermSheetContent(annotation: PrayerTermAnnotation) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
-    SacredText("Toque para entender", Modifier.fillMaxWidth(), type.micro, colors.marian, TextAlign.Center)
+    SacredText("Toque para entender", Modifier.fillMaxWidth(), type.micro, colors.accentInk, TextAlign.Center)
     SacredText("“${annotation.term}”", Modifier.fillMaxWidth().padding(top = 6.dp).testTag("term-title").semantics { heading() }, type.heading, align = TextAlign.Center)
     SacredFlourish(Modifier.align(Alignment.CenterHorizontally).padding(top = 14.dp, bottom = 2.dp))
 
@@ -105,8 +104,8 @@ internal fun ColumnScope.TermSheetContent(annotation: PrayerTermAnnotation) {
 
     if (annotation.scriptureQuote != null || annotation.scriptureReference != null) {
         TermHeading("Na Escritura")
-        annotation.scriptureQuote?.let { SacredText("“$it”", Modifier.fillMaxWidth(), type.whisper, lerp(colors.marian, colors.ink, if (colors.isDark) 0f else .25f)) }
-        annotation.scriptureReference?.let { SacredText(it, Modifier.padding(top = 4.dp), type.micro, colors.marian) }
+        annotation.scriptureQuote?.let { SacredText("“$it”", Modifier.fillMaxWidth(), type.whisper, colors.accentInk) }
+        annotation.scriptureReference?.let { SacredText(it, Modifier.padding(top = 4.dp), type.micro, colors.accentInk) }
     }
 
     TermHeading("O que rezamos hoje")

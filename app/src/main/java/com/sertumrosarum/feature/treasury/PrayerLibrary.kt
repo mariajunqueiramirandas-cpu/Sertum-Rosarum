@@ -62,7 +62,7 @@ internal fun PrayerLibrary(state: TreasuryUiState, actions: TreasuryActions, scr
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     Column(Modifier.fillMaxSize().testTag("treasury")) {
-        Row(Modifier.fillMaxWidth().padding(start = 24.dp, top = 10.dp, bottom = 2.dp).height(48.dp),
+        Row(Modifier.fillMaxWidth().padding(start = SertumTheme.spacing.page, top = 10.dp, bottom = 2.dp).heightIn(min = 48.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
             RoseMark(Modifier.size(30.dp))
             SacredText("Tesouro", Modifier.semantics { heading() }, type.brand)
@@ -79,11 +79,11 @@ internal fun PrayerLibrary(state: TreasuryUiState, actions: TreasuryActions, scr
                     PageWelcome(category?.label ?: "Rezar e compreender.", category?.caption ?: "Orações para cada momento, e o sentido de cada palavra.", Modifier.padding(top = 10.dp))
                 }
             }
-            item("search") { PrayerSearchField(state.query, actions::search, Modifier.padding(start = 24.dp, end = 24.dp, top = 22.dp)) }
+            item("search") { PrayerSearchField(state.query, actions::search, Modifier.padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, top = 22.dp)) }
             item("categories") { CategoryChoices(state.category, actions::selectCategory, Modifier.padding(top = 4.dp)) }
             if (state.query.isBlank() && state.category == null) {
                 item("formation") {
-                    SacredCard(Modifier.padding(horizontal = 24.dp, vertical = 14.dp).fillMaxWidth()) {
+                    SacredCard(Modifier.padding(horizontal = SertumTheme.spacing.page, vertical = 14.dp).fillMaxWidth()) {
                         Row(Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = "Abrir o guia de estudo", onClick = actions::openMysteries)
                             .testTag("open-mysteries").heightIn(min = 84.dp).padding(16.dp),
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -99,7 +99,7 @@ internal fun PrayerLibrary(state: TreasuryUiState, actions: TreasuryActions, scr
             }
             item("result-count") {
                 SacredText("${state.prayers.size} ${if (state.prayers.size == 1) "oração" else "orações"}",
-                    Modifier.padding(horizontal = 24.dp, vertical = 8.dp).testTag("treasury-result-count"), type.micro, colors.secondary)
+                    Modifier.padding(horizontal = SertumTheme.spacing.page, vertical = 8.dp).testTag("treasury-result-count"), type.micro, colors.secondary)
             }
             if (state.prayers.isEmpty()) {
                 item("empty") { EmptyShelf(if (state.query.isNotBlank()) "Nenhuma oração encontrada para “${state.query.trim()}”." else "Nenhuma oração neste momento.") }
@@ -107,7 +107,7 @@ internal fun PrayerLibrary(state: TreasuryUiState, actions: TreasuryActions, scr
                 val shelves = state.prayers.groupBy { it.category }
                 PrayerCategory.entries.filter { it in shelves }.forEach { category ->
                     if (state.category == null) item("heading-${category.name}") {
-                        Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 24.dp, top = 12.dp, bottom = 10.dp).testTag("shelf-${category.name}"),
+                        Row(Modifier.fillMaxWidth().padding(start = SertumTheme.spacing.page - 4.dp, end = SertumTheme.spacing.page, top = 12.dp, bottom = 10.dp).testTag("shelf-${category.name}"),
                             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                             TreasuryArtwork(category, Modifier.size(76.dp))
                             Column(Modifier.weight(1f)) {
@@ -117,12 +117,12 @@ internal fun PrayerLibrary(state: TreasuryUiState, actions: TreasuryActions, scr
                         }
                     }
                     items(shelves.getValue(category), key = { "prayer-${it.id}" }, contentType = { "prayer" }) { prayer ->
-                        SacredCard(Modifier.padding(horizontal = 24.dp).padding(bottom = 6.dp).fillMaxWidth()) { PrayerRow(prayer) { actions.openPrayer(prayer) } }
+                        SacredCard(Modifier.padding(horizontal = SertumTheme.spacing.page).padding(bottom = 6.dp).fillMaxWidth()) { PrayerRow(prayer) { actions.openPrayer(prayer) } }
                     }
                 }
             }
             item("closing") {
-                SacredText("“Maria guardava todas estas coisas, meditando-as no seu coração.”", Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 28.dp), type.whisper, colors.secondary, TextAlign.Center)
+                SacredText("“Maria guardava todas estas coisas, meditando-as no seu coração.”", Modifier.fillMaxWidth().padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, top = 28.dp), type.whisper, colors.secondary, TextAlign.Center)
                 SacredText("Lucas 2, 19", Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 44.dp), type.micro, colors.muted, TextAlign.Center)
             }
         }
@@ -201,7 +201,7 @@ private fun PrayerRow(prayer: TreasuryPrayer, onOpen: () -> Unit) {
                 if (prayer.latin != null) add("Português e latim")
                 if (prayer.annotations.isNotEmpty()) add("Toque para entender")
             }
-            if (details.isNotEmpty()) SacredText(details.joinToString(" · "), Modifier.padding(top = 7.dp), type.micro.copy(fontWeight = FontWeight.Medium), colors.marian)
+            if (details.isNotEmpty()) SacredText(details.joinToString(" · "), Modifier.padding(top = 7.dp), type.micro.copy(fontWeight = FontWeight.Medium), colors.accentInk)
         }
         SacredIcon(SacredIcon.CHEVRON, Modifier.size(13.dp), colors.muted)
     }
@@ -215,7 +215,7 @@ private fun EmptyShelf(message: String) {
     val art = LocalBotanicalArtwork.current
     Column(Modifier.fillMaxWidth().testTag("treasury-empty").padding(start = 32.dp, end = 32.dp, top = 34.dp), horizontalAlignment = Alignment.CenterHorizontally) {
         Canvas(Modifier.size(54.dp)) { paintBotanical(art.bud, center, size.minDimension) }
-        SacredText("Ainda em botão", Modifier.padding(top = 6.dp), type.micro, colors.marian)
+        SacredText("Ainda em botão", Modifier.padding(top = 6.dp), type.micro, colors.accentInk)
         SacredText(message, Modifier.padding(top = 8.dp).testTag("treasury-empty-message"), type.whisper, colors.secondary, TextAlign.Center)
     }
 }
