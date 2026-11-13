@@ -46,6 +46,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sertumrosarum.domain.prayer.FixedPrayer
+import com.sertumrosarum.domain.prayer.PrayerMode
 import com.sertumrosarum.domain.prayer.PrayerPhase
 import com.sertumrosarum.ui.canvas.BloomingBeadsArc
 import com.sertumrosarum.ui.canvas.CompactMysteries
@@ -87,6 +88,7 @@ fun ImmersivePrayerScreen(state: PrayerUiState, model: PrayerSessionViewModel, o
                 Column(Modifier.weight(1f).padding(horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     SacredText(state.sessionGuide.prayerLabel, Modifier.testTag("prayer-guide"), type.micro, colors.secondary)
                     SacredText(state.sessionTitle, style = type.section.copy(fontSize = 17.sp, lineHeight = 23.sp), color = colors.ink, align = TextAlign.Center)
+                    SacredText(if (state.sessionMode == PrayerMode.SOLO) "Oração a sós" else "Oração em grupo", Modifier.testTag("session-mode"), type.micro, colors.secondary)
                 }
                 SacredIconButton(SacredIcon.HAPTIC, if (state.hapticsEnabled) "Desativar vibração" else "Ativar vibração", model::toggleHaptics, active = state.hapticsEnabled)
             }
@@ -129,10 +131,10 @@ fun ImmersivePrayerScreen(state: PrayerUiState, model: PrayerSessionViewModel, o
                             // The announcement is the mystery itself, layer by layer, before the Pai-Nosso.
                             MysteryDimensions(step.mystery, contemplation, state.meditated, model::toggleMeditated)
                         } else if (step.reading?.response != null) {
-                            LitanyVerses(listOf(step.text to step.reading.response))
+                            LitanyVerses(listOf(state.prayerText to step.reading.response))
                         } else {
                             if (announcing) SacredText(requireNotNull(step.mystery).scripture, Modifier.padding(bottom = 10.dp), type.micro, colors.marian, TextAlign.Center)
-                            SacredText(step.text, Modifier.padding(horizontal = 3.dp).testTag("prayer-text"), type.prayer, colors.ink, TextAlign.Center)
+                            SacredText(state.prayerText, Modifier.padding(horizontal = 3.dp).testTag("prayer-text"), type.prayer, colors.ink, TextAlign.Center)
                         }
                     }
                     if (step.intention != null) {
@@ -158,7 +160,9 @@ fun ImmersivePrayerScreen(state: PrayerUiState, model: PrayerSessionViewModel, o
                 Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                     SacredIconButton(SacredIcon.BACK, "Oração anterior", model::previous, Modifier.testTag("previous-prayer"), enabled = state.stepIndex > 0)
                     SacredPrimaryButton(
-                        if (state.stepIndex == state.sequence.lastIndex) "Entregar minha coroa" else if (step.isSmallBead) "Próxima conta" else "Próxima oração",
+                        if (state.stepIndex == state.sequence.lastIndex) {
+                            if (state.sessionMode == PrayerMode.SOLO) "Entregar minha coroa" else "Entregar nossa coroa"
+                        } else if (step.isSmallBead) "Próxima conta" else "Próxima oração",
                         onNext, Modifier.weight(1f), "next-prayer", compact = shortScreen,
                     )
                 }

@@ -12,12 +12,15 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.click
 import androidx.compose.ui.test.swipeLeft
 import androidx.compose.ui.test.swipeRight
+import com.sertumrosarum.domain.prayer.FixedPrayer
+import com.sertumrosarum.domain.prayer.PrayerMode
 import java.io.File
 import org.junit.Rule
 import org.junit.Test
@@ -34,9 +37,9 @@ class SanctuaryFlowTest {
         compose.onNodeWithTag("theme-menu").performClick()
         compose.onNodeWithTag("theme-DAY").performClick()
         listOf("JOYFUL", "LUMINOUS", "SORROWFUL", "GLORIOUS").forEach { set ->
-            compose.onNodeWithTag("mystery-$set").performClick().assertIsSelected()
+            compose.onNodeWithTag("mystery-$set").performScrollTo().performClick().assertIsSelected()
         }
-        compose.onNodeWithTag("mystery-LUMINOUS").performClick()
+        compose.onNodeWithTag("mystery-LUMINOUS").performScrollTo().performClick()
         screenshot("sanctuary-day")
         compose.onNodeWithTag("theme-menu").performClick()
         compose.onNodeWithTag("theme-VIGIL").performClick()
@@ -45,15 +48,41 @@ class SanctuaryFlowTest {
     }
 
     @Test fun `complete rosary flows from the sign of the cross through all prayers to delivery`() {
+        compose.onNodeWithTag("prayer-mode-SOLO").assertIsSelected()
         compose.onNodeWithTag("start-rosary").performClick()
+        compose.onNodeWithTag("session-mode").assertTextEquals("Oração a sós")
         compose.onNodeWithTag("prayer-title").assertTextEquals("Sinal da Cruz")
-        repeat(79) { compose.onNodeWithTag("next-prayer").performClick() }
+        compose.onNodeWithTag("next-prayer").performClick()
+        compose.onNodeWithTag("prayer-text").assertTextEquals(FixedPrayer.OFFERING.textFor(PrayerMode.SOLO))
+        repeat(77) { compose.onNodeWithTag("next-prayer").performClick() }
+        compose.onNodeWithTag("prayer-text").assertTextEquals(FixedPrayer.THANKSGIVING.textFor(PrayerMode.SOLO))
+        compose.onNodeWithTag("next-prayer").performClick()
         compose.onNodeWithTag("prayer-title").assertTextEquals("Salve Rainha")
         compose.onNodeWithTag("next-prayer").performClick()
         compose.onNodeWithTag("crown-delivered").assertIsDisplayed()
         screenshot("crown-delivered")
         compose.onNodeWithTag("return-sanctuary").performClick()
         compose.onNodeWithTag("sanctuary").assertIsDisplayed()
+    }
+
+    @Test fun `group mode survives recreation and resumes independently of the next crown mode`() {
+        compose.onNodeWithTag("prayer-mode-GROUP").performClick().assertIsSelected()
+        compose.onNodeWithTag("start-rosary").performClick()
+        compose.onNodeWithTag("next-prayer").performClick()
+        compose.activityRule.scenario.recreate()
+        compose.onNodeWithTag("session-mode").assertTextEquals("Oração em grupo")
+        compose.onNodeWithTag("prayer-text").assertTextEquals(FixedPrayer.OFFERING.text)
+        compose.onNodeWithTag("pause-prayer").performClick()
+        compose.onNodeWithTag("prayer-mode-SOLO").performClick().assertIsSelected()
+        compose.onNodeWithTag("resume").performClick()
+        compose.onNodeWithTag("session-mode").assertTextEquals("Oração em grupo")
+        compose.onNodeWithTag("prayer-text").assertTextEquals(FixedPrayer.OFFERING.text)
+        compose.onNodeWithTag("pause-prayer").performClick()
+        compose.onNodeWithTag("start-rosary").performClick()
+        compose.onNodeWithTag("session-mode").assertTextEquals("Oração a sós")
+        compose.onNodeWithTag("next-prayer").performClick()
+        compose.onNodeWithTag("prayer-text").assertTextEquals(FixedPrayer.OFFERING.textFor(PrayerMode.SOLO))
+        screenshot("prayer-solo")
     }
 
     @Test fun `overflowing creed shows its reading position and scrolls without advancing the rosary`() {
@@ -80,7 +109,7 @@ class SanctuaryFlowTest {
     }
 
     @Test fun `beads decades backward stepping and pause resume preserve the prayer position`() {
-        compose.onNodeWithTag("mystery-LUMINOUS").performClick()
+        compose.onNodeWithTag("mystery-LUMINOUS").performScrollTo().performClick()
         compose.onNodeWithTag("start-rosary").performClick()
         compose.onNodeWithTag("decade-1").performClick()
         compose.onNodeWithTag("prayer-title").assertTextEquals("As Bodas de Caná")

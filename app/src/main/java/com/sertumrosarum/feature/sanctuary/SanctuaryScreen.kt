@@ -38,6 +38,7 @@ import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -51,6 +52,8 @@ import androidx.compose.ui.window.Popup
 import androidx.compose.ui.window.PopupProperties
 import com.sertumrosarum.domain.prayer.Mystery
 import com.sertumrosarum.domain.prayer.MysterySet
+import com.sertumrosarum.domain.prayer.PrayerMode
+import com.sertumrosarum.feature.prayer.PrayerModeSelector
 import com.sertumrosarum.feature.prayer.PrayerSessionViewModel
 import com.sertumrosarum.feature.prayer.PrayerUiState
 import com.sertumrosarum.feature.prayer.SanctuaryTab
@@ -74,6 +77,9 @@ fun SanctuaryScreen(state: PrayerUiState, model: PrayerSessionViewModel) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     val scroll = rememberScrollState()
+    val configuration = LocalConfiguration.current
+    val compactActions = configuration.screenHeightDp < 500 && configuration.screenWidthDp >= 500
+    val startLabel = if (state.hasSession) "Tecer uma nova coroa" else "Tecer a coroa de hoje"
     Column(Modifier.fillMaxSize().testTag("sanctuary")) {
         SanctuaryHeader(state.themeMode, model::setTheme)
         Box(Modifier.weight(1f)) {
@@ -88,7 +94,7 @@ fun SanctuaryScreen(state: PrayerUiState, model: PrayerSessionViewModel) {
                 SacredFlourish(Modifier.align(Alignment.CenterHorizontally).padding(top = 26.dp, bottom = 26.dp))
 
                 Row(Modifier.fillMaxWidth().heightIn(min = 32.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    SacredText("O que vamos contemplar?", Modifier.weight(1f), type.section)
+                    SacredText(if (state.selectedMode == PrayerMode.SOLO) "O que quer contemplar?" else "O que vamos contemplar?", Modifier.weight(1f), type.section)
                     val isToday = state.selectedSet == MysterySet.forDay(state.today.dayOfWeek)
                     // Reserve the label's width and height for every set so changing
                     // mysteries never reflows the heading or moves the selector.
@@ -133,13 +139,22 @@ fun SanctuaryScreen(state: PrayerUiState, model: PrayerSessionViewModel) {
                     RoseMark(Modifier.size(28.dp))
                     Column(Modifier.weight(1f)) {
                         SacredText("Sua oração espera por você", style = type.label)
-                        SacredText("${state.sessionGuide.title} · ${state.stepIndex + 1}/${state.sequence.size}", style = type.micro.copy(fontWeight = FontWeight.Normal), color = colors.secondary)
+                        SacredText("${state.sessionGuide.title} · ${state.sessionMode.label} · ${state.stepIndex + 1}/${state.sequence.size}", style = type.micro.copy(fontWeight = FontWeight.Normal), color = colors.secondary)
                     }
                     SacredIcon(SacredIcon.CHEVRON, Modifier.size(15.dp), colors.marian)
                 }
                 Spacer(Modifier.height(12.dp))
             }
-            SacredPrimaryButton(if (state.hasSession) "Tecer uma nova coroa" else "Tecer a coroa de hoje", model::start, tag = "start-rosary")
+            if (compactActions) {
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
+                    PrayerModeSelector(state.selectedMode, model::selectPrayerMode, Modifier.weight(1f))
+                    SacredPrimaryButton(startLabel, model::start, Modifier.weight(1f), tag = "start-rosary")
+                }
+            } else {
+                PrayerModeSelector(state.selectedMode, model::selectPrayerMode)
+                Spacer(Modifier.height(12.dp))
+                SacredPrimaryButton(startLabel, model::start, tag = "start-rosary")
+            }
         }
     }
 }

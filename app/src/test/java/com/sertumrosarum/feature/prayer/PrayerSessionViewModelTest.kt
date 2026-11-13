@@ -3,6 +3,7 @@ package com.sertumrosarum.feature.prayer
 import androidx.lifecycle.SavedStateHandle
 import com.sertumrosarum.domain.prayer.FixedPrayer
 import com.sertumrosarum.domain.prayer.MysterySet
+import com.sertumrosarum.domain.prayer.PrayerMode
 import com.sertumrosarum.feature.guides.PrayerGuide
 import java.time.Clock
 import java.time.Instant
@@ -17,6 +18,108 @@ class PrayerSessionViewModelTest {
 
     @Test fun `today selects luminous mysteries on Thursday`() {
         assertEquals(MysterySet.LUMINOUS, model().state.value.selectedSet)
+    }
+
+    @Test fun `new sessions default to solo and use personal opening and closing texts`() {
+        val model = model()
+        assertEquals(PrayerMode.SOLO, model.state.value.selectedMode)
+        model.start()
+        assertEquals(PrayerMode.SOLO, model.state.value.sessionMode)
+        model.next()
+        assertTrue(model.state.value.prayerText.startsWith("Divino Jesus, eu Vos ofereço"))
+        repeat(77) { model.next() }
+        assertEquals(FixedPrayer.THANKSGIVING, model.state.value.step.prayer)
+        assertTrue(model.state.value.prayerText.startsWith("Infinitas graças vos dou"))
+        model.next()
+        assertEquals(FixedPrayer.HAIL_HOLY_QUEEN.text, model.state.value.prayerText)
+        assertEquals(PrayerPulse.COMPLETION, model.next())
+    }
+
+    @Test fun `mode selection applies to a new crown without changing a paused crown`() {
+        val model = model()
+        model.selectPrayerMode(PrayerMode.GROUP)
+        model.start()
+        model.next()
+        val startedAt = model.state.value.startedAt
+        model.returnHome()
+        model.selectPrayerMode(PrayerMode.SOLO)
+        model.resume()
+        assertEquals(PrayerMode.GROUP, model.state.value.sessionMode)
+        assertEquals(1, model.state.value.stepIndex)
+        assertEquals(startedAt, model.state.value.startedAt)
+        assertEquals(FixedPrayer.OFFERING.text, model.state.value.prayerText)
+        model.returnHome()
+        model.start()
+        assertEquals(PrayerMode.SOLO, model.state.value.sessionMode)
+        assertEquals(0, model.state.value.stepIndex)
+    }
+
+    @Test fun `selected and active prayer modes restore independently in either mode`() {
+        PrayerMode.entries.forEach { mode ->
+            val handle = SavedStateHandle()
+            val original = model(handle)
+            original.selectPrayerMode(mode)
+            original.start()
+            original.next()
+            original.returnHome()
+            original.selectPrayerMode(PrayerMode.entries.first { it != mode })
+            val restored = model(SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) }))
+            assertEquals(original.state.value, restored.state.value)
+            restored.resume()
+            assertEquals(mode, restored.state.value.sessionMode)
+            assertEquals(FixedPrayer.OFFERING.textFor(mode), restored.state.value.prayerText)
+        }
+    }
+
+    @Test fun `mode choice restores before starting the first session`() {
+        val handle = SavedStateHandle()
+        model(handle).selectPrayerMode(PrayerMode.GROUP)
+        val restored = model(SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) }))
+        assertEquals(PrayerMode.GROUP, restored.state.value.selectedMode)
+        restored.start()
+        assertEquals(PrayerMode.GROUP, restored.state.value.sessionMode)
+    }
+
+    @Test fun `sessions saved before modes existed preserve their group texts`() {
+        val restored = model(SavedStateHandle(mapOf(
+            "sessionSet" to MysterySet.JOYFUL.name,
+            "startedAt" to fixedClock.millis(),
+            "stepIndex" to 1,
+        )))
+        restored.resume()
+        assertEquals(PrayerMode.GROUP, restored.state.value.sessionMode)
+        assertEquals(FixedPrayer.OFFERING.text, restored.state.value.prayerText)
+    }
+
+    @Test fun `every guide starts in the selected mode`() {
+        PrayerGuide.entries.forEach { guide ->
+            PrayerMode.entries.forEach { mode ->
+                val model = model()
+                model.selectPrayerMode(mode)
+                model.start(guide)
+                assertEquals(guide, model.state.value.sessionGuide)
+                assertEquals(mode, model.state.value.sessionMode)
+                model.returnHome()
+                model.selectPrayerMode(PrayerMode.entries.first { it != mode })
+                model.resume()
+                assertEquals(mode, model.state.value.sessionMode)
+            }
+        }
+    }
+
+    @Test fun `themed offerings follow the active mode without changing their intentions`() {
+        listOf(PrayerGuide.FAMILY, PrayerGuide.SICK, PrayerGuide.PEACE).forEach { guide ->
+            val model = model()
+            model.start(guide)
+            repeat(2) { model.next() }
+            assertTrue(model.state.value.prayerText.startsWith("Senhor Jesus, ofereço esta oração"))
+            assertEquals(guide.script.offering?.title, model.state.value.step.title)
+            model.selectPrayerMode(PrayerMode.GROUP)
+            model.start(guide)
+            repeat(2) { model.next() }
+            assertTrue(model.state.value.prayerText.startsWith("Senhor Jesus, oferecemos esta oração"))
+            assertEquals(guide.script.offering?.text, model.state.value.prayerText)
+        }
     }
 
     @Test fun `all 80 steps can be traversed forward and backward without skipping boundaries`() {

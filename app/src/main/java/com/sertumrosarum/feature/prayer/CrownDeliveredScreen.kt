@@ -17,6 +17,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.sertumrosarum.domain.prayer.PrayerMode
 import com.sertumrosarum.ui.canvas.RoseCrownEmblem
 import com.sertumrosarum.ui.canvas.RoseMark
 import com.sertumrosarum.feature.guides.offeringIllustration
@@ -38,7 +39,7 @@ fun CrownDeliveredScreen(state: PrayerUiState, onReturn: () -> Unit) {
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
             RoseCrownEmblem(Modifier.size(286.dp), state.groupCount, state.crownBeadCount, state.sessionGuide.offeringIllustration)
             SacredText(state.sessionGuide.title, Modifier.padding(top = 10.dp).testTag("delivered-guide"), type.micro, colors.marian, TextAlign.Center)
-            SacredText("Sua Coroa de Rosas\nfoi entregue", Modifier.padding(top = 12.dp), type.display, align = TextAlign.Center)
+            SacredText(if (state.sessionMode == PrayerMode.SOLO) "Sua Coroa de Rosas\nfoi entregue" else "Nossa Coroa de Rosas\nfoi entregue", Modifier.padding(top = 12.dp), type.display, align = TextAlign.Center)
             SacredText("Que a paz desta oração\nacompanhe o seu dia.", Modifier.padding(top = 14.dp), type.whisper, colors.secondary, TextAlign.Center)
             SacredFlourish(Modifier.padding(top = 24.dp, bottom = 20.dp))
             // A quiet record of the time given, with no score to keep.

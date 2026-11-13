@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModel
 import com.sertumrosarum.domain.prayer.FixedPrayer
 import com.sertumrosarum.domain.prayer.MysterySet
 import com.sertumrosarum.domain.prayer.MysteryContent
+import com.sertumrosarum.domain.prayer.PrayerMode
 import com.sertumrosarum.domain.prayer.PrayerPhase
 import com.sertumrosarum.domain.prayer.ThemedMeditations
 import com.sertumrosarum.feature.guides.PrayerGuide
@@ -28,6 +29,8 @@ data class PrayerUiState(
     val today: LocalDate,
     val selectedSet: MysterySet,
     val sessionSet: MysterySet = selectedSet,
+    val selectedMode: PrayerMode = PrayerMode.SOLO,
+    val sessionMode: PrayerMode = selectedMode,
     val themeMode: ThemeMode = ThemeMode.SYSTEM,
     val screen: SanctuaryScreen = SanctuaryScreen.HOME,
     val tab: SanctuaryTab = SanctuaryTab.HOME,
@@ -42,6 +45,7 @@ data class PrayerUiState(
     val script get() = sessionGuide.script
     val sequence = script.build(sessionSet)
     val step get() = sequence[stepIndex]
+    val prayerText get() = step.prayer?.textFor(sessionMode) ?: step.reading?.textFor(sessionMode) ?: step.text
     val groupCount get() = script.groupCount
     val sessionTitle get() = if (script.isRosary) "Mistérios ${sessionSet.label.lowercase()}" else sessionGuide.title
     val groupLabel get() = script.groupLabel
@@ -80,6 +84,7 @@ class PrayerSessionViewModel(
     } else MysterySet.forDay(today.dayOfWeek)
     private val initialGuide = savedEnum<PrayerGuide>("sessionGuide") ?: PrayerGuide.TRADITIONAL
     private val initialSessionSet = savedEnum<MysterySet>("sessionSet") ?: initialSet
+    private val initialMode = savedEnum<PrayerMode>("selectedMode") ?: PrayerMode.SOLO
     private inline fun <reified T : Enum<T>> savedEnum(key: String): T? =
         savedState.get<String>(key)?.let { name -> enumValues<T>().firstOrNull { it.name == name } }
     private val mutableState = MutableStateFlow(
@@ -87,6 +92,10 @@ class PrayerSessionViewModel(
             today = today,
             selectedSet = initialSet,
             sessionSet = initialSessionSet,
+            selectedMode = initialMode,
+            // Sessions saved before modes existed used the group prayer texts.
+            sessionMode = savedEnum<PrayerMode>("sessionMode")
+                ?: if (savedState.get<Long>("startedAt") != null) PrayerMode.GROUP else initialMode,
             themeMode = savedEnum<ThemeMode>("themeMode") ?: ThemeMode.SYSTEM,
             screen = savedEnum<SanctuaryScreen>("screen") ?: SanctuaryScreen.HOME,
             tab = savedEnum<SanctuaryTab>("tab") ?: SanctuaryTab.HOME,
@@ -107,6 +116,8 @@ class PrayerSessionViewModel(
         savedState["selectedSet"] = next.selectedSet.name
         savedState["selectionDate"] = next.today.toString()
         savedState["sessionSet"] = next.sessionSet.name
+        savedState["selectedMode"] = next.selectedMode.name
+        savedState["sessionMode"] = next.sessionMode.name
         savedState["themeMode"] = next.themeMode.name
         savedState["screen"] = next.screen.name
         savedState["tab"] = next.tab.name
@@ -120,6 +131,7 @@ class PrayerSessionViewModel(
     }
 
     fun selectMystery(set: MysterySet) = update { it.copy(selectedSet = set) }
+    fun selectPrayerMode(mode: PrayerMode) = update { it.copy(selectedMode = mode) }
     fun refreshDay() {
         val currentDay = LocalDate.now(clock)
         if (state.value.today != currentDay) update { it.copy(today = currentDay, selectedSet = MysterySet.forDay(currentDay.dayOfWeek)) }
@@ -134,7 +146,7 @@ class PrayerSessionViewModel(
     /** Begins a crown with its own sequence and keeps the previous tab for the return. */
     fun start(guide: PrayerGuide) {
         update {
-            it.copy(screen = SanctuaryScreen.PRAYER, sessionSet = it.selectedSet, sessionGuide = guide, stepIndex = 0, startedAt = clock.millis(), finishedAt = null)
+            it.copy(screen = SanctuaryScreen.PRAYER, sessionSet = it.selectedSet, sessionMode = it.selectedMode, sessionGuide = guide, stepIndex = 0, startedAt = clock.millis(), finishedAt = null)
         }
     }
     fun resume() = update { if (it.hasSession) it.copy(screen = SanctuaryScreen.PRAYER) else it }
