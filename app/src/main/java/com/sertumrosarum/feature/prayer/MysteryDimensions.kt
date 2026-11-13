@@ -1,6 +1,10 @@
 package com.sertumrosarum.feature.prayer
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.SizeTransform
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -18,6 +22,9 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -32,6 +39,7 @@ import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
@@ -73,11 +81,14 @@ internal fun MysteryDimensions(
     onToggleMeditated: () -> Unit,
     modifier: Modifier = Modifier,
     unfolded: Boolean = false,
+    onLayerSelected: (Int) -> Unit = {},
 ) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     val layers = listOf("A cena bíblica", "O sentido da contemplação", "O fruto do mistério")
-    val shortLayers = listOf("Cena bíblica", "Sentido", "Fruto")
+    val shortLayers = listOf("Cena", "Sentido", "Fruto")
+    val reducedMotion = SertumTheme.reducedMotion
+    val markerSize = if (LocalDensity.current.fontScale > 1.3f) 36.dp else 28.dp
     var open by rememberSaveable(mystery.title) { mutableIntStateOf(0) }
 
     SacredCard(modifier.fillMaxWidth().testTag("mystery-dimensions")) {
@@ -85,50 +96,60 @@ internal fun MysteryDimensions(
             if (unfolded) {
                 layers.forEachIndexed { index, name ->
                     UnfoldedDimensionLayer(index, name, last = index == layers.lastIndex) {
+                        if (index == 0) ScriptureReference(mystery)
                         DimensionBody(index, mystery, contemplation)
                     }
                 }
             } else {
                 val active = open.coerceIn(0, layers.lastIndex)
                 val stem = colors.marian.copy(alpha = .32f)
+                val progress by animateFloatAsState(active.toFloat(), if (reducedMotion) tween(0) else spring(dampingRatio = 1f, stiffness = 200f), label = "dimension-stem")
                 Row(
-                    Modifier.fillMaxWidth().drawBehind {
-                        val y = 19.dp.toPx()
+                    Modifier.fillMaxWidth().selectableGroup().drawBehind {
+                        val y = 6.dp.toPx() + markerSize.toPx() / 2f
                         drawLine(stem, Offset(size.width / 6f, y), Offset(size.width * 5f / 6f, y), 1.5.dp.toPx())
+                        if (progress > 0f) drawLine(colors.gold.copy(alpha = .5f), Offset(size.width / 6f, y), Offset(size.width * (1f + progress * 2f) / 6f, y), 1.5.dp.toPx())
                     },
                     horizontalArrangement = Arrangement.SpaceEvenly,
                 ) {
                     shortLayers.forEachIndexed { index, label ->
                         val chosen = index == active
+                        val tint by animateColorAsState(
+                            if (chosen) colors.marian.copy(alpha = .2f) else colors.surface,
+                            if (reducedMotion) tween(0) else tween(220), label = "dimension-tint-$index",
+                        )
+                        val edge by animateColorAsState(
+                            if (chosen) colors.gold.copy(alpha = .65f) else colors.border,
+                            if (reducedMotion) tween(0) else tween(220), label = "dimension-edge-$index",
+                        )
                         Column(
                             Modifier.weight(1f).clip(RoundedCornerShape(16.dp))
-                                .clickable(role = Role.Button, onClick = { open = index })
+                                .selectable(chosen, role = Role.Tab, onClick = { open = index; onLayerSelected(index) })
                                 .semantics {
-                                    selected = chosen
                                     stateDescription = if (chosen) "Aberto" else "Fechado"
                                     contentDescription = "${index + 1}. ${layers[index]}"
                                 }
                                 .testTag("dimension-$index")
-                                .padding(vertical = 6.dp, horizontal = 4.dp),
+                                .heightIn(min = 56.dp).padding(vertical = 6.dp, horizontal = 4.dp),
                             horizontalAlignment = Alignment.CenterHorizontally,
                         ) {
                             Box(
-                                Modifier.size(26.dp)
+                                Modifier.size(markerSize)
                                     .background(colors.elevated, CircleShape)
-                                    .background(if (chosen) colors.marian.copy(alpha = .2f) else colors.surface, CircleShape)
-                                    .border(1.dp, if (chosen) colors.gold.copy(alpha = .65f) else colors.border, CircleShape),
+                                    .background(tint, CircleShape)
+                                    .border(1.dp, edge, CircleShape),
                                 contentAlignment = Alignment.Center,
                             ) {
                                 SacredText(
                                     "${index + 1}",
-                                    style = type.micro.copy(fontSize = 12.5.sp, fontWeight = if (chosen) FontWeight.Bold else FontWeight.SemiBold),
+                                    style = type.micro.copy(fontSize = 12.5.sp, lineHeight = 16.sp),
                                     color = if (chosen) colors.ink else colors.secondary,
                                 )
                             }
                             SacredText(
                                 label,
                                 Modifier.padding(top = 4.dp),
-                                style = type.micro.copy(fontSize = 12.sp, lineHeight = 16.sp, fontWeight = if (chosen) FontWeight.Bold else FontWeight.Medium),
+                                style = type.micro.copy(fontSize = 12.sp, lineHeight = 16.sp),
                                 color = if (chosen) colors.ink else colors.secondary,
                                 align = TextAlign.Center,
                                 maxLines = 2,
@@ -139,23 +160,14 @@ internal fun MysteryDimensions(
                 Box(Modifier.padding(top = 4.dp, bottom = 10.dp).fillMaxWidth().height(1.dp).background(colors.border.copy(alpha = .7f)))
                 AnimatedContent(
                     targetState = active,
-                    transitionSpec = { fadeIn(tween(180)) togetherWith fadeOut(tween(140)) },
+                    transitionSpec = {
+                        (fadeIn(tween(if (reducedMotion) 0 else 220, delayMillis = if (reducedMotion) 0 else 60)) togetherWith fadeOut(tween(if (reducedMotion) 0 else 140)))
+                            .using(SizeTransform { _, _ -> if (reducedMotion) tween(0) else spring(dampingRatio = 1f, stiffness = 220f) })
+                    },
                     label = "mystery-dimension-body",
                 ) { index ->
-                    Column(Modifier.fillMaxWidth().padding(horizontal = 2.dp)) {
-                        Row(
-                            Modifier.fillMaxWidth().padding(bottom = 8.dp),
-                            horizontalArrangement = Arrangement.SpaceBetween,
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            SacredText(layers[index], Modifier.weight(1f).semantics { heading() }, type.label.copy(fontWeight = FontWeight.SemiBold), color = colors.marian)
-                            if (index == 0) {
-                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                                    SacredText(mystery.scripture, style = type.micro, color = colors.marian)
-                                    DevotionalArtwork(DevotionalIllustration.PRAYER_BOOK, Modifier.size(22.dp))
-                                }
-                            }
-                        }
+                    Column(Modifier.widthIn(max = 480.dp).fillMaxWidth().padding(horizontal = 2.dp).testTag("dimension-body")) {
+                        if (index == 0) ScriptureReference(mystery)
                         DimensionBody(index, mystery, contemplation)
                     }
                 }
@@ -167,18 +179,29 @@ internal fun MysteryDimensions(
 }
 
 @Composable
+private fun ScriptureReference(mystery: Mystery) {
+    Row(
+        Modifier.fillMaxWidth().padding(bottom = 8.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically,
+    ) {
+        DevotionalArtwork(DevotionalIllustration.PRAYER_BOOK, Modifier.size(22.dp))
+        SacredText(mystery.scripture, style = SertumTheme.typography.micro, color = SertumTheme.colors.marian)
+    }
+}
+
+@Composable
 private fun DimensionBody(index: Int, mystery: Mystery, contemplation: MysteryContemplation) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     when (index) {
         0 -> {
-            SacredText("“${contemplation.scriptureQuote}”", Modifier.padding(bottom = 8.dp).testTag("scripture-quote"), type.whisper, colors.marian)
-            SacredText(contemplation.scene, style = type.whisper)
+            SacredText("“${contemplation.scriptureQuote}”", Modifier.fillMaxWidth().padding(bottom = 10.dp).testTag("scripture-quote"), type.whisper, colors.marian, TextAlign.Start)
+            SacredText(contemplation.scene, Modifier.fillMaxWidth().testTag("mystery-scene"), type.whisper, align = TextAlign.Start)
         }
-        1 -> SacredText(contemplation.meaning, style = type.whisper)
+        1 -> SacredText(contemplation.meaning, Modifier.fillMaxWidth().testTag("mystery-meaning"), type.whisper, align = TextAlign.Start)
         else -> {
             SacredText(mystery.fruit, Modifier.padding(bottom = 4.dp), type.section, lerp(colors.ruby, colors.ink, if (colors.isDark) .1f else .4f))
-            SacredText(contemplation.practice, style = type.whisper)
+            SacredText(contemplation.practice, Modifier.fillMaxWidth().testTag("mystery-practice"), type.whisper, align = TextAlign.Start)
         }
     }
 }

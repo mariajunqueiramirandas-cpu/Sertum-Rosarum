@@ -154,7 +154,19 @@ The traditional opening includes the Sign of the Cross, offering, Apostles' Cree
 
 ### Read every line at your own pace
 
-Long prayers show a custom sage position rail, soft fades at edges with hidden text, and a **Continue lendo** cue. Tap to read the next portion with overlap, or scroll normally. At the end, **Voltar ao início** returns to the top. Reading never advances the rosary, and prayers that fit keep the entire reading area free of scroll cues.
+A compact header, curved rose stems, and shared progress/eyes-closed row give most of the screen to reading. The meditation card offers **Cena**, **Sentido**, and **Fruto** on one animated stem. Each section uses a consistent left edge, with no indented text gutter or repeated heading. Long prayers align left; titles and short invocations remain centered. The original text sizes, painted artwork, spring blooms, and ambient garden motion are preserved. The offering and the Cana scene fit on a standard portrait phone without scrolling.
+
+Long prayers show a custom sage position rail, short fades at edges with hidden text, and a **Continue lendo** action beneath the reading area. Tap to read the next portion with overlap, or scroll normally. At the end, **Voltar ao início** returns to the top. Reading never advances the rosary, and prayers that fit have no scroll cues. The labeled **Olhos fechados** switch beside the step counter opens eyes-closed prayer. Changing a meditation section keeps its heading in place and returns the new passage to the top.
+
+<table>
+<tr><th>Day reading</th><th>Vigil reading</th></tr>
+<tr>
+<td><img src="docs/screenshots/prayer-reading-redesign-day.png" width="235" alt="The entire Cana scene, three botanical section tabs, and compact prayer controls in Day mode" /></td>
+<td><img src="docs/screenshots/prayer-reading-redesign-vigil.png" width="235" alt="The Cana meditation card with its animated section stem, curved roses, and prayer controls in Vigil mode" /></td>
+</tr>
+</table>
+
+See the [large-text view](docs/screenshots/prayer-reading-large-text.png) and [section transitions and rose bloom](docs/screenshots/prayer-reading-motion.mp4).
 
 <table>
 <tr><th>More text below</th><th>End of the text</th></tr>

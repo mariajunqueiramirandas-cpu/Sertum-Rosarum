@@ -17,12 +17,13 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.runtime.key
@@ -35,8 +36,8 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.testTag
-import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.onClick
@@ -48,10 +49,10 @@ import androidx.compose.ui.unit.sp
 import com.sertumrosarum.domain.prayer.FixedPrayer
 import com.sertumrosarum.domain.prayer.PrayerMode
 import com.sertumrosarum.domain.prayer.PrayerPhase
+import com.sertumrosarum.feature.guides.PrayerGuide
 import com.sertumrosarum.ui.canvas.BloomingBeadsArc
 import com.sertumrosarum.ui.canvas.CompactMysteries
 import com.sertumrosarum.ui.canvas.FiveMysteriesArc
-import com.sertumrosarum.ui.canvas.RoseCrownEmblem
 import com.sertumrosarum.ui.canvas.RoseMark
 import com.sertumrosarum.ui.canvas.rememberGardenBreath
 import com.sertumrosarum.ui.components.SacredBottomSheet
@@ -78,41 +79,38 @@ fun ImmersivePrayerScreen(state: PrayerUiState, model: PrayerSessionViewModel, o
     val groups = state.groupCount
     val announcing = step.isAnnouncement
     var contemplating by rememberSaveable(state.stepIndex) { mutableStateOf(false) }
+    var readingSection by rememberSaveable(state.stepIndex) { mutableIntStateOf(0) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val compact = maxHeight < 650.dp
         val shortScreen = maxHeight < 430.dp
         val touchZoneHeight = maxHeight * .5f
         Column(Modifier.fillMaxSize().testTag("prayer-screen")) {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(top = 4.dp, bottom = 2.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
+            Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 4.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                 SacredIconButton(SacredIcon.CLOSE, "Voltar ao santuário e pausar", model::returnHome, Modifier.testTag("pause-prayer"))
                 Column(Modifier.weight(1f).padding(horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                    SacredText(state.sessionTitle, style = type.section.copy(fontSize = 17.sp, lineHeight = 22.sp), color = colors.ink, align = TextAlign.Center, maxLines = 1)
-                    Row(
-                        Modifier.padding(top = 1.dp),
-                        horizontalArrangement = Arrangement.spacedBy(5.dp, Alignment.CenterHorizontally),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        SacredText(state.sessionGuide.prayerLabel, Modifier.weight(1f, fill = false).testTag("prayer-guide"), type.micro.copy(fontSize = 12.sp, lineHeight = 16.sp), colors.secondary, maxLines = 1)
-                        SacredText("·", style = type.micro.copy(fontSize = 12.sp, lineHeight = 16.sp), color = colors.muted)
-                        SacredText(if (state.sessionMode == PrayerMode.SOLO) "Oração a sós" else "Oração em grupo", Modifier.testTag("session-mode"), type.micro.copy(fontSize = 12.sp, lineHeight = 16.sp), colors.secondary, maxLines = 1)
+                    SacredText(state.sessionTitle, Modifier.testTag("prayer-session-title"), style = type.section.copy(fontSize = 17.sp, lineHeight = 23.sp), color = colors.ink, align = TextAlign.Center)
+                    // A generic "Minha oração" repeats the screen's purpose. Keep
+                    // meaningful guide names on their own line so large type can wrap.
+                    if (state.sessionGuide.prayerLabel != PrayerGuide.TRADITIONAL.prayerLabel) {
+                        SacredText(state.sessionGuide.prayerLabel, Modifier.testTag("prayer-guide"), type.micro.copy(fontSize = 12.sp, lineHeight = 16.sp), colors.secondary, TextAlign.Center)
                     }
+                    SacredText(if (state.sessionMode == PrayerMode.SOLO) "Oração a sós" else "Oração em grupo", Modifier.testTag("session-mode"), type.micro.copy(fontSize = 12.sp, lineHeight = 16.sp), colors.secondary, TextAlign.Center)
                 }
                 SacredIconButton(SacredIcon.HAPTIC, if (state.hapticsEnabled) "Desativar vibração" else "Ativar vibração", model::toggleHaptics, active = state.hapticsEnabled)
             }
             if (!state.eyesClosed) {
-                if (compact) Box(Modifier.padding(horizontal = 20.dp)) { CompactMysteries(state.completedDecades, step.decadeIndex, model::jumpToDecade, groups, state.groupLabel) }
-                else FiveMysteriesArc(state.completedDecades, step.decadeIndex, model::jumpToDecade, Modifier.padding(horizontal = 16.dp), groups = groups, groupLabel = state.groupLabel)
+                if (shortScreen) Box(Modifier.padding(horizontal = 20.dp)) { CompactMysteries(state.completedDecades, step.decadeIndex, model::jumpToDecade, groups, state.groupLabel) }
+                else FiveMysteriesArc(state.completedDecades, step.decadeIndex, model::jumpToDecade, Modifier.padding(horizontal = 16.dp), groups = groups, groupLabel = state.groupLabel, compact = true)
             }
             key(state.stepIndex, state.eyesClosed) {
-                PrayerTextReader(Modifier.weight(1f).fillMaxWidth().padding(horizontal = 14.dp)) {
+                PrayerTextReader(
+                    Modifier.weight(1f).fillMaxWidth().padding(horizontal = 14.dp),
+                    centerContent = !announcing && state.catecheticalNote == null,
+                    readingKey = readingSection,
+                ) {
                     val meditation = state.beadMeditation.takeUnless { state.eyesClosed }
                     if (meditation != null && step.mystery != null) {
                         // In the bead-by-bead rosary the line to contemplate leads, and the prayer follows it.
-                        MeditatedBead(requireNotNull(step.decadeIndex), step.mystery, meditation, { contemplating = true }, Modifier.padding(bottom = if (shortScreen) 8.dp else 14.dp))
+                        MeditatedBead(requireNotNull(step.decadeIndex), step.mystery, meditation, { contemplating = true }, Modifier.padding(bottom = 12.dp))
                     } else {
                         // Within a decade the chapter line becomes the way back into its mystery.
                         if (step.mystery != null && state.contemplation != null && !announcing && !state.eyesClosed) {
@@ -120,81 +118,76 @@ fun ImmersivePrayerScreen(state: PrayerUiState, model: PrayerSessionViewModel, o
                             Spacer(Modifier.height(if (shortScreen) 0.dp else 2.dp))
                         } else {
                             SacredText(chapter, style = type.micro, color = colors.marian, align = TextAlign.Center)
-                            Spacer(Modifier.height(if (shortScreen) 2.dp else 4.dp))
+                            Spacer(Modifier.height(4.dp))
                         }
                         SacredText(step.title, Modifier.testTag("prayer-title"), if (shortScreen) type.section else type.heading, align = TextAlign.Center)
-                        if (shortScreen) Spacer(Modifier.height(6.dp)) else {
-                            Spacer(Modifier.height(8.dp))
-                            SacredFlourish()
-                            Spacer(Modifier.height(10.dp))
-                        }
+                        if (!shortScreen) {
+                            SacredFlourish(Modifier.padding(top = 6.dp, bottom = 8.dp))
+                        } else Spacer(Modifier.height(8.dp))
                     }
                     if (state.eyesClosed) {
                         SacredText("Reze no seu tempo.\nO toque acompanha sua oração.", Modifier.padding(horizontal = 3.dp), type.whisper, colors.secondary, TextAlign.Center)
                     } else {
-                        state.catecheticalNote?.let { CatecheticalNote(it, Modifier.padding(bottom = 12.dp)) }
+                        state.catecheticalNote?.let { CatecheticalNote(it, Modifier.padding(bottom = 16.dp)) }
                         val contemplation = state.contemplation
                         if (announcing) state.themedMeditation?.let {
-                            SacredText(it, Modifier.padding(bottom = 12.dp).testTag("themed-meditation"), type.whisper, colors.marian, TextAlign.Center)
+                            SacredText(it, Modifier.padding(bottom = 16.dp).testTag("themed-meditation"), type.whisper, colors.marian, TextAlign.Center)
                         }
                         if (step.mystery != null && announcing && contemplation != null) {
                             // The announcement is the mystery itself, layer by layer, before the Pai-Nosso.
-                            MysteryDimensions(step.mystery, contemplation, state.meditated, model::toggleMeditated)
+                            MysteryDimensions(step.mystery, contemplation, state.meditated, model::toggleMeditated, onLayerSelected = { readingSection = it })
                         } else if (step.reading?.response != null) {
                             LitanyVerses(listOf(state.prayerText to step.reading.response))
                         } else {
-                            if (announcing) SacredText(requireNotNull(step.mystery).scripture, Modifier.padding(bottom = 8.dp), type.micro, colors.marian, TextAlign.Center)
-                            SacredText(state.prayerText, Modifier.padding(horizontal = 2.dp).testTag("prayer-text"), type.prayer, colors.ink, TextAlign.Center)
+                            if (announcing) SacredText(requireNotNull(step.mystery).scripture, Modifier.padding(bottom = 10.dp), type.micro, colors.marian, TextAlign.Center)
+                            val alignment = when (step.prayer) {
+                                FixedPrayer.SIGN_OF_CROSS, FixedPrayer.GLORY_BE -> TextAlign.Center
+                                else -> TextAlign.Start
+                            }
+                            SacredText(state.prayerText, Modifier.widthIn(max = 480.dp).fillMaxWidth().testTag("prayer-text"), type.prayer, colors.ink, alignment)
                         }
                     }
                     if (step.intention != null) {
-                        SacredText(step.intention, Modifier.padding(top = 14.dp), type.whisper, colors.gold, TextAlign.Center)
+                        SacredText(step.intention, Modifier.padding(top = 16.dp), type.whisper, colors.gold, TextAlign.Center)
                     }
                 }
             }
             if (state.eyesClosed) {
-                EyesClosedZone(beadLabel, onNext, model::previous, Modifier.padding(horizontal = 24.dp).height(touchZoneHeight).padding(top = 14.dp, bottom = 12.dp))
+                EyesClosedZone(beadLabel, onNext, model::previous, Modifier.padding(horizontal = 20.dp).height(touchZoneHeight).padding(top = 14.dp, bottom = 12.dp))
             } else {
                 if (!shortScreen && state.groupBeads.isNotEmpty()) {
-                    BloomingBeadsArc(state.groupBeads.size, step.beadIndex, state.beadsComplete, model::jumpToBead, Modifier.padding(horizontal = 14.dp), beadLabel = state.beadLabel)
-                } else if (!shortScreen && step.phase == PrayerPhase.CLOSING) {
-                    RoseCrownEmblem(Modifier.align(Alignment.CenterHorizontally).size(104.dp), groups, state.crownBeadCount)
-                }
-                if (!shortScreen) {
-                    SacredText(
-                        beadLabel,
-                        Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(top = 2.dp, bottom = if (compact) 4.dp else 8.dp).testTag("bead-counter").semantics { liveRegion = LiveRegionMode.Polite },
-                        type.micro, colors.secondary, TextAlign.Center,
-                    )
+                    BloomingBeadsArc(state.groupBeads.size, step.beadIndex, state.beadsComplete, model::jumpToBead, Modifier.padding(horizontal = 14.dp), beadLabel = state.beadLabel, compact = true)
                 }
             }
-            Column(Modifier.padding(horizontal = 24.dp).padding(top = 2.dp, bottom = if (compact) 4.dp else 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.padding(horizontal = 20.dp).padding(bottom = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                Row(Modifier.fillMaxWidth().heightIn(min = 48.dp), horizontalArrangement = Arrangement.spacedBy(8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    if (!state.eyesClosed) {
+                        SacredText(
+                            beadLabel,
+                            Modifier.weight(1f).testTag("bead-counter").semantics { liveRegion = LiveRegionMode.Polite },
+                            type.micro, colors.secondary,
+                        )
+                    } else Spacer(Modifier.weight(1f))
+                    Row(
+                        Modifier.weight(1f, fill = false).clip(RoundedCornerShape(16.dp))
+                            .semantics { contentDescription = if (state.eyesClosed) "Voltar à leitura" else "Rezar de olhos fechados" }
+                            .toggleable(state.eyesClosed, role = Role.Switch, onValueChange = { model.toggleEyesClosed() })
+                            .testTag("eyes-closed-toggle").heightIn(min = 48.dp).padding(horizontal = 8.dp, vertical = 4.dp),
+                        horizontalArrangement = Arrangement.spacedBy(7.dp, Alignment.End),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        SacredIcon(SacredIcon.EYE, Modifier.size(17.dp), if (state.eyesClosed) colors.marian else colors.secondary)
+                        SacredText(if (state.eyesClosed) "Voltar à leitura" else "Olhos fechados", Modifier.weight(1f, fill = false), type.micro, if (state.eyesClosed) colors.marian else colors.secondary)
+                    }
+                }
+                Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                     SacredIconButton(SacredIcon.BACK, "Oração anterior", model::previous, Modifier.testTag("previous-prayer"), enabled = state.stepIndex > 0)
                     SacredPrimaryButton(
                         if (state.stepIndex == state.sequence.lastIndex) {
                             if (state.sessionMode == PrayerMode.SOLO) "Entregar minha coroa" else "Entregar nossa coroa"
                         } else if (step.isSmallBead) "Próxima conta" else "Próxima oração",
-                        onNext, Modifier.weight(1f), "next-prayer", compact = compact || shortScreen,
+                        onNext, Modifier.weight(1f), "next-prayer", compact = shortScreen,
                     )
-                }
-                val toggle = @Composable {
-                    Row(
-                        Modifier.clip(RoundedCornerShape(50)).toggleable(state.eyesClosed, role = Role.Switch, onValueChange = { model.toggleEyesClosed() })
-                            .testTag("eyes-closed-toggle").heightIn(min = if (compact) 36.dp else 44.dp).padding(horizontal = 16.dp),
-                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        SacredIcon(SacredIcon.EYE, Modifier.size(17.dp), if (state.eyesClosed) colors.marian else colors.muted)
-                        SacredText(if (state.eyesClosed) "Rezando de olhos fechados" else "Rezar de olhos fechados", style = type.micro, color = if (state.eyesClosed) colors.marian else colors.secondary)
-                    }
-                }
-                if (shortScreen && !state.eyesClosed) {
-                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                        SacredText(beadLabel, Modifier.weight(1f).testTag("bead-counter").semantics { liveRegion = LiveRegionMode.Polite }, type.micro, colors.secondary)
-                        toggle()
-                    }
-                } else {
-                    toggle()
                 }
             }
         }

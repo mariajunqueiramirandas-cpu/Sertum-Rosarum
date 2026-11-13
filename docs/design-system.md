@@ -42,7 +42,7 @@ Mystery atmospheres gently wash the top of the page and the light around the gar
 | --- | --- | --- |
 | Wordmark | Fraunces Medium | 24 / 30 sp |
 | Welcome and closing title | Fraunces Regular | 31 / 39 sp |
-| Prayer heading | Fraunces Regular | 28 / 35 sp |
+| Prayer and sheet heading | Fraunces Regular | 28 / 35 sp |
 | Section heading | Fraunces Medium | 20 / 27 sp |
 | Prayer text | Fraunces Regular | 21 / 34 sp |
 | Quiet lines | Fraunces Regular | 17 / 27 sp |
@@ -82,11 +82,17 @@ Until their own phases, these two places remain in bud: a painted prayer book in
 
 ### Prayer
 
-Five painted buds and roses show mystery progress along a leafed stem that grows as the prayer advances. The current mystery is an ivory bloom in a fine gold setting. Compact layouts pair the botanical marks with mystery numbers. Full prayer text has generous space and scrolls for longer prayers. The ten beads are separate, directly selectable closed buds on a garland; each blends into a layered blush rose with a spring animation and a fine selection ring. Previous and next actions remain visible on short screens.
+Reading occupies most of the prayer screen. The header centers the session title above its prayer mode; meaningful guide names get their own wrapping line. The generic “Minha oração” caption is omitted. Five painted buds and roses show mystery progress along a shallow, curved 66 dp stem; the current mystery is an ivory bloom in a fine gold setting. Landscape layouts pair botanical marks with mystery numbers. The lower bead garland keeps its curve in 58 dp. Guide sheets retain the original larger arcs. Both sizes keep the painted textures, spring blooms, breathing glows, swaying leaves, and growing stem.
 
-Overflowing prayers show a persistent sage reading-position rail. Soft alpha fades appear only at edges with hidden text, revealing the actual garden background. An open text action with a chevron says **Continue lendo** and advances by most of a viewport, retaining an overlap for reading continuity. Its separate 48 dp touch target has no persistent fill or border. At the end it becomes **Voltar ao início**. These cues disappear when the complete text fits. Each new prayer starts at the top; scrolling never advances the rosary. Native accessibility scrolling remains available, and the reading cue exposes its action and whether more text remains.
+Prayer and contemplation text keep their 21 / 34 sp and 17 / 27 sp sizes. Longer passages are aligned to the start with a natural ragged edge, using Android's paragraph line breaking. The Sign of the Cross and Glory Be retain a centered setting. Text columns are capped at 480 dp. Titles and the painted sprig remain centered, with prayer headings at 28 / 35 sp. No prayer wording or paragraph breaks are changed.
 
-A mystery is announced in its dimensions. Its card holds three layers joined by a stem (**A cena bíblica**, **O sentido da contemplação**, **O fruto do mistério**) which open one at a time, the scene first. Layer text is set in the prayer serif and aligned left for reading; the fruit is named in rose above its practice. Beneath a hairline, a switch turns on the fourth dimension, the **terço meditado conta a conta**. The switch is a bud that blooms into a rose as it crosses.
+The progress counter and a labeled **Olhos fechados** switch share one row above the previous and next actions. The switch, paging action, and navigation targets stay at least 48 dp high. The next action retains its full 60 dp petal form in portrait. The delivered crown has its own screen, leaving closing prayers room to breathe.
+
+Overflowing prayers show a sage reading-position rail and 18 dp alpha fades only at edges with hidden text, revealing the actual garden background. **Continue lendo** has a separate, right-aligned 48 dp touch target and advances by most of a viewport with a line of overlap. At the end it becomes **Voltar ao início**. Readers that fit reserve no paging row. Each prayer starts at the top; scrolling never advances the rosary. Native accessibility scrolling remains available.
+
+A rounded meditation card holds three numbered tabs, **Cena**, **Sentido**, and **Fruto**, joined by a fine stem. Their full names are exposed to accessibility. The active node gains a honey edge as the stem extends to it. The section body crossfades while its height settles with a damped spring. The surrounding heading and tabs stay anchored to the top of the reading area rather than recentering when the body changes. Choosing a section returns its reading to the top. Reduced motion removes these transitions.
+
+Inside the card, the small prayer book and Scripture citation share one line above the quote. Quote, scene, meaning, fruit, and practice use the same left edge, with no indented text gutter or repeated section heading. The contemplation sheet lays out all three sections vertically with full-width bodies. Beneath a hairline, the **terço meditado conta a conta** switch retains its explanatory caption and its bud-to-rose animation.
 
 During the decade, an open text link names the mystery beside a small ivory rose and chevron. It opens the contemplation sheet, where all three layers are laid out to read and, when the bead-by-bead rosary is on, the ten lines of the decade are listed with the current bead resting on a petal. Scripture references use plain text. With the bead-by-bead rosary on, each Ave-Maria is led by a soft card with a fine honey edge that carries the mystery's name and the line to contemplate; it takes the heading's place, so the whole prayer still fits beneath it.
 

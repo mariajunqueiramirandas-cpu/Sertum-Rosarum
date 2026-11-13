@@ -22,8 +22,12 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Alignment
@@ -52,15 +56,26 @@ import com.sertumrosarum.ui.theme.SertumTheme
 import kotlinx.coroutines.launch
 import kotlin.math.max
 
-/** Keeps the reading cues outside the text, with native scroll semantics intact. */
+/** A stable reading column; paging remains separate from advancing the prayer. */
 @Composable
 internal fun PrayerTextReader(
     modifier: Modifier = Modifier,
+    centerContent: Boolean = true,
+    readingKey: Int = 0,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val scroll = rememberScrollState()
     val hasMoreBelow by remember { derivedStateOf { scroll.canScrollForward } }
     val scope = rememberCoroutineScope()
+    var previousReadingKey by rememberSaveable { mutableIntStateOf(readingKey) }
+    LaunchedEffect(readingKey) {
+        // Reset a newly selected section, while retaining a restored reading
+        // position after rotation or activity recreation.
+        if (readingKey != previousReadingKey) {
+            scroll.scrollTo(0)
+            previousReadingKey = readingKey
+        }
+    }
     val colors = SertumTheme.colors
     val cueInk = lerp(colors.secondary, colors.ink, .3f)
     val type = SertumTheme.typography
@@ -68,8 +83,7 @@ internal fun PrayerTextReader(
 
     BoxWithConstraints(modifier.testTag("prayer-reader")) {
         val availableHeight = with(LocalDensity.current) { maxHeight.roundToPx() }
-        // Compare the content against the whole reader, before the cue takes space.
-        // This prevents the cue from creating its own overflow near the fit boundary.
+        // Compare against the whole reader so paging cannot create its own overflow.
         val hasOverflow by remember(scroll, availableHeight) {
             derivedStateOf {
                 scroll.maxValue in 1 until Int.MAX_VALUE &&
@@ -79,27 +93,30 @@ internal fun PrayerTextReader(
         Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 Column(
-                    Modifier.fillMaxSize().padding(start = 6.dp, end = if (hasOverflow) 14.dp else 6.dp)
+                    Modifier.fillMaxSize().padding(horizontal = 6.dp)
                         .readingEdgeFades(scroll)
                         .verticalScroll(scroll)
                         .testTag("prayer-scroll")
                         .padding(vertical = 8.dp),
-                    verticalArrangement = Arrangement.Center,
+                    verticalArrangement = if (centerContent) Arrangement.Center else Arrangement.Top,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     content = content,
                 )
                 if (hasOverflow) {
                     ReadingPositionRail(
                         scroll,
-                        Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(vertical = 8.dp).width(6.dp),
+                        Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(vertical = 12.dp).width(6.dp),
                     )
                 }
             }
 
-            // Keep a full touch target outside the reading viewport. Text that fits
-            // uses the entire reader instead of reserving an empty cue slot.
+            // The touch target never overlaps text or reserves an empty row.
             if (hasOverflow) {
-                Box(Modifier.fillMaxWidth().heightIn(min = 48.dp), contentAlignment = Alignment.Center) {
+                Row(
+                    Modifier.fillMaxWidth().heightIn(min = 48.dp),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
                     Row(
                         Modifier.testTag("prayer-scroll-cue")
                             .clip(RoundedCornerShape(12.dp))
@@ -123,7 +140,7 @@ internal fun PrayerTextReader(
                                 stateDescription = if (hasMoreBelow) "Há mais texto abaixo" else "Fim do texto"
                             }
                             .heightIn(min = 48.dp)
-                            .padding(horizontal = 14.dp, vertical = 7.dp),
+                            .padding(horizontal = 8.dp, vertical = 7.dp),
                         horizontalArrangement = Arrangement.spacedBy(7.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
