@@ -22,11 +22,11 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.setValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -54,26 +54,31 @@ import com.sertumrosarum.ui.components.SacredIcon
 import com.sertumrosarum.ui.components.SacredText
 import com.sertumrosarum.ui.theme.SertumTheme
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.CoroutineStart
 import kotlin.math.max
 
 /** A stable reading column; paging remains separate from advancing the prayer. */
 @Composable
 internal fun PrayerTextReader(
     modifier: Modifier = Modifier,
-    centerContent: Boolean = true,
+    centerContent: Boolean = false,
     readingKey: Int = 0,
     content: @Composable ColumnScope.() -> Unit,
 ) {
     val scroll = rememberScrollState()
-    val hasMoreBelow by remember { derivedStateOf { scroll.canScrollForward } }
+    val hasMoreBelow by remember(scroll) {
+        // At the start, never flash the previous section's "end of text" cue
+        // while Android is measuring the new scroll range.
+        derivedStateOf { scroll.value == 0 || scroll.canScrollForward }
+    }
     val scope = rememberCoroutineScope()
     var previousReadingKey by rememberSaveable { mutableIntStateOf(readingKey) }
-    LaunchedEffect(readingKey) {
-        // Reset a newly selected section, while retaining a restored reading
-        // position after rotation or activity recreation.
+    SideEffect {
         if (readingKey != previousReadingKey) {
-            scroll.scrollTo(0)
             previousReadingKey = readingKey
+            // Run before layout, rather than scheduling the reset for a later
+            // frame. Keep the same scroll state for restoration and accessibility.
+            scope.launch(start = CoroutineStart.UNDISPATCHED) { scroll.scrollTo(0) }
         }
     }
     val colors = SertumTheme.colors

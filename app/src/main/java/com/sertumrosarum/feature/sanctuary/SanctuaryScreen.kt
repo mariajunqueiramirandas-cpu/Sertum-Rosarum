@@ -11,6 +11,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
@@ -49,6 +51,7 @@ import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
@@ -85,88 +88,93 @@ fun SanctuaryScreen(state: PrayerUiState, model: PrayerSessionViewModel) {
     val scroll = rememberScrollState()
     val scope = rememberCoroutineScope()
     val startLabel = if (state.hasSession) "Tecer uma nova coroa" else "Tecer a coroa de hoje"
-    Column(Modifier.fillMaxSize().testTag("sanctuary")) {
-        SanctuaryHeader(state.themeMode, model::setTheme)
-        Box(Modifier.weight(1f)) {
-            Column(Modifier.fillMaxSize().softScrollTop(scroll).verticalScroll(scroll).testTag("sanctuary-scroll").padding(horizontal = 24.dp)) {
-                SanctuaryGarden(Modifier.fillMaxWidth().height(292.dp))
-                SacredText(
-                    state.today.format(DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM", Locale.forLanguageTag("pt-BR"))).replaceFirstChar { it.uppercaseChar() },
-                    Modifier.fillMaxWidth().padding(top = 10.dp), type.micro, colors.marian, TextAlign.Center,
-                )
-                SacredText("Que bom ter você aqui.", Modifier.fillMaxWidth().padding(top = 8.dp), type.display, align = TextAlign.Center)
-                SacredText("Respire. Há um lugar de paz esperando por você.", Modifier.fillMaxWidth().padding(top = 8.dp), type.body, colors.secondary, TextAlign.Center)
-                SacredFlourish(Modifier.align(Alignment.CenterHorizontally).padding(top = 26.dp, bottom = 26.dp))
+    val page = SertumTheme.spacing.page
+    BoxWithConstraints(Modifier.fillMaxSize().testTag("sanctuary")) {
+        // Let the greeting and mystery choices share the first view on denser displays.
+        val gardenHeight = (maxHeight * .28f).coerceIn(164.dp, 280.dp)
+        Column(Modifier.fillMaxSize()) {
+            SanctuaryHeader(state.themeMode, model::setTheme)
+            Box(Modifier.weight(1f)) {
+                Column(Modifier.fillMaxSize().softScrollTop(scroll).verticalScroll(scroll).testTag("sanctuary-scroll").padding(horizontal = page)) {
+                    SanctuaryGarden(Modifier.fillMaxWidth().height(gardenHeight))
+                    SacredText(
+                        state.today.format(DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM", Locale.forLanguageTag("pt-BR"))).replaceFirstChar { it.uppercaseChar() },
+                        Modifier.fillMaxWidth().padding(top = 10.dp), type.micro, colors.accentInk, TextAlign.Center,
+                    )
+                    SacredText("Que bom ter você aqui.", Modifier.fillMaxWidth().padding(top = 8.dp).testTag("sanctuary-greeting"), type.display, align = TextAlign.Center)
+                    SacredText("Respire. Há um lugar de paz esperando por você.", Modifier.fillMaxWidth().padding(top = 8.dp), type.body, colors.secondary, TextAlign.Center)
+                    SacredFlourish(Modifier.align(Alignment.CenterHorizontally).padding(top = 26.dp, bottom = 26.dp))
 
-                Row(Modifier.fillMaxWidth().heightIn(min = 32.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                    SacredText(if (state.selectedMode == PrayerMode.SOLO) "O que quer contemplar?" else "O que vamos contemplar?", Modifier.weight(1f), type.section)
-                    val isToday = state.selectedSet == MysterySet.forDay(state.today.dayOfWeek)
-                    // Reserve the label's width and height for every set so changing
-                    // mysteries never reflows the heading or moves the selector.
+                    Row(Modifier.fillMaxWidth().heightIn(min = 32.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                        SacredText(if (state.selectedMode == PrayerMode.SOLO) "O que quer contemplar?" else "O que vamos contemplar?", Modifier.weight(1f), type.section)
+                        val isToday = state.selectedSet == MysterySet.forDay(state.today.dayOfWeek)
+                        // Reserve the label's width and height for every set so changing
+                        // mysteries never reflows the heading or moves the selector.
+                        Row(
+                            Modifier.then(if (isToday) Modifier else Modifier.clearAndSetSemantics {})
+                                .alpha(if (isToday) 1f else 0f)
+                                .padding(start = 12.dp, top = 5.dp, bottom = 5.dp),
+                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        ) {
+                            Box(Modifier.size(6.dp).background(colors.marian, CircleShape))
+                            SacredText("Hoje", style = type.micro, color = colors.accentInk)
+                        }
+                    }
+                    Spacer(Modifier.height(14.dp))
+                    MysterySelector(state.selectedSet, model::selectMystery)
+                    Spacer(Modifier.height(16.dp))
+                    MysteryCard(state.selectedSet)
+                    PrayerModeSelector(state.selectedMode, model::selectPrayerMode, Modifier.padding(top = 24.dp))
                     Row(
-                        Modifier.then(if (isToday) Modifier else Modifier.clearAndSetSemantics {})
-                            .alpha(if (isToday) 1f else 0f)
-                            .padding(start = 12.dp, top = 5.dp, bottom = 5.dp),
-                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
+                        Modifier.align(Alignment.CenterHorizontally).padding(top = 10.dp).clip(CircleShape).clickable(role = Role.Button) { model.selectTab(SanctuaryTab.GUIDES) }
+                            .testTag("other-guides").heightIn(min = 48.dp).padding(horizontal = 18.dp),
+                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp),
                     ) {
-                        Box(Modifier.size(6.dp).background(colors.marian, CircleShape))
-                        SacredText("Hoje", style = type.micro, color = colors.marian)
+                        SacredText("Rezar com outro roteiro", style = type.label, color = colors.accentInk)
+                        SacredIcon(SacredIcon.CHEVRON, Modifier.size(12.dp), colors.marian)
                     }
-                }
-                Spacer(Modifier.height(14.dp))
-                MysterySelector(state.selectedSet, model::selectMystery)
-                Spacer(Modifier.height(16.dp))
-                MysteryCard(state.selectedSet)
-                PrayerModeSelector(state.selectedMode, model::selectPrayerMode, Modifier.padding(top = 24.dp))
-                Row(
-                    Modifier.align(Alignment.CenterHorizontally).padding(top = 10.dp).clip(CircleShape).clickable(role = Role.Button) { model.selectTab(SanctuaryTab.GUIDES) }
-                        .testTag("other-guides").heightIn(min = 48.dp).padding(horizontal = 18.dp),
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp),
-                ) {
-                    SacredText("Rezar com outro roteiro", style = type.label, color = colors.marian)
-                    SacredIcon(SacredIcon.CHEVRON, Modifier.size(12.dp), colors.marian)
-                }
 
-                SacredText("“A minha alma engrandece o Senhor.”", Modifier.fillMaxWidth().padding(top = 24.dp), type.whisper, colors.secondary, TextAlign.Center)
-                SacredText("Lucas 1, 46", Modifier.fillMaxWidth().padding(top = 6.dp), type.micro, colors.muted, TextAlign.Center)
-                SacredText("Uma oração de cada vez. Sem pressa.", Modifier.fillMaxWidth().padding(top = 22.dp, bottom = 40.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.secondary, TextAlign.Center)
+                    SacredText("“A minha alma engrandece o Senhor.”", Modifier.fillMaxWidth().padding(top = 24.dp), type.whisper, colors.secondary, TextAlign.Center)
+                    SacredText("Lucas 1, 46", Modifier.fillMaxWidth().padding(top = 6.dp), type.micro, colors.muted, TextAlign.Center)
+                    SacredText("Uma oração de cada vez. Sem pressa.", Modifier.fillMaxWidth().padding(top = 22.dp, bottom = 40.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.secondary, TextAlign.Center)
+                }
+                ScrollHeaderShadow(scroll, Modifier.align(Alignment.TopCenter))
+                // The page dissolves into the action instead of being cut by it.
+                Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(32.dp).background(Brush.verticalGradient(listOf(colors.background.copy(alpha = 0f), colors.background))))
             }
-            ScrollHeaderShadow(scroll, Modifier.align(Alignment.TopCenter))
-            // The page dissolves into the action instead of being cut by it.
-            Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(32.dp).background(Brush.verticalGradient(listOf(colors.background.copy(alpha = 0f), colors.background))))
-        }
-        Column(Modifier.fillMaxWidth().background(colors.background).padding(horizontal = 24.dp).padding(top = 4.dp, bottom = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            // Reserve the cue's touch target outside the content, even at the end,
-            // so it never covers words or changes the viewport when it fades away.
-            Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
-                androidx.compose.animation.AnimatedVisibility(scroll.canScrollForward, enter = fadeIn(), exit = fadeOut()) {
-                    Box(
-                        Modifier.fillMaxSize().clip(CircleShape)
-                            .clickable(role = Role.Button) { scope.launch { scroll.animateScrollBy(scroll.viewportSize * .7f) } }
-                            .semantics { contentDescription = "Ver mais no santuário" }
-                            .testTag("sanctuary-scroll-cue"),
-                        contentAlignment = Alignment.Center,
+            Column(Modifier.fillMaxWidth().background(colors.background).padding(horizontal = page).padding(top = 4.dp, bottom = 6.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                // Reserve the cue's touch target outside the content, even at the end,
+                // so it never covers words or changes the viewport when it fades away.
+                Box(Modifier.size(48.dp), contentAlignment = Alignment.Center) {
+                    androidx.compose.animation.AnimatedVisibility(scroll.canScrollForward, enter = fadeIn(), exit = fadeOut()) {
+                        Box(
+                            Modifier.fillMaxSize().clip(CircleShape)
+                                .clickable(role = Role.Button) { scope.launch { scroll.animateScrollBy(scroll.viewportSize * .7f) } }
+                                .semantics { contentDescription = "Ver mais no santuário" }
+                                .testTag("sanctuary-scroll-cue"),
+                            contentAlignment = Alignment.Center,
+                        ) {
+                            SacredIcon(SacredIcon.CHEVRON, Modifier.size(14.dp).rotate(90f), colors.muted)
+                        }
+                    }
+                }
+                if (state.hasSession) {
+                    Row(
+                        Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(colors.surface).border(1.dp, colors.border, RoundedCornerShape(24.dp))
+                            .clickable(role = Role.Button, onClick = model::resume).testTag("resume").heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
                     ) {
-                        SacredIcon(SacredIcon.CHEVRON, Modifier.size(14.dp).rotate(90f), colors.muted)
+                        RoseMark(Modifier.size(28.dp))
+                        Column(Modifier.weight(1f)) {
+                            SacredText("Sua oração espera por você", style = type.label)
+                            SacredText("${state.sessionGuide.title} · ${state.sessionMode.label} · ${state.stepIndex + 1}/${state.sequence.size}", style = type.micro.copy(fontWeight = FontWeight.Normal), color = colors.secondary)
+                        }
+                        SacredIcon(SacredIcon.CHEVRON, Modifier.size(15.dp), colors.marian)
                     }
+                    Spacer(Modifier.height(12.dp))
                 }
+                SacredPrimaryButton(startLabel, model::start, tag = "start-rosary")
             }
-            if (state.hasSession) {
-                Row(
-                    Modifier.fillMaxWidth().clip(RoundedCornerShape(24.dp)).background(colors.surface).border(1.dp, colors.border, RoundedCornerShape(24.dp))
-                        .clickable(role = Role.Button, onClick = model::resume).testTag("resume").heightIn(min = 56.dp).padding(horizontal = 16.dp, vertical = 10.dp),
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
-                ) {
-                    RoseMark(Modifier.size(28.dp))
-                    Column(Modifier.weight(1f)) {
-                        SacredText("Sua oração espera por você", style = type.label)
-                        SacredText("${state.sessionGuide.title} · ${state.sessionMode.label} · ${state.stepIndex + 1}/${state.sequence.size}", style = type.micro.copy(fontWeight = FontWeight.Normal), color = colors.secondary)
-                    }
-                    SacredIcon(SacredIcon.CHEVRON, Modifier.size(15.dp), colors.marian)
-                }
-                Spacer(Modifier.height(12.dp))
-            }
-            SacredPrimaryButton(startLabel, model::start, tag = "start-rosary")
         }
     }
 }
@@ -177,7 +185,8 @@ private fun SanctuaryHeader(mode: ThemeMode, onTheme: (ThemeMode) -> Unit) {
     val colors = SertumTheme.colors
     val density = LocalDensity.current
     var menuOpen by remember { mutableStateOf(false) }
-    Row(Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 10.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
+    val page = SertumTheme.spacing.page
+    Row(Modifier.fillMaxWidth().padding(start = page, end = page, top = 10.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.SpaceBetween) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
             RoseMark(Modifier.size(30.dp))
             SacredText("sertum", style = type.brand)
@@ -214,21 +223,51 @@ private fun SanctuaryHeader(mode: ThemeMode, onTheme: (ThemeMode) -> Unit) {
 internal fun MysterySelector(selected: MysterySet, onSelect: (MysterySet) -> Unit) {
     val colors = SertumTheme.colors
     val track = RoundedCornerShape(26.dp)
-    Row(Modifier.fillMaxWidth().testTag("mystery-selector").clip(track).background(colors.surface).border(1.dp, colors.border.copy(alpha = .7f), track).padding(5.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
-        MysterySet.entries.forEach { set ->
-            val active = set == selected
-            val fill by animateColorAsState(if (active) colors.elevated else colors.elevated.copy(alpha = 0f), label = "mystery-fill")
-            val pill = RoundedCornerShape(21.dp)
-            Box(
-                Modifier.weight(1f)
-                    .shadow(if (active && !colors.isDark) 5.dp else 0.dp, pill, ambientColor = colors.marian.copy(alpha = .2f), spotColor = colors.marian.copy(alpha = .28f))
-                    .clip(pill).background(fill)
-                    .selectable(active, role = Role.RadioButton, onClick = { onSelect(set) }).testTag("mystery-${set.name}").heightIn(min = 48.dp),
-                contentAlignment = Alignment.Center,
-            ) {
-                SacredText(set.label, style = SertumTheme.typography.label.copy(fontSize = 13.5.sp, fontWeight = if (active) FontWeight.Bold else FontWeight.Medium), color = if (active) colors.ink else colors.secondary, align = TextAlign.Center)
+    val label = SertumTheme.typography.label.copy(fontSize = 13.5.sp, fontWeight = FontWeight.Bold)
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    // Reserve each label's selected width, rather than four copies of the longest
+    // label. Modest side padding keeps a normal phone in one row without shrinking
+    // its type; the measured widths also keep selection from changing the layout.
+    val minimumCells = with(density) {
+        MysterySet.entries.associateWith { set ->
+            (measurer.measure(set.label, label, softWrap = false).size.width.toDp() + 8.dp).coerceAtLeast(48.dp)
+        }
+    }
+    BoxWithConstraints(Modifier.fillMaxWidth().testTag("mystery-selector").selectableGroup().clip(track).background(colors.surface).border(1.dp, colors.border.copy(alpha = .7f), track).padding(5.dp)) {
+        val singleRowWidth = minimumCells.values.fold(6.dp) { total, cell -> total + cell }
+        val widestCell = minimumCells.values.maxOf { it }
+        val columns = when {
+            maxWidth >= singleRowWidth -> 4
+            maxWidth >= widestCell * 2 + 2.dp -> 2
+            else -> 1
+        }
+        Column(verticalArrangement = Arrangement.spacedBy(2.dp)) {
+            MysterySet.entries.chunked(columns).forEach { row ->
+                Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+                    row.forEach { set ->
+                        val weight = if (columns == 4) minimumCells.getValue(set).value else 1f
+                        MysteryChoice(set, set == selected, onSelect, Modifier.weight(weight))
+                    }
+                }
             }
         }
+    }
+}
+
+@Composable
+private fun MysteryChoice(set: MysterySet, active: Boolean, onSelect: (MysterySet) -> Unit, modifier: Modifier) {
+    val colors = SertumTheme.colors
+    val fill by animateColorAsState(if (active) colors.elevated else colors.elevated.copy(alpha = 0f), label = "mystery-fill")
+    val pill = RoundedCornerShape(21.dp)
+    Box(
+        modifier.shadow(if (active && !colors.isDark) 5.dp else 0.dp, pill, ambientColor = colors.marian.copy(alpha = .2f), spotColor = colors.marian.copy(alpha = .28f))
+            .clip(pill).background(fill)
+            .selectable(active, role = Role.RadioButton, onClick = { onSelect(set) }).testTag("mystery-${set.name}")
+            .heightIn(min = 48.dp).padding(horizontal = 4.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center,
+    ) {
+        SacredText(set.label, Modifier.testTag("mystery-label-${set.name}"), style = SertumTheme.typography.label.copy(fontSize = 13.5.sp, fontWeight = if (active) FontWeight.Bold else FontWeight.Medium), color = if (active) colors.ink else colors.secondary, align = TextAlign.Center)
     }
 }
 
@@ -273,7 +312,7 @@ private fun MysteryRow(set: MysterySet, index: Int, mystery: Mystery, last: Bool
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
             Box(Modifier.size(32.dp).background(colors.elevated, CircleShape).background(colors.marian.copy(alpha = .14f), CircleShape), contentAlignment = Alignment.Center) {
-                SacredText("${index + 1}", style = type.label.copy(fontSize = 14.sp), color = colors.marian)
+                SacredText("${index + 1}", style = type.label.copy(fontSize = 14.sp), color = colors.accentInk)
             }
             Column(Modifier.weight(1f)) {
                 SacredText(mystery.title, style = type.label.copy(fontWeight = FontWeight.SemiBold))

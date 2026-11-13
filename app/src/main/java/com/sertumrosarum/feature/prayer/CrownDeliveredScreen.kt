@@ -7,6 +7,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
@@ -31,25 +33,27 @@ import java.util.Locale
 fun CrownDeliveredScreen(state: PrayerUiState, onReturn: () -> Unit) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
-    Column(Modifier.fillMaxSize().testTag("crown-delivered").padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(Modifier.fillMaxSize().testTag("crown-delivered").padding(horizontal = SertumTheme.spacing.page), horizontalAlignment = Alignment.CenterHorizontally) {
         Row(Modifier.padding(top = 19.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
             RoseMark(Modifier.size(26.dp))
             SacredText("sertum", style = type.brand)
         }
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            RoseCrownEmblem(Modifier.size(286.dp), state.groupCount, state.crownBeadCount, state.sessionGuide.offeringIllustration)
-            SacredText(state.sessionGuide.title, Modifier.padding(top = 10.dp).testTag("delivered-guide"), type.micro, colors.marian, TextAlign.Center)
+            RoseCrownEmblem(Modifier.widthIn(max = 286.dp).fillMaxWidth().aspectRatio(1f), state.groupCount, state.crownBeadCount, state.sessionGuide.offeringIllustration)
+            SacredText(state.sessionGuide.title, Modifier.padding(top = 10.dp).testTag("delivered-guide"), type.micro, colors.accentInk, TextAlign.Center)
             SacredText(if (state.sessionMode == PrayerMode.SOLO) "Sua Coroa de Rosas\nfoi entregue" else "Nossa Coroa de Rosas\nfoi entregue", Modifier.padding(top = 12.dp), type.display, align = TextAlign.Center)
             SacredText("Que a paz desta oração\nacompanhe o seu dia.", Modifier.padding(top = 14.dp), type.whisper, colors.secondary, TextAlign.Center)
             SacredFlourish(Modifier.padding(top = 24.dp, bottom = 20.dp))
             // A quiet record of the time given, with no score to keep.
-            Row(
+            Column(
                 Modifier.padding(vertical = 10.dp),
-                verticalAlignment = Alignment.CenterVertically,
+                horizontalAlignment = Alignment.CenterHorizontally,
             ) {
-                SacredText("${state.groupCount} ${if (state.script.isRosary) "mistérios" else if (state.groupLabel == "setena") "setenas" else "dezenas"}, ", style = type.body.copy(fontSize = 14.sp), color = colors.secondary)
-                SacredText(String.format(Locale.ROOT, "%02d:%02d", state.durationSeconds / 60, state.durationSeconds % 60), Modifier.testTag("prayer-duration"), type.body.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold), colors.ink)
-                SacredText(" em oração", style = type.body.copy(fontSize = 14.sp), color = colors.secondary)
+                SacredText("${state.groupCount} ${if (state.script.isRosary) "mistérios" else if (state.groupLabel == "setena") "setenas" else "dezenas"}", style = type.body.copy(fontSize = 14.sp), color = colors.secondary, align = TextAlign.Center)
+                Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    SacredText(String.format(Locale.ROOT, "%02d:%02d", state.durationSeconds / 60, state.durationSeconds % 60), Modifier.testTag("prayer-duration"), type.body.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold), colors.ink)
+                    SacredText(" em oração", style = type.body.copy(fontSize = 14.sp), color = colors.secondary)
+                }
             }
         }
         SacredPrimaryButton("Voltar ao santuário", onReturn, Modifier.padding(top = 12.dp), tag = "return-sanctuary")
