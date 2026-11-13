@@ -61,8 +61,12 @@ class SanctuaryScreenshotTest {
         tap("theme-$mode")
         tap("start-rosary")
         tap("next-prayer")
-        compose.onNodeWithTag("prayer-scroll-cue").assertIsDisplayed()
+        compose.onNodeWithTag("prayer-scroll-cue").assertDoesNotExist()
         shot("prayer-reading-$suffix")
+        // The offering now fits. The longer Creed still exercises the reader cues.
+        tap("next-prayer")
+        compose.onNodeWithTag("prayer-scroll-cue").assertIsDisplayed()
+        shot("prayer-creed-$suffix")
         if (mode == "VIGIL") {
             compose.onNodeWithTag("prayer-scroll").performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, 100_000f) }
             compose.waitForIdle()

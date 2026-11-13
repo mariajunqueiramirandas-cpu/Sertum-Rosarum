@@ -19,6 +19,7 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineBreak
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -79,8 +80,8 @@ data class SertumTypography(
     val display: TextStyle = TextStyle(fontFamily = VoiceDisplay, fontSize = 31.sp, lineHeight = 39.sp, fontWeight = FontWeight.Normal),
     val heading: TextStyle = TextStyle(fontFamily = VoiceDisplay, fontSize = 28.sp, lineHeight = 35.sp, fontWeight = FontWeight.Normal),
     val section: TextStyle = TextStyle(fontFamily = VoiceDisplay, fontSize = 20.sp, lineHeight = 27.sp, fontWeight = FontWeight.Medium),
-    val prayer: TextStyle = TextStyle(fontFamily = VoiceText, fontSize = 21.sp, lineHeight = 34.sp),
-    val whisper: TextStyle = TextStyle(fontFamily = VoiceText, fontSize = 17.sp, lineHeight = 27.sp),
+    val prayer: TextStyle = TextStyle(fontFamily = VoiceText, fontSize = 21.sp, lineHeight = 34.sp, lineBreak = LineBreak.Paragraph),
+    val whisper: TextStyle = TextStyle(fontFamily = VoiceText, fontSize = 17.sp, lineHeight = 27.sp, lineBreak = LineBreak.Paragraph),
     val body: TextStyle = TextStyle(fontFamily = SanctuaryFont, fontSize = 15.sp, lineHeight = 23.sp),
     val label: TextStyle = TextStyle(fontFamily = SanctuaryFont, fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.SemiBold),
     val micro: TextStyle = TextStyle(fontFamily = SanctuaryFont, fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.SemiBold),
