@@ -30,7 +30,7 @@ Open Sertum and arrive in a small garden: warm cream, sage leaves, clay-colored 
 
 ## A garden in every screen
 
-These previews are rendered from the Android Compose screens using Robolectric native graphics. The sacred garden and coordinated botanical paintings are bundled with the app; Canvas and Foundation compose the flowers, stems, crown, icons, and controls.
+These previews are rendered from the Android Compose screens using Robolectric native graphics. The sacred garden, botanical paintings, and [eight devotional illustrations](docs/artwork/devotions/README.md) are bundled with the app; Canvas and Foundation compose the flowers, stems, crown, icons, and controls. Scrolling content dissolves gently beneath the fixed headers.
 
 <table>
   <tr>
@@ -94,8 +94,8 @@ All ten Roteiros guides can be prayed offline. Each of the twenty rosary mysteri
   </tr>
   <tr>
     <td><img src="docs/screenshots/roteiros-day.png" width="250" alt="The Roteiros tab: three rosary guides on one card, themed rosaries as small painted cards, and the four-place bar" /></td>
-    <td><img src="docs/screenshots/roteiros-crowns.png" width="250" alt="Devotional crowns, each with a small glyph of its own bead layout and its group and bead counts" /></td>
-    <td><img src="docs/screenshots/guide-tears.png" width="250" alt="The sheet for the Crown of Tears: seven flowers on the stem, seven beads on the garland, and the path of the prayer" /></td>
+    <td><img src="docs/screenshots/roteiros-crowns.png" width="250" alt="Devotional crowns with their sacred portraits and exact group and bead counts" /></td>
+    <td><img src="docs/screenshots/guide-tears.png" width="250" alt="Our Lady of Tears above seven flowers on the stem, seven beads on the garland, and the path of the prayer" /></td>
   </tr>
 </table>
 
@@ -191,7 +191,7 @@ The visual system is **O Jardim de Maria**: a comforting place of shelter, with 
 | The garden | Bundled model-generated sacred paintings for day and Vigil: Mary and the Child, a rose-covered arch and stone path, with Canvas light and pollen |
 | Living beads | Painted blush and ivory roses, buds that blend into blooms, sage leaves, a growing stem, fine gold selection rings, and gentle spring animations |
 | Offered crown | Fifty painted roses woven with sage leaves, five ivory mystery markers, and a central rose in a quiet gold setting |
-| Typography | Bundled Fraunces (soft serif, for the wordmark and prayers) and Nunito (controls), with explicit variable-font axes |
+| Typography | Bundled fixed-weight Fraunces and Nunito instances, with the soft serif axes baked in for consistent rendering across devices |
 | Day | Warm cream `#FBF8F2`, sage `#789A81`, rose `#C07A72`, and blush petal actions |
 | Vigil | Deep forest `#162A27`, cream `#F3EFE3`, and muted rose `#E0A99C` |
 | Controls | Custom Foundation buttons, filled icon controls, press indications, mystery selectors, and appearance menu |

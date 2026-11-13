@@ -63,6 +63,8 @@ class RoteirosScreenshotTest {
         tap("decade-6")
         tap("bead-6")
         shot("prayer-tears")
+        repeat(5) { tap("next-prayer") }
+        shot("offering-tears")
     }
 
     @Test fun franciscanCrownSheetAtNight() {
@@ -75,6 +77,9 @@ class RoteirosScreenshotTest {
         tap("bead-9")
         repeat(2) { tap("next-prayer") }
         shot("prayer-franciscan-final-pair")
+        tap("bead-1")
+        repeat(2) { tap("next-prayer") }
+        shot("offering-franciscan-vigil")
     }
 
     @Test fun completeRosarySheetShowsTheLitany() {
@@ -133,5 +138,37 @@ class RoteirosScreenshotTest {
         shot("tesouro")
         tap("tab-GARDEN")
         shot("meu-jardim")
+        tap("tab-HOME")
+        appearance("VIGIL")
+        tap("tab-TREASURY")
+        shot("tesouro-vigil")
+    }
+
+    @Test fun devotionalPortraitsAndThemedCards() {
+        appearance("DAY")
+        tap("tab-GUIDES")
+        compose.onNodeWithTag("shelf-THEMED").performScrollTo()
+        // The shelf title alone can fit at the viewport's foot; bring its paintings into view too.
+        compose.onNodeWithTag("guides-scroll").performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, 1600f) }
+        shot("roteiros-themed")
+        compose.onNodeWithTag("guide-DIVINE_MERCY").performScrollTo()
+        tap("guide-DIVINE_MERCY")
+        shot("guide-divine-mercy")
+        tap("guide-sheet-veil")
+        compose.onNodeWithTag("guide-SAINT_JOSEPH").performScrollTo()
+        tap("guide-SAINT_JOSEPH")
+        shot("guide-saint-joseph")
+    }
+
+    @Test fun scrolledHeaderDay() {
+        appearance("DAY")
+        compose.onNodeWithTag("sanctuary-scroll").performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, 192f) }
+        shot("sanctuary-scrolled-day")
+    }
+
+    @Test fun scrolledHeaderVigil() {
+        appearance("VIGIL")
+        compose.onNodeWithTag("sanctuary-scroll").performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, 192f) }
+        shot("sanctuary-scrolled-vigil")
     }
 }

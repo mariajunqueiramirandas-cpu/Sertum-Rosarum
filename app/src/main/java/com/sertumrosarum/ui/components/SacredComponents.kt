@@ -274,11 +274,3 @@ fun SacredToggleRow(title: String, caption: String, checked: Boolean, onToggle: 
         SacredSwitch(checked)
     }
 }
-
-/** A small label in a soft sage pill, for a state or a count that needs no emphasis. */
-@Composable
-fun SacredChip(text: String, modifier: Modifier = Modifier, tint: Color = SertumTheme.colors.marian) {
-    Box(modifier.clip(CircleShape).background(tint.copy(alpha = .13f)).padding(horizontal = 11.dp, vertical = 4.dp)) {
-        SacredText(text, style = SertumTheme.typography.micro, color = tint, maxLines = 1)
-    }
-}

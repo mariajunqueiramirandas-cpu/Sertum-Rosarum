@@ -104,7 +104,7 @@ fun ImmersivePrayerScreen(state: PrayerUiState, model: PrayerSessionViewModel, o
                     } else {
                         // Within a decade the chapter line becomes the way back into its mystery.
                         if (step.mystery != null && state.contemplation != null && !announcing && !state.eyesClosed) {
-                            MysteryChip(requireNotNull(step.decadeIndex), step.mystery, { contemplating = true })
+                            MysteryLink(requireNotNull(step.decadeIndex), step.mystery, { contemplating = true })
                             Spacer(Modifier.height(if (shortScreen) 0.dp else 2.dp))
                         } else {
                             SacredText(chapter, style = type.micro, color = colors.marian, align = TextAlign.Center)

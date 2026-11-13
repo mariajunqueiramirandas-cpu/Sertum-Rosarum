@@ -7,9 +7,10 @@ The experience should feel welcoming, familiar, and unhurried. The garden is par
 ## Visual language
 
 - The home garden is a bundled, model-generated sacred painting: an ivory arch, climbing roses, Mary holding the Child, and a stone path. Classical naturalistic faces, a flowing blue mantle, fine gold embroidery, and a radiant halo convey Mary's holiness and grace. Matching day and moonlit paintings share the same composition. Canvas adds restrained moving light and pollen; the painted figures stay still. The [artwork notes, masters, and prompts](artwork/garden/README.md) preserve the chosen direction.
-- Bundled **Fraunces** is the voice of the garden. Its softness axis is fully open, so every serif ends rounded. It sets the wordmark, headings, and every prayer. **Nunito** carries controls and small supporting copy.
+- Bundled **Fraunces** is the voice of the garden. Its softness axis is baked fully open into fixed-weight font files, so every serif ends rounded consistently across devices. It sets the wordmark, headings, and every prayer. **Nunito** carries controls and small supporting copy, with separate regular, medium, semibold, and bold resources. [Font sources and regeneration](fonts/README.md) preserve the exact cuts.
 - Type is sentence case, with generous line spacing. Headings are regular weight, never bold.
 - Surfaces are soft, generously rounded, and edged with a hairline in place of a heavy shadow. Shadows are tinted sage or rose, never grey.
+- Pill shapes are discouraged and used sparingly where they clearly communicate selection or the main action. Status, categories, counts, Scripture citations, and other supporting labels use plain typography. Secondary actions use open text with a small directional icon and a generous touch target. Give every enclosed shape a functional reason to exist.
 - Actions are petals: a pale blush fill with a rosewood label. Nothing on screen is a dark slab.
 - A small sprig (two leaves around a closed bud) marks each pause in the text.
 - Night is the same garden at dusk: deep forest, cream, muted rose, moonlight, and honey accents.
@@ -28,8 +29,8 @@ The experience should feel welcoming, familiar, and unhurried. The garden is par
 | Muted text | `#8A968B` | `#8CA594` |
 | Honey accent | `#B8935A` | `#D8BE84` |
 | Rose (flowers and accents) | `#C07A72` | `#E0A99C` |
-| Petal action fill | `#F8E3DA` to `#EFCDC2` | `#EDC6BA` to `#DFA99C` |
-| Petal action label | `#7A433D` | `#4A2925` |
+| Petal action fill | `#F6DED5` to `#EDC7BC` | `#EDC6BA` to `#DFA99C` |
+| Petal action label | `#713F39` | `#4A2925` |
 | Botanical accent | `#789A81` | `#9DBE9D` |
 | Soft border | `#E6E9DD` | `#314D40` |
 
@@ -49,7 +50,7 @@ Mystery atmospheres gently wash the top of the page and the light around the gar
 | Controls | Nunito Semibold–Bold | 15–16 / 21 sp |
 | Small labels | Nunito Semibold | 13 / 18 sp |
 
-Cards and primary actions use 30 dp corners; selectors and icon controls are full pills and circles. All are built from Compose UI and Foundation, with custom Canvas icons, indications, and animations. Material and Material3 groups are excluded from every dependency configuration, including preview tooling.
+Cards and primary actions use 30 dp corners. The main prayer action, mystery selector, and active bottom-navigation destination retain rounded fills to communicate action or selection; icon controls remain circular. Supporting text stays unenclosed. All are built from Compose UI and Foundation, with custom Canvas icons, indications, and animations. Material and Material3 groups are excluded from every dependency configuration, including preview tooling.
 
 ## Screens
 
@@ -59,13 +60,15 @@ A soft floating shelf at the foot of the screen holds four places: **Início**, 
 
 Outside Início, the rose and the place's name sit where the wordmark sits at home.
 
+Once content scrolls beneath a fixed header, its first 32 dp fade to reveal the actual page wash. A faint sage shadow adds separation without an opaque strip. Both effects disappear at the top of the page; sheets use a shorter 16 dp fade beneath their handle.
+
 ### Sanctuary
 
-The Marian garden opens the screen, under a small floral wordmark and the appearance control. A centered greeting follows. Four soft mystery controls lead to one card that holds the chosen mysteries: their invitation, then five moments joined by a stem. A quiet link beneath it leads to Roteiros. The page dissolves into the primary prayer action, which stays within reach above the shelf. A paused crown offers a gentle continuation card.
+The Marian garden opens the screen, under a small floral wordmark and the appearance control. A centered greeting follows. Four soft mystery controls lead to one card that holds the chosen mysteries: their invitation, then five moments joined by a stem. The section heading always reserves the space for its plain “Hoje” label and small dot, so selecting another set does not shift the controls or card. The hidden label is excluded from accessibility. A quiet link beneath it leads to Roteiros. The page dissolves into the primary prayer action, which stays within reach above the shelf. A paused crown offers a gentle continuation card.
 
 ### Roteiros
 
-Every way of praying sits on one of three shelves. **O santo terço** and **Outras coroas devocionais** are single cards whose rows are separated by a hairline; **Terços temáticos** is a row of small painted cards that runs from edge to edge, each washed in the colour of its intention. A devotional crown is introduced by a small glyph of its own shape, seen from above: one dot for each small bead and a honey dot where each group begins, so five decades, seven septets, and seven decades differ at a glance. Small sage pills carry what distinguishes a guide (*Iniciante*, *Ladainha*, its shape).
+Every way of praying sits on one of three shelves. **O santo terço** and **Outras coroas devocionais** are single cards whose rows are separated by a hairline; **Terços temáticos** is a row of small painted cards that runs from edge to edge, each washed in the colour of its intention. An open prayer book welcomes the reader. Devotional rows carry their own classical sacred portraits; themed cards carry the Holy Family, a lily and lamp for consolation, or a dove of peace. Plain sage text identifies what distinguishes a guide (*Iniciante*, *Ladainha*, its shape), and guide sheets introduce their category with a simple caption. The traditional rosary retains its small crown glyph. The [paintings, iconography, scales, and prompts](artwork/devotions/README.md) form one family with the home garden.
 
 Touching a guide raises its sheet: what it is, the crown's shape, and the path of the prayer as buds on a stem ending in a rose. The shape is drawn with the same stem and garland as the prayer screen and answers to touch, so a septet of seven can be felt before it is prayed. The complete rosary also shows the litany's two voices. Each guide has one petal action that stays in view and begins its own prayer sequence. Rosaries also offer the mystery selector and bead-by-bead switch. The stem, garland, and delivered crown use the active script’s actual group and bead counts.
 
@@ -75,17 +78,17 @@ A sheet is a rounded page of the background colour that rises over a dusk-green 
 
 ### Tesouro and Meu Jardim
 
-Until their own phases, these two places are flowerbeds in bud: a single painted bud in slow rings of light, the place's purpose in one line, and a card naming what will grow there, joined by the same stem as the mysteries. They promise nothing with a date, and Meu Jardim says outright that it will keep no goals or streaks.
+Until their own phases, these two places remain in bud: a painted prayer book in Tesouro and a single painted bud in slow rings of light in Meu Jardim. “Ainda em botão” is a plain caption beneath the illustration. Each states its purpose in one line and names what will grow there on a card joined by the same stem as the mysteries. They promise nothing with a date, and Meu Jardim says outright that it will keep no goals or streaks.
 
 ### Prayer
 
 Five painted buds and roses show mystery progress along a leafed stem that grows as the prayer advances. The current mystery is an ivory bloom in a fine gold setting. Compact layouts pair the botanical marks with mystery numbers. Full prayer text has generous space and scrolls for longer prayers. The ten beads are separate, directly selectable closed buds on a garland; each blends into a layered blush rose with a spring animation and a fine selection ring. Previous and next actions remain visible on short screens.
 
-Overflowing prayers show a persistent sage reading-position rail. Soft alpha fades appear only at edges with hidden text, revealing the actual garden background. A separate 48 dp touch target says **Continue lendo** and advances by most of a viewport, retaining an overlap for reading continuity. At the end it becomes **Voltar ao início**. These cues disappear when the complete text fits. Each new prayer starts at the top; scrolling never advances the rosary. Native accessibility scrolling remains available, and the reading cue exposes its action and whether more text remains.
+Overflowing prayers show a persistent sage reading-position rail. Soft alpha fades appear only at edges with hidden text, revealing the actual garden background. An open text action with a chevron says **Continue lendo** and advances by most of a viewport, retaining an overlap for reading continuity. Its separate 48 dp touch target has no persistent fill or border. At the end it becomes **Voltar ao início**. These cues disappear when the complete text fits. Each new prayer starts at the top; scrolling never advances the rosary. Native accessibility scrolling remains available, and the reading cue exposes its action and whether more text remains.
 
 A mystery is announced in its dimensions. Its card holds three layers joined by a stem (**A cena bíblica**, **O sentido da contemplação**, **O fruto do mistério**) which open one at a time, the scene first. Layer text is set in the prayer serif and aligned left for reading; the fruit is named in rose above its practice. Beneath a hairline, a switch turns on the fourth dimension, the **terço meditado conta a conta**. The switch is a bud that blooms into a rose as it crosses.
 
-During the decade, the chapter line becomes a small sage pill naming the mystery. It opens the contemplation sheet, where all three layers are laid out to read and, when the bead-by-bead rosary is on, the ten lines of the decade are listed with the current bead resting on a petal. With the bead-by-bead rosary on, each Ave-Maria is led by a soft card with a fine honey edge that carries the mystery's name and the line to contemplate; it takes the heading's place, so the whole prayer still fits beneath it.
+During the decade, an open text link names the mystery beside a small ivory rose and chevron. It opens the contemplation sheet, where all three layers are laid out to read and, when the bead-by-bead rosary is on, the ten lines of the decade are listed with the current bead resting on a petal. Scripture references use plain text. With the bead-by-bead rosary on, each Ave-Maria is led by a soft card with a fine honey edge that carries the mystery's name and the line to contemplate; it takes the heading's place, so the whole prayer still fits beneath it.
 
 The catechetical guide adds one honey-tinted note above a prayer, titled **Por que rezamos assim?**. A note appears the first time a prayer comes in a group, never on every bead.
 
@@ -95,7 +98,7 @@ Eyes-closed mode replaces the reading area with a concise prayer heading and cal
 
 ### Crown delivered
 
-A crown of fifty roses woven with leaves surrounds a large central blossom. The screen names the delivered crown, offers a gentle closing message, records the time in prayer in one quiet line, and returns to the sanctuary. There are no streaks, scores, or urgency cues.
+A crown of roses woven with leaves surrounds a large central blossom or the chosen devotion's sacred painting. The ring uses the script's actual bead and group counts; blossoms and leaves contract for denser rings, keeping all 72 Franciscan flowers distinct. The screen names the delivered crown, offers a gentle closing message, records the time in prayer as a plain line of text, and returns to the sanctuary. There are no streaks, scores, or urgency cues.
 
 ## Motion, haptics, and accessibility
 

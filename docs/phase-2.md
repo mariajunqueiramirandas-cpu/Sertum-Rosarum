@@ -2,6 +2,8 @@
 
 All ten guides in Roteiros now begin a complete local prayer session. Tesouro and Meu Jardim remain the Phase 3 and 4 placeholders. No account, network service, or new production dependency is required.
 
+The [devotional artwork collection](artwork/devotions/README.md) adds eight coordinated sacred paintings to the library, guide sheets, and delivered crowns. Portraits distinguish each devotion; the interactive stems and beads still show its exact structure. Denser delivered crowns scale their roses and leaves to retain all 49 or 72 flowers. Pages gently fade beneath their fixed headers in both Day and Vigil.
+
 | Seven setenas | Franciscan final pair | Responsive litany |
 | --- | --- | --- |
 | <img src="screenshots/prayer-tears.png" width="235" alt="Seventh setena and seventh bead of the Crown of Tears" /> | <img src="screenshots/prayer-franciscan-final-pair.png" width="235" alt="First of the two closing Hail Marys after the seven Franciscan joys" /> | <img src="screenshots/prayer-litany.png" width="235" alt="Loreto call and response as a prayer step in the complete script" /> |

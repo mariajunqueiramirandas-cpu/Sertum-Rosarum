@@ -25,13 +25,17 @@ fun RoseMark(modifier: Modifier = Modifier, alpha: Float = 1f) {
 
 /** The offered crown adapts to the groups and small beads of the prayer just completed. */
 @Composable
-fun RoseCrownEmblem(modifier: Modifier = Modifier, groups: Int = 5, beads: Int = 50) {
+fun RoseCrownEmblem(modifier: Modifier = Modifier, groups: Int = 5, beads: Int = 50, centerIllustration: DevotionalIllustration? = null) {
     val colors = SertumTheme.colors
     val accent = SertumTheme.atmosphere.accent
     val art = LocalBotanicalArtwork.current
+    val devotionalArt = LocalDevotionalArtwork.current
+    val offeredImage = centerIllustration?.let { devotionalArt.image(it) }
     val breath = rememberGardenBreath("rose-crown", 7000)
     Canvas(modifier.semantics { contentDescription = "Coroa de $beads rosas em $groups grupos" }) {
         val radius = size.minDimension * .405f
+        val blossom = minOf(radius * .125f, 2f * PI.toFloat() * radius / beads.coerceAtLeast(1) * .94f)
+        val foliageScale = (50f / beads.coerceAtLeast(1)).coerceAtMost(1f)
         val warmth = .5f + .5f * sin(breath.value)
         fun onRing(degrees: Float, distance: Float): Offset {
             val angle = degrees * PI / 180
@@ -39,7 +43,7 @@ fun RoseCrownEmblem(modifier: Modifier = Modifier, groups: Int = 5, beads: Int =
         }
         drawCircle(Brush.radialGradient(listOf(accent.copy(alpha = .12f + .04f * warmth), Color.Transparent), center, radius * 1.2f), radius * 1.2f, center)
         drawCircle(Brush.radialGradient(listOf(colors.ruby.copy(alpha = .10f), Color.Transparent), center, radius * .8f), radius * .8f, center)
-        // Two fine stems weave around the same fifty positions as the flowers.
+        // Two fine stems weave around the prayer's actual bead positions.
         repeat(2) { strand ->
             val vine = Path().apply {
                 repeat(201) { step ->
@@ -53,27 +57,31 @@ fun RoseCrownEmblem(modifier: Modifier = Modifier, groups: Int = 5, beads: Int =
         }
         repeat(beads) { index ->
             val degrees = -90f + index * 360f / beads + 2f
-            val reach = if (index % 2 == 0) 1.14f else .88f
+            val reach = 1f + (if (index % 2 == 0) .14f else -.12f) * foliageScale
             val sway = .3f * sin(breath.value + index * .7f)
-            paintLeaf(art.leaf, onRing(degrees, radius), onRing(degrees + 5f + sway, radius * reach), if (colors.isDark) .82f else .9f)
+            paintLeaf(art.leaf, onRing(degrees, radius), onRing(degrees + 5f * foliageScale + sway, radius * reach), if (colors.isDark) .82f else .9f)
         }
         repeat(beads) { index ->
             val mystery = (0 until groups).any { index == it * (beads / groups) }
             paintBotanical(
                 if (mystery) art.ivoryRose else art.rose,
                 onRing(-90f + index * 360f / beads, radius * (1f + .008f * sin(index * 1.7f))),
-                radius * (if (mystery) .195f else .125f),
+                if (mystery) minOf(radius * .195f, blossom * 1.55f) else blossom,
                 alpha = if (index % 3 == 0 || mystery) 1f else .88f,
                 turn = index * 137.5f % 50f - 25f,
             )
         }
-        // A quiet gold setting and a single offered rose at the heart.
+        // A quiet gold setting for the offered rose or the devotion's sacred portrait.
         drawCircle(colors.gold.copy(alpha = .3f), radius * .51f, center, style = Stroke(.55.dp.toPx()))
         repeat(12) { index ->
             drawCircle(colors.gold.copy(alpha = .45f), radius * .005f, onRing(index * 30f, radius * .56f))
         }
-        paintLeaf(art.leaf, center + Offset(-radius * .10f, radius * .07f), center + Offset(-radius * .44f, -radius * .15f), .9f)
-        paintLeaf(art.leaf, center + Offset(radius * .10f, radius * .07f), center + Offset(radius * .44f, -radius * .18f), .9f)
-        paintBotanical(art.rose, center + Offset(0f, radius * .015f), radius * .76f)
+        if (offeredImage != null) {
+            paintBotanical(offeredImage, center, radius * .94f)
+        } else {
+            paintLeaf(art.leaf, center + Offset(-radius * .10f, radius * .07f), center + Offset(-radius * .44f, -radius * .15f), .9f)
+            paintLeaf(art.leaf, center + Offset(radius * .10f, radius * .07f), center + Offset(radius * .44f, -radius * .18f), .9f)
+            paintBotanical(art.rose, center + Offset(0f, radius * .015f), radius * .76f)
+        }
     }
 }

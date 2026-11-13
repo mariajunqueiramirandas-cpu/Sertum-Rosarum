@@ -15,7 +15,7 @@ The [exact generation prompts and reference relationships](prompts.json) are arc
 
 The ten prayer beads blend from a closed bud into an opening rose, with a soft spring and restrained gold selection ring. The five mysteries use the same paintings along a growing stem; compact layouts keep small botanical marks beside their numbers. Individual beads and mysteries retain their existing actions and accessible descriptions.
 
-The delivered crown contains exactly fifty roses, with five ivory flowers marking the mystery boundaries and forty-five blush flowers. Two fine stems weave between alternating painted leaves. A larger offered rose sits inside a quiet gold setting at the center, outside the fifty-rose count. Its flowers have subtle variations in rotation, size, and position so the crown reads as a woven garden.
+The delivered crown uses the active script's small-bead count: fifty roses for the ordinary rosary, forty-nine for Tears, or seventy-two for the Franciscan crown. Ivory flowers mark the group boundaries. Two fine stems weave between alternating painted leaves. A larger offered rose or the [devotion's painting](../devotions/README.md) sits inside a quiet gold setting at the center, outside the counted ring. Its flowers have subtle variations in rotation, size, and position so the crown reads as a woven garden. Blossoms and leaf spacing contract for denser rings.
 
 The small dividers combine a painted bud, two sage leaves, and a fading gold thread. The header, pause/resume card, mystery rose symbols, eyes-closed surface, and adaptive launcher use the same blush rose. The launcher retains its ten golden beads and has a separate line-drawn monochrome rose for Android themed icons.
 
@@ -35,6 +35,6 @@ Compose positions the flowers, constructs the stems and crown, and handles touch
 
 ## Verification and preview provenance
 
-Previews are rendered from the actual Compose screens using Robolectric native graphics. The temporary review harness exercises both themes, forward/backward bead selection, pause/resume, full delivery, live reduced motion, compact and landscape navigation, and the existing three reading-cue/accessibility cases. The harness and its dependencies stay outside the repository. The bloom demo uses the same renderer with a controlled clock.
+Previews are rendered from the actual Compose screens using Robolectric native graphics. Current screenshots are reproducible with `./gradlew recordRoborazziDebug`, including the 49- and 72-flower offerings. The original botanical review harness additionally exercised live reduced motion, compact and landscape navigation, and reading cues; that harness remains outside the repository. The bloom demo uses the same renderer with a controlled clock.
 
-The app's debug and optimized release APKs build successfully; all 19 JVM tests pass, the instrumented tests compile, and lint reports dependency-update warnings only. A full instrumented run on an attached device or emulator is not available in this environment.
+Run the standard build and test checks described in [Phase 2](../../phase-2.md#validation). A full instrumented run requires an attached device or emulator.

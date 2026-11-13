@@ -15,11 +15,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.ExperimentalTextApi
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
-import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -29,6 +27,8 @@ import com.sertumrosarum.domain.prayer.MysterySet
 import com.sertumrosarum.feature.prayer.ThemeMode
 import com.sertumrosarum.ui.canvas.LocalBotanicalArtwork
 import com.sertumrosarum.ui.canvas.rememberBotanicalArtwork
+import com.sertumrosarum.ui.canvas.LocalDevotionalArtwork
+import com.sertumrosarum.ui.canvas.rememberDevotionalArtwork
 
 /**
  * [ruby] is the rose of the flowers and small accents. Actions are petals:
@@ -46,7 +46,7 @@ private val DayColors = SertumColors(
     background = Color(0xFFFBF8F2), surface = Color(0xFFF1F0E6), elevated = Color(0xFFFFFDF9),
     ink = Color(0xFF324B40), secondary = Color(0xFF667A6E), muted = Color(0xFF8A968B),
     gold = Color(0xFFB8935A), ruby = Color(0xFFC07A72), marian = Color(0xFF789A81), border = Color(0xFFE6E9DD),
-    petal = Color(0xFFF8E3DA), petalDeep = Color(0xFFEFCDC2), onPetal = Color(0xFF7A433D), isDark = false,
+    petal = Color(0xFFF6DED5), petalDeep = Color(0xFFEDC7BC), onPetal = Color(0xFF713F39), isDark = false,
 )
 private val VigilColors = SertumColors(
     background = Color(0xFF162A27), surface = Color(0xFF1F3731), elevated = Color(0xFF27433A),
@@ -55,24 +55,23 @@ private val VigilColors = SertumColors(
     petal = Color(0xFFEDC6BA), petalDeep = Color(0xFFDFA99C), onPetal = Color(0xFF4A2925), isDark = true,
 )
 
-@OptIn(ExperimentalTextApi::class)
-private fun variableFamily(resource: Int, vararg axes: FontVariation.Setting) = FontFamily(
-    listOf(FontWeight.Normal, FontWeight.Medium, FontWeight.SemiBold, FontWeight.Bold).map { weight ->
-        Font(resource, weight = weight, variationSettings = FontVariation.Settings(FontVariation.weight(weight.weight), *axes))
-    },
-)
-
 /**
- * Fraunces is the voice of the garden. Its softness axis is fully open, so every
- * serif ends rounded. Titles use the display cut; prayers use the sturdier text cut.
+ * Fixed Fraunces instances preserve SOFT=100 and WONK=0 on devices that ignore
+ * runtime variation axes. Display uses opsz=48; the prayer cut uses opsz=30.
  */
-@OptIn(ExperimentalTextApi::class)
-val VoiceDisplay = variableFamily(R.font.fraunces, FontVariation.Setting("SOFT", 100f), FontVariation.Setting("WONK", 0f), FontVariation.Setting("opsz", 48f))
-@OptIn(ExperimentalTextApi::class)
-val VoiceText = variableFamily(R.font.fraunces, FontVariation.Setting("SOFT", 100f), FontVariation.Setting("WONK", 0f), FontVariation.Setting("opsz", 30f))
+val VoiceDisplay = FontFamily(
+    Font(R.font.fraunces_display_regular, FontWeight.Normal),
+    Font(R.font.fraunces_display_medium, FontWeight.Medium),
+)
+val VoiceText = FontFamily(Font(R.font.fraunces_text_regular, FontWeight.Normal))
 
-/** Nunito carries controls and small supporting copy. */
-val SanctuaryFont = variableFamily(R.font.nunito)
+/** Each weight has its own font file; no device can fall back to Nunito's 200 default. */
+val SanctuaryFont = FontFamily(
+    Font(R.font.nunito_regular, FontWeight.Normal),
+    Font(R.font.nunito_medium, FontWeight.Medium),
+    Font(R.font.nunito_semibold, FontWeight.SemiBold),
+    Font(R.font.nunito_bold, FontWeight.Bold),
+)
 
 @Immutable
 data class SertumTypography(
@@ -140,6 +139,7 @@ fun SertumTheme(mode: ThemeMode, mysterySet: MysterySet, content: @Composable ()
     }
     CompositionLocalProvider(
         LocalBotanicalArtwork provides rememberBotanicalArtwork(),
+        LocalDevotionalArtwork provides rememberDevotionalArtwork(),
         LocalSertumColors provides colors,
         LocalIndication provides remember(colors.marian) { SacredIndication(colors.marian) },
         LocalSertumTypography provides SertumTypography(),

@@ -3,8 +3,6 @@ package com.sertumrosarum.feature.prayer
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ScrollState
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.animateScrollBy
 import androidx.compose.foundation.layout.Arrangement
@@ -104,7 +102,7 @@ internal fun PrayerTextReader(
                 Box(Modifier.fillMaxWidth().heightIn(min = 48.dp), contentAlignment = Alignment.Center) {
                     Row(
                         Modifier.testTag("prayer-scroll-cue")
-                            .clip(RoundedCornerShape(50))
+                            .clip(RoundedCornerShape(12.dp))
                             .clickable(
                                 role = Role.Button,
                                 onClickLabel = if (hasMoreBelow) "Ler a próxima parte da oração" else "Voltar ao início da oração",
@@ -129,26 +127,17 @@ internal fun PrayerTextReader(
                         horizontalArrangement = Arrangement.spacedBy(7.dp),
                         verticalAlignment = Alignment.CenterVertically,
                     ) {
-                        Row(
-                            Modifier.clip(RoundedCornerShape(50))
-                                .background(colors.marian.copy(alpha = .1f))
-                                .border(1.dp, colors.marian.copy(alpha = .2f), RoundedCornerShape(50))
-                                .padding(horizontal = 14.dp, vertical = 6.dp),
-                            horizontalArrangement = Arrangement.spacedBy(7.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                        ) {
-                            SacredText(
-                                if (hasMoreBelow) "Continue lendo" else "Voltar ao início",
-                                Modifier.weight(1f, fill = false),
-                                style = type.micro,
-                                color = cueInk,
-                            )
-                            SacredIcon(
-                                SacredIcon.CHEVRON,
-                                Modifier.size(13.dp).rotate(if (hasMoreBelow) 90f else -90f),
-                                cueInk,
-                            )
-                        }
+                        SacredText(
+                            if (hasMoreBelow) "Continue lendo" else "Voltar ao início",
+                            Modifier.weight(1f, fill = false),
+                            style = type.micro,
+                            color = cueInk,
+                        )
+                        SacredIcon(
+                            SacredIcon.CHEVRON,
+                            Modifier.size(13.dp).rotate(if (hasMoreBelow) 90f else -90f),
+                            cueInk,
+                        )
                     }
                 }
             }
