@@ -1,7 +1,10 @@
 package com.sertumrosarum.feature.prayer
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,11 +29,11 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
-import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.selected
 import androidx.compose.ui.semantics.semantics
@@ -58,8 +61,9 @@ internal fun ordinal(index: Int) = Ordinals.getOrElse(index) { "${index + 1}º" 
  * A mystery in its dimensions: the scene, its meaning, and its fruit, joined by one stem,
  * with the bead-by-bead rosary as the fourth, optional layer.
  *
- * Before the decade the layers open one at a time; inside the contemplation sheet
- * ([unfolded]) they are all laid out to read.
+ * Before the decade the three layers sit on a horizontal stem so the active reading text
+ * fills the card width; inside the contemplation sheet ([unfolded]) all three are laid out
+ * vertically to read in sequence.
  */
 @Composable
 internal fun MysteryDimensions(
@@ -72,62 +76,126 @@ internal fun MysteryDimensions(
 ) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
+    val layers = listOf("A cena bíblica", "O sentido da contemplação", "O fruto do mistério")
+    val shortLayers = listOf("Cena bíblica", "Sentido", "Fruto")
     var open by rememberSaveable(mystery.title) { mutableIntStateOf(0) }
+
     SacredCard(modifier.fillMaxWidth().testTag("mystery-dimensions")) {
-        Column(Modifier.padding(start = 14.dp, end = 14.dp, top = 10.dp, bottom = 8.dp)) {
-            val layers = listOf("A cena bíblica", "O sentido da contemplação", "O fruto do mistério")
-            layers.forEachIndexed { index, name ->
-                DimensionLayer(index, name, shown = unfolded || open == index, foldable = !unfolded, last = index == layers.lastIndex, onClick = { open = if (open == index) -1 else index }) {
-                    when (index) {
-                        0 -> {
-                            Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                SacredText(mystery.scripture, style = type.micro, color = colors.marian)
-                                DevotionalArtwork(DevotionalIllustration.PRAYER_BOOK, Modifier.size(42.dp))
+        Column(Modifier.padding(horizontal = 14.dp, vertical = 10.dp)) {
+            if (unfolded) {
+                layers.forEachIndexed { index, name ->
+                    UnfoldedDimensionLayer(index, name, last = index == layers.lastIndex) {
+                        DimensionBody(index, mystery, contemplation)
+                    }
+                }
+            } else {
+                val active = open.coerceIn(0, layers.lastIndex)
+                val stem = colors.marian.copy(alpha = .32f)
+                Row(
+                    Modifier.fillMaxWidth().drawBehind {
+                        val y = 19.dp.toPx()
+                        drawLine(stem, Offset(size.width / 6f, y), Offset(size.width * 5f / 6f, y), 1.5.dp.toPx())
+                    },
+                    horizontalArrangement = Arrangement.SpaceEvenly,
+                ) {
+                    shortLayers.forEachIndexed { index, label ->
+                        val chosen = index == active
+                        Column(
+                            Modifier.weight(1f).clip(RoundedCornerShape(16.dp))
+                                .clickable(role = Role.Button, onClick = { open = index })
+                                .semantics {
+                                    selected = chosen
+                                    stateDescription = if (chosen) "Aberto" else "Fechado"
+                                    contentDescription = "${index + 1}. ${layers[index]}"
+                                }
+                                .testTag("dimension-$index")
+                                .padding(vertical = 6.dp, horizontal = 4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Box(
+                                Modifier.size(26.dp)
+                                    .background(colors.elevated, CircleShape)
+                                    .background(if (chosen) colors.marian.copy(alpha = .2f) else colors.surface, CircleShape)
+                                    .border(1.dp, if (chosen) colors.gold.copy(alpha = .65f) else colors.border, CircleShape),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                SacredText(
+                                    "${index + 1}",
+                                    style = type.micro.copy(fontSize = 12.5.sp, fontWeight = if (chosen) FontWeight.Bold else FontWeight.SemiBold),
+                                    color = if (chosen) colors.ink else colors.secondary,
+                                )
                             }
-                            SacredText("“${contemplation.scriptureQuote}”", Modifier.padding(bottom = 10.dp).testTag("scripture-quote"), type.whisper, colors.marian)
-                            SacredText(contemplation.scene, style = type.whisper)
-                        }
-                        1 -> SacredText(contemplation.meaning, style = type.whisper)
-                        else -> {
-                            SacredText(mystery.fruit, Modifier.padding(bottom = 4.dp), type.section, lerp(colors.ruby, colors.ink, if (colors.isDark) .1f else .4f))
-                            SacredText(contemplation.practice, style = type.whisper)
+                            SacredText(
+                                label,
+                                Modifier.padding(top = 4.dp),
+                                style = type.micro.copy(fontSize = 12.sp, lineHeight = 16.sp, fontWeight = if (chosen) FontWeight.Bold else FontWeight.Medium),
+                                color = if (chosen) colors.ink else colors.secondary,
+                                align = TextAlign.Center,
+                                maxLines = 2,
+                            )
                         }
                     }
                 }
+                Box(Modifier.padding(top = 4.dp, bottom = 10.dp).fillMaxWidth().height(1.dp).background(colors.border.copy(alpha = .7f)))
+                AnimatedContent(
+                    targetState = active,
+                    transitionSpec = { fadeIn(tween(180)) togetherWith fadeOut(tween(140)) },
+                    label = "mystery-dimension-body",
+                ) { index ->
+                    Column(Modifier.fillMaxWidth().padding(horizontal = 2.dp)) {
+                        Row(
+                            Modifier.fillMaxWidth().padding(bottom = 8.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically,
+                        ) {
+                            SacredText(layers[index], Modifier.weight(1f).semantics { heading() }, type.label.copy(fontWeight = FontWeight.SemiBold), color = colors.marian)
+                            if (index == 0) {
+                                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp)) {
+                                    SacredText(mystery.scripture, style = type.micro, color = colors.marian)
+                                    DevotionalArtwork(DevotionalIllustration.PRAYER_BOOK, Modifier.size(22.dp))
+                                }
+                            }
+                        }
+                        DimensionBody(index, mystery, contemplation)
+                    }
+                }
             }
-            Box(Modifier.padding(top = 8.dp, bottom = 4.dp).fillMaxWidth().height(1.dp).background(colors.border))
+            Box(Modifier.padding(top = 12.dp, bottom = 2.dp).fillMaxWidth().height(1.dp).background(colors.border))
             SacredToggleRow("Terço meditado conta a conta", "Uma frase para contemplar em cada Ave-Maria.", meditated, onToggleMeditated, tag = "meditated-toggle")
         }
     }
 }
 
 @Composable
-private fun DimensionLayer(index: Int, name: String, shown: Boolean, foldable: Boolean, last: Boolean, onClick: () -> Unit, body: @Composable () -> Unit) {
+private fun DimensionBody(index: Int, mystery: Mystery, contemplation: MysteryContemplation) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
-    val turn by animateFloatAsState(if (shown) 90f else 0f, label = "dimension-chevron")
-    val stem = colors.marian.copy(alpha = .3f)
-    Column(
-        Modifier.fillMaxWidth().clip(RoundedCornerShape(20.dp))
-            .then(if (foldable) Modifier.clickable(role = Role.Button, onClick = onClick).semantics { stateDescription = if (shown) "Aberto" else "Fechado" } else Modifier)
-            .testTag("dimension-$index")
-            .drawBehind {
-                val x = 20.dp.toPx()
-                val knot = 26.dp.toPx()
-                drawLine(stem, Offset(x, if (index == 0) knot else 0f), Offset(x, if (last) knot else size.height), 1.5.dp.toPx())
-            }
-            .padding(vertical = 10.dp, horizontal = 4.dp),
-    ) {
-        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-            Box(Modifier.size(32.dp).background(colors.elevated, CircleShape).background(colors.marian.copy(alpha = .14f), CircleShape), contentAlignment = Alignment.Center) {
-                SacredText("${index + 1}", style = type.label.copy(fontSize = 14.sp), color = colors.marian)
+    when (index) {
+        0 -> {
+            SacredText("“${contemplation.scriptureQuote}”", Modifier.padding(bottom = 8.dp).testTag("scripture-quote"), type.whisper, colors.marian)
+            SacredText(contemplation.scene, style = type.whisper)
+        }
+        1 -> SacredText(contemplation.meaning, style = type.whisper)
+        else -> {
+            SacredText(mystery.fruit, Modifier.padding(bottom = 4.dp), type.section, lerp(colors.ruby, colors.ink, if (colors.isDark) .1f else .4f))
+            SacredText(contemplation.practice, style = type.whisper)
+        }
+    }
+}
+
+@Composable
+private fun UnfoldedDimensionLayer(index: Int, name: String, last: Boolean, body: @Composable () -> Unit) {
+    val colors = SertumTheme.colors
+    val type = SertumTheme.typography
+    Column(Modifier.fillMaxWidth().testTag("dimension-$index").padding(vertical = 8.dp, horizontal = 2.dp)) {
+        Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            Box(Modifier.size(28.dp).background(colors.elevated, CircleShape).background(colors.marian.copy(alpha = .14f), CircleShape), contentAlignment = Alignment.Center) {
+                SacredText("${index + 1}", style = type.label.copy(fontSize = 13.5.sp), color = colors.marian)
             }
             SacredText(name, Modifier.weight(1f).semantics { heading() }, type.label.copy(fontWeight = FontWeight.SemiBold))
-            if (foldable) SacredIcon(SacredIcon.CHEVRON, Modifier.size(13.dp).rotate(turn), colors.muted)
         }
-        AnimatedVisibility(shown) {
-            Column(Modifier.padding(start = 46.dp, end = 6.dp, top = 8.dp, bottom = 4.dp)) { body() }
-        }
+        Column(Modifier.padding(start = 2.dp, end = 2.dp, top = 8.dp, bottom = 4.dp)) { body() }
+        if (!last) Box(Modifier.padding(top = 8.dp).fillMaxWidth().height(1.dp).background(colors.border.copy(alpha = .6f)))
     }
 }
 
@@ -161,7 +229,7 @@ internal fun MeditatedBead(decade: Int, mystery: Mystery, line: String, onOpen: 
     Column(
         modifier.fillMaxWidth().clip(shape).background(colors.elevated.copy(alpha = if (colors.isDark) .55f else .75f)).border(1.dp, colors.gold.copy(alpha = .32f), shape)
             .clickable(role = Role.Button, onClickLabel = "Contemplar este mistério", onClick = onOpen).testTag("mystery-chip")
-            .padding(start = 16.dp, end = 16.dp, top = 11.dp, bottom = 14.dp),
+            .padding(horizontal = 16.dp, vertical = 10.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         Row(horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -169,7 +237,7 @@ internal fun MeditatedBead(decade: Int, mystery: Mystery, line: String, onOpen: 
             SacredText("${decade + 1}º mistério · ${mystery.title}", Modifier.weight(1f, fill = false), SertumTheme.typography.micro, honey, maxLines = 1)
             SacredIcon(SacredIcon.CHEVRON, Modifier.size(11.dp), honey)
         }
-        SacredText(line, Modifier.padding(top = 6.dp).testTag("bead-meditation"), SertumTheme.typography.whisper, colors.ink, TextAlign.Center)
+        SacredText(line, Modifier.padding(top = 5.dp).testTag("bead-meditation"), SertumTheme.typography.whisper, colors.ink, TextAlign.Center)
     }
 }
 

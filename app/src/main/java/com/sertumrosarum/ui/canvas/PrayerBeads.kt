@@ -76,10 +76,10 @@ fun FiveMysteriesArc(completed: Int, current: Int?, onSelect: (Int) -> Unit, mod
     val colors = SertumTheme.colors
     val art = LocalBotanicalArtwork.current
     val breath = rememberGardenBreath("mystery-stem", 5200)
-    BoxWithConstraints(modifier.fillMaxWidth().height(100.dp)) {
+    BoxWithConstraints(modifier.fillMaxWidth().height(66.dp)) {
         val usable = maxWidth - 44.dp
         fun stemX(u: Float) = 22.dp + usable * u
-        fun stemY(u: Float) = 70.dp - 34.dp * sin(PI * u).toFloat()
+        fun stemY(u: Float) = 42.dp - 18.dp * sin(PI * u).toFloat()
         val grown = when {
             completed >= groups -> 1f
             current != null -> (current + .5f) / groups
@@ -142,9 +142,9 @@ fun BloomingBeadsArc(count: Int, active: Int?, complete: Boolean, onSelect: (Int
     val colors = SertumTheme.colors
     val art = LocalBotanicalArtwork.current
     val breath = rememberGardenBreath("rose-breath", 4800)
-    BoxWithConstraints(modifier.fillMaxWidth().height(96.dp)) {
+    BoxWithConstraints(modifier.fillMaxWidth().height(58.dp)) {
         val slot = maxWidth / count
-        fun beadY(index: Int) = 58.dp - 22.dp * sin(PI * index / (count - 1).coerceAtLeast(1)).toFloat()
+        fun beadY(index: Int) = 34.dp - 10.dp * sin(PI * index / (count - 1).coerceAtLeast(1)).toFloat()
         Canvas(Modifier.fillMaxSize()) {
             // The thread follows the same gentle rise as the beads it carries.
             val first = (slot * .5f).toPx()
@@ -152,7 +152,7 @@ fun BloomingBeadsArc(count: Int, active: Int?, complete: Boolean, onSelect: (Int
             val thread = Path().apply {
                 repeat(41) { step ->
                     val u = step / 40f
-                    val y = (58.dp - 22.dp * sin(PI * u).toFloat()).toPx()
+                    val y = (34.dp - 10.dp * sin(PI * u).toFloat()).toPx()
                     if (step == 0) moveTo(first, y) else lineTo(first + span * u, y)
                 }
             }

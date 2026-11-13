@@ -79,11 +79,11 @@ internal fun PrayerTextReader(
         Column(Modifier.fillMaxSize(), horizontalAlignment = Alignment.CenterHorizontally) {
             Box(Modifier.weight(1f).fillMaxWidth()) {
                 Column(
-                    Modifier.fillMaxSize().padding(horizontal = 12.dp)
+                    Modifier.fillMaxSize().padding(start = 6.dp, end = if (hasOverflow) 14.dp else 6.dp)
                         .readingEdgeFades(scroll)
                         .verticalScroll(scroll)
                         .testTag("prayer-scroll")
-                        .padding(vertical = 18.dp),
+                        .padding(vertical = 8.dp),
                     verticalArrangement = Arrangement.Center,
                     horizontalAlignment = Alignment.CenterHorizontally,
                     content = content,
@@ -91,7 +91,7 @@ internal fun PrayerTextReader(
                 if (hasOverflow) {
                     ReadingPositionRail(
                         scroll,
-                        Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(vertical = 12.dp).width(6.dp),
+                        Modifier.align(Alignment.CenterEnd).fillMaxHeight().padding(vertical = 8.dp).width(6.dp),
                     )
                 }
             }
@@ -175,7 +175,7 @@ private fun Modifier.readingEdgeFades(scroll: ScrollState) =
     drawWithCache {
         val maskPaint = Paint()
         onDrawWithContent {
-            val depth = 24.dp.toPx().coerceAtMost(size.height / 2f)
+            val depth = 18.dp.toPx().coerceAtMost(size.height / 2f)
             val above = scroll.value.toFloat().coerceIn(0f, depth)
             val below = (scroll.maxValue.toLong() - scroll.value).toFloat().coerceIn(0f, depth)
             if (above == 0f && below == 0f) {
