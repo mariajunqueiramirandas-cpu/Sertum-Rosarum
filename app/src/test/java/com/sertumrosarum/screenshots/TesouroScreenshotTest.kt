@@ -10,6 +10,7 @@ import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.hasTestTag
 import com.github.takahirom.roborazzi.captureRoboImage
+import com.sertumrosarum.domain.treasury.PrayerCategory
 import com.sertumrosarum.MainActivity
 import org.junit.Rule
 import org.junit.Test
@@ -51,6 +52,22 @@ class TesouroScreenshotTest {
         shot("tesouro-library")
         tap("category-WAKING")
         shot("tesouro-morning")
+    }
+
+    @Test fun eachMomentHasItsOwnPaintingInDayAndVigil() {
+        appearance("DAY")
+        tap("tab-TREASURY")
+        PrayerCategory.entries.forEach { category ->
+            tap("category-${category.name}")
+            shot("tesouro-category-${category.name.lowercase()}")
+        }
+        tap("tab-HOME")
+        appearance("VIGIL")
+        tap("tab-TREASURY")
+        listOf(PrayerCategory.NIGHT, PrayerCategory.COMMUNION).forEach { category ->
+            tap("category-${category.name}")
+            shot("tesouro-category-${category.name.lowercase()}-vigil")
+        }
     }
 
     @Test fun prayerInThreeReadings() {

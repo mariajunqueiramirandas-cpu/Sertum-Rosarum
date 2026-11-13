@@ -16,6 +16,13 @@ import com.sertumrosarum.R
 
 enum class DevotionalIllustration(internal val resourceId: Int) {
     PRAYER_BOOK(R.drawable.devotion_prayer_book),
+    TREASURY_ENTRANCE(R.drawable.treasury_entrance),
+    TREASURY_MORNING(R.drawable.treasury_morning),
+    TREASURY_NIGHT(R.drawable.treasury_night),
+    TREASURY_CONSOLATION(R.drawable.treasury_consolation),
+    TREASURY_THANKSGIVING(R.drawable.treasury_thanksgiving),
+    TREASURY_COMMUNION(R.drawable.treasury_communion),
+    TREASURY_MARIAN(R.drawable.treasury_marian),
     HOLY_FAMILY(R.drawable.devotion_holy_family),
     DIVINE_MERCY(R.drawable.devotion_divine_mercy),
     SAINT_JOSEPH(R.drawable.devotion_saint_joseph),

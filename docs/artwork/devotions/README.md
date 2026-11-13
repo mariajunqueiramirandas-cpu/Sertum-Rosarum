@@ -17,7 +17,7 @@ The [exact prompts, generation filenames, and reference relationships](prompts.j
 
 ## Scale and composition
 
-Library rows use 64 dp images; themed cards give the illustration 104 dp of height. Guide sheets use 128 dp portraits. The book at the library entrance is an 88 dp ornament; Tesouro uses a 168 dp vignette. Every image uses `ContentScale.Fit` with its original transparent margins, keeping halos, hands, lilies, and wings inside the composition. The title beside each decorative image provides its accessible name.
+Library rows use 64 dp images; themed cards give the illustration 104 dp of height. Guide sheets use 128 dp portraits. The book at the Roteiros entrance is an 88 dp ornament. Tesouro now has its own [seven-painting collection](../treasury/README.md), while its mystery study sheets retain the Scripture-book ornaments. Every image uses `ContentScale.Fit` with its original transparent margins, keeping halos, hands, lilies, and wings inside the composition. The title beside each decorative image provides its accessible name.
 
 Delivered devotional crowns place the matching painting inside the existing gold setting. Ordinary rosaries retain their central rose. The surrounding flowers use the script's actual counts: 49 for Tears and 72 for the Franciscan crown. Blossom size and leaf spacing contract for denser rings. Sacred figures remain still; only the surrounding light and foliage retain the app's restrained motion, which respects the live system animation setting.
 

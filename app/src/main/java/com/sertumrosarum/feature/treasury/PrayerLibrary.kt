@@ -54,7 +54,6 @@ import com.sertumrosarum.ui.components.PageWelcome
 import com.sertumrosarum.ui.components.SacredCard
 import com.sertumrosarum.ui.components.SacredIcon
 import com.sertumrosarum.ui.components.SacredText
-import com.sertumrosarum.ui.components.ShelfHeading
 import com.sertumrosarum.ui.theme.SertumTheme
 
 /** The library: a search, the moments of life, and one shelf for each moment that has prayers. */
@@ -69,10 +68,15 @@ internal fun PrayerLibrary(state: TreasuryUiState, actions: TreasuryActions, scr
             SacredText("Tesouro", Modifier.semantics { heading() }, type.brand)
         }
         LazyColumn(Modifier.fillMaxSize().testTag("treasury-scroll"), state = scroll) {
-            item("welcome") {
+            if (state.query.isBlank()) item("welcome") {
                 Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    DevotionalArtwork(DevotionalIllustration.PRAYER_BOOK, Modifier.padding(top = 12.dp).size(width = 144.dp, height = 88.dp))
-                    PageWelcome("Rezar e compreender.", "Orações para cada momento, e o sentido de cada palavra.", Modifier.padding(top = 14.dp))
+                    val category = state.category
+                    if (category == null) {
+                        DevotionalArtwork(DevotionalIllustration.TREASURY_ENTRANCE, Modifier.padding(top = 10.dp).size(width = 256.dp, height = 144.dp))
+                    } else {
+                        TreasuryArtwork(category, Modifier.padding(top = 12.dp).size(120.dp))
+                    }
+                    PageWelcome(category?.label ?: "Rezar e compreender.", category?.caption ?: "Orações para cada momento, e o sentido de cada palavra.", Modifier.padding(top = 10.dp))
                 }
             }
             item("search") { PrayerSearchField(state.query, actions::search, Modifier.padding(start = 24.dp, end = 24.dp, top = 22.dp)) }
@@ -102,8 +106,15 @@ internal fun PrayerLibrary(state: TreasuryUiState, actions: TreasuryActions, scr
             } else {
                 val shelves = state.prayers.groupBy { it.category }
                 PrayerCategory.entries.filter { it in shelves }.forEach { category ->
-                    item("heading-${category.name}") {
-                        ShelfHeading(category.label, category.caption, Modifier.padding(top = 18.dp).testTag("shelf-${category.name}"))
+                    if (state.category == null) item("heading-${category.name}") {
+                        Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 24.dp, top = 12.dp, bottom = 10.dp).testTag("shelf-${category.name}"),
+                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+                            TreasuryArtwork(category, Modifier.size(76.dp))
+                            Column(Modifier.weight(1f)) {
+                                SacredText(category.label, Modifier.semantics { heading() }, type.section)
+                                SacredText(category.caption, Modifier.padding(top = 4.dp), type.body.copy(fontSize = 14.sp, lineHeight = 21.sp), colors.secondary)
+                            }
+                        }
                     }
                     items(shelves.getValue(category), key = { "prayer-${it.id}" }, contentType = { "prayer" }) { prayer ->
                         SacredCard(Modifier.padding(horizontal = 24.dp).padding(bottom = 6.dp).fillMaxWidth()) { PrayerRow(prayer) { actions.openPrayer(prayer) } }
@@ -176,13 +187,12 @@ private fun CategoryChoices(selected: PrayerCategory?, onSelect: (PrayerCategory
 private fun PrayerRow(prayer: TreasuryPrayer, onOpen: () -> Unit) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
-    val art = LocalBotanicalArtwork.current
     Row(
         Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = "Ler esta oração", onClick = onOpen).testTag("prayer-${prayer.id}")
             .heightIn(min = 76.dp).padding(start = 18.dp, end = 18.dp, top = 14.dp, bottom = 14.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp),
     ) {
-        Canvas(Modifier.size(30.dp)) { paintBotanical(art.ivoryRose, center, size.minDimension) }
+        TreasuryArtwork(prayer.category, Modifier.size(56.dp))
         Column(Modifier.weight(1f)) {
             SacredText(prayer.title, style = type.label.copy(fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold))
             SacredText(prayer.summary, Modifier.padding(top = 2.dp), type.body.copy(fontSize = 14.sp, lineHeight = 20.sp), colors.secondary)

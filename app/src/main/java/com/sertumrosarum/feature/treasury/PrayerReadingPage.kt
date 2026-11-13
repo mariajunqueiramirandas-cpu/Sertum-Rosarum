@@ -73,7 +73,8 @@ internal fun PrayerReadingPage(prayer: TreasuryPrayer, language: PrayerLanguage,
     val shown = if (latin == null) PrayerLanguage.PORTUGUESE else language
     SanctuaryPage(SanctuaryTab.TREASURY.label, "treasury-reading", onBack = actions::backToLibrary) {
         Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-            SacredText(prayer.category.label, Modifier.padding(top = 18.dp), type.micro, colors.marian, TextAlign.Center)
+            TreasuryArtwork(prayer.category, Modifier.padding(top = 12.dp).size(88.dp))
+            SacredText(prayer.category.label, Modifier.padding(top = 8.dp), type.micro, colors.marian, TextAlign.Center)
             val latinTitle = prayer.latinTitle
             if (shown == PrayerLanguage.LATIN && latinTitle != null) {
                 SacredText(latinTitle, Modifier.padding(top = 6.dp).testTag("reading-title").semantics { heading() }, type.heading.inLatin, align = TextAlign.Center)

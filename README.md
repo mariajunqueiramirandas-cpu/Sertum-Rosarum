@@ -355,7 +355,7 @@ See [`phases.md`](phases.md) for the milestone definitions and acceptance criter
 
 ### Artwork and font credits
 
-The home garden uses original model-generated sacred paintings, inspired by the grace and light of classical Marian art. [Full-resolution garden masters, final prompts, and the seven-round exploration](docs/artwork/garden/README.md) are preserved with the project. The [coordinated botanical paintings and prompts](docs/artwork/botanical/README.md) extend its roses, buds, and leaves through the prayer beads, crown, ornaments, and launcher. Canvas handles composition and motion; interface symbols and the themed launcher use custom vector artwork. Fraunces and Nunito are bundled from Google Fonts under their [SIL Open Font Licenses](docs/fonts).
+The home garden uses original model-generated sacred paintings, inspired by the grace and light of classical Marian art. The [seven Treasury paintings](docs/artwork/treasury/README.md) add a chapel entrance and individual artwork for its six moments of life. [Full-resolution garden masters, final prompts, and the seven-round exploration](docs/artwork/garden/README.md) are preserved with the project. The [coordinated botanical paintings and prompts](docs/artwork/botanical/README.md) extend its roses, buds, and leaves through the prayer beads, crown, ornaments, and launcher. Canvas handles composition and motion; interface symbols and the themed launcher use custom vector artwork. Fraunces and Nunito are bundled from Google Fonts under their [SIL Open Font Licenses](docs/fonts).
 
 ---
 

@@ -10,6 +10,10 @@ Every prayer has a reading context and an attribution. These identify traditiona
 
 The bilingual reader aligns complete phrases or stanzas, with Latin glosses. It stacks the two languages on narrow screens or with larger text. Glosses explain literal meanings and grammar where the usual Portuguese differs. The Portuguese columns retain the same prayer, rather than silently replacing it with a literal translation. A prayer without a corresponding Latin version displays Portuguese while preserving the reader's language choice for the next bilingual prayer.
 
+## Original Treasury artwork
+
+Seven [new original sacred paintings](artwork/treasury/README.md) give Tesouro its own visual identity: a chapel-garden entrance and distinct morning, night, consolation, thanksgiving, communion and Marian illustrations. They appear in the category openings, shelf headings, prayer cards and reading pages. Search brings results forward by hiding the large introduction. Transparent WebP exports are bundled and decoded lazily through the existing shared cache; the unmodified masters and generation record are archived separately.
+
 ## Touch to understand
 
 `PrayerAnnotationParser` is independent of Compose. It matches every occurrence of an expression at word boundaries, ignoring case and allowing whitespace and line breaks. It recognizes canonically equivalent Unicode accents while returning UTF-16 offsets into the untouched prayer. Different accents remain distinct. Longer expressions win overlaps; editorial order breaks ties. Blank terms and regex metacharacters are safe.
