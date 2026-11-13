@@ -14,12 +14,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.text.PlatformTextStyle
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.LineBreak
+import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.text.intl.LocaleList
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -41,11 +46,14 @@ data class SertumColors(
     val ink: Color, val secondary: Color, val muted: Color,
     val gold: Color, val ruby: Color, val marian: Color, val border: Color,
     val petal: Color, val petalDeep: Color, val onPetal: Color, val isDark: Boolean,
-)
+) {
+    /** Sage for words; the lighter marian token remains the colour of leaves and stems. */
+    val accentInk: Color get() = if (isDark) marian else lerp(marian, ink, .5f)
+}
 
 private val DayColors = SertumColors(
     background = Color(0xFFFBF8F2), surface = Color(0xFFF1F0E6), elevated = Color(0xFFFFFDF9),
-    ink = Color(0xFF324B40), secondary = Color(0xFF667A6E), muted = Color(0xFF8A968B),
+    ink = Color(0xFF324B40), secondary = Color(0xFF5C6E61), muted = Color(0xFF5E7062),
     gold = Color(0xFFB8935A), ruby = Color(0xFFC07A72), marian = Color(0xFF789A81), border = Color(0xFFE6E9DD),
     petal = Color(0xFFF6DED5), petalDeep = Color(0xFFEDC7BC), onPetal = Color(0xFF713F39), isDark = false,
 )
@@ -74,17 +82,26 @@ val SanctuaryFont = FontFamily(
     Font(R.font.nunito_bold, FontWeight.Bold),
 )
 
+// Align the visible letterforms, rather than Android's extra fallback-font padding.
+// Portuguese paragraph breaking keeps prayers readable without changing their words.
+private val GardenText = TextStyle(
+    platformStyle = PlatformTextStyle(includeFontPadding = false),
+    lineHeightStyle = LineHeightStyle(LineHeightStyle.Alignment.Center, LineHeightStyle.Trim.Both),
+    localeList = LocaleList("pt-BR"),
+    lineBreak = LineBreak.Paragraph,
+)
+
 @Immutable
 data class SertumTypography(
-    val brand: TextStyle = TextStyle(fontFamily = VoiceDisplay, fontSize = 24.sp, lineHeight = 30.sp, fontWeight = FontWeight.Medium),
-    val display: TextStyle = TextStyle(fontFamily = VoiceDisplay, fontSize = 31.sp, lineHeight = 39.sp, fontWeight = FontWeight.Normal),
-    val heading: TextStyle = TextStyle(fontFamily = VoiceDisplay, fontSize = 28.sp, lineHeight = 35.sp, fontWeight = FontWeight.Normal),
-    val section: TextStyle = TextStyle(fontFamily = VoiceDisplay, fontSize = 20.sp, lineHeight = 27.sp, fontWeight = FontWeight.Medium),
-    val prayer: TextStyle = TextStyle(fontFamily = VoiceText, fontSize = 21.sp, lineHeight = 34.sp, lineBreak = LineBreak.Paragraph),
-    val whisper: TextStyle = TextStyle(fontFamily = VoiceText, fontSize = 17.sp, lineHeight = 27.sp, lineBreak = LineBreak.Paragraph),
-    val body: TextStyle = TextStyle(fontFamily = SanctuaryFont, fontSize = 15.sp, lineHeight = 23.sp),
-    val label: TextStyle = TextStyle(fontFamily = SanctuaryFont, fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.SemiBold),
-    val micro: TextStyle = TextStyle(fontFamily = SanctuaryFont, fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.SemiBold),
+    val brand: TextStyle = GardenText.copy(fontFamily = VoiceDisplay, fontSize = 24.sp, lineHeight = 30.sp, fontWeight = FontWeight.Medium, lineBreak = LineBreak.Heading),
+    val display: TextStyle = GardenText.copy(fontFamily = VoiceDisplay, fontSize = 31.sp, lineHeight = 39.sp, fontWeight = FontWeight.Normal, lineBreak = LineBreak.Heading),
+    val heading: TextStyle = GardenText.copy(fontFamily = VoiceDisplay, fontSize = 28.sp, lineHeight = 35.sp, fontWeight = FontWeight.Normal, lineBreak = LineBreak.Heading),
+    val section: TextStyle = GardenText.copy(fontFamily = VoiceDisplay, fontSize = 20.sp, lineHeight = 27.sp, fontWeight = FontWeight.Medium, lineBreak = LineBreak.Heading),
+    val prayer: TextStyle = GardenText.copy(fontFamily = VoiceText, fontSize = 21.sp, lineHeight = 34.sp),
+    val whisper: TextStyle = GardenText.copy(fontFamily = VoiceText, fontSize = 17.sp, lineHeight = 27.sp),
+    val body: TextStyle = GardenText.copy(fontFamily = SanctuaryFont, fontSize = 15.sp, lineHeight = 23.sp),
+    val label: TextStyle = GardenText.copy(fontFamily = SanctuaryFont, fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.SemiBold, lineBreak = LineBreak.Simple),
+    val micro: TextStyle = GardenText.copy(fontFamily = SanctuaryFont, fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.SemiBold, lineBreak = LineBreak.Simple),
 )
 
 @Immutable
@@ -144,7 +161,7 @@ fun SertumTheme(mode: ThemeMode, mysterySet: MysterySet, content: @Composable ()
         LocalSertumColors provides colors,
         LocalIndication provides remember(colors.marian) { SacredIndication(colors.marian) },
         LocalSertumTypography provides SertumTypography(),
-        LocalSertumSpacing provides SertumSpacing(),
+        LocalSertumSpacing provides SertumSpacing(page = if (LocalConfiguration.current.screenWidthDp < 380) 20.dp else 24.dp),
         LocalSertumShapes provides SertumShapes(),
         LocalMysteryAtmosphere provides atmosphere(mysterySet, dark),
         LocalReducedMotion provides reducedMotion.value,

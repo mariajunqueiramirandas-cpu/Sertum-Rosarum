@@ -335,6 +335,7 @@ See [`phases.md`](phases.md) for the milestone definitions and acceptance criter
 | Document | What you will find |
 | --- | --- |
 | [Build performance and releases](docs/build-and-releases.md) | Automatic signed APKs, memory budgets, caches, versioning, and stable fallback signing |
+| [POCO X8 Pro layout](docs/poco-x8-pro.md) | Display research, responsive typography, and device-profile validation |
 | [Design system](docs/design-system.md) | The current quiet garden: palette, type, artwork, motion, and accessibility |
 | [Product vision](docs/product-vision.md) | The wider experience and long-term product direction |
 | [Visão de produto · Português](docs/visao-de-produto-pt.md) | The original Portuguese product vision |
