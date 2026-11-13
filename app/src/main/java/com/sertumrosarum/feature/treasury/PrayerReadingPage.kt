@@ -54,6 +54,7 @@ import com.sertumrosarum.ui.components.SacredIcon
 import com.sertumrosarum.ui.components.SacredSegmented
 import com.sertumrosarum.ui.components.SacredText
 import com.sertumrosarum.ui.components.SanctuaryPage
+import com.sertumrosarum.ui.components.SteadySlot
 import com.sertumrosarum.ui.theme.SertumTheme
 
 /** Screen readers pronounce the text as Latin, not as misspelt Portuguese. */
@@ -76,13 +77,19 @@ internal fun PrayerReadingPage(prayer: TreasuryPrayer, language: PrayerLanguage,
             TreasuryArtwork(prayer.category, Modifier.padding(top = 12.dp).size(88.dp))
             SacredText(prayer.category.label, Modifier.padding(top = 8.dp), type.micro, colors.accentInk, TextAlign.Center)
             val latinTitle = prayer.latinTitle
-            if (shown == PrayerLanguage.LATIN && latinTitle != null) {
-                SacredText(latinTitle, Modifier.padding(top = 6.dp).testTag("reading-title").semantics { heading() }, type.heading.inLatin, align = TextAlign.Center)
-            } else {
-                SacredText(prayer.title, Modifier.padding(top = 6.dp).testTag("reading-title").semantics { heading() }, type.heading, align = TextAlign.Center)
-            }
-            if (shown == PrayerLanguage.BILINGUAL && latinTitle != null) {
-                SacredText(latinTitle, Modifier.padding(top = 2.dp), type.whisper.inLatin, colors.secondary, TextAlign.Center)
+            // Every language's heading is laid out at once, so switching never moves the choice beneath it.
+            SteadySlot(if (latin != null) PrayerLanguage.entries else listOf(PrayerLanguage.PORTUGUESE), shown, Modifier.fillMaxWidth()) { language, visible ->
+                Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+                    val title = Modifier.padding(top = 6.dp).then(if (visible) Modifier.testTag("reading-title") else Modifier).semantics { heading() }
+                    if (language == PrayerLanguage.LATIN && latinTitle != null) {
+                        SacredText(latinTitle, title, type.heading.inLatin, align = TextAlign.Center)
+                    } else {
+                        SacredText(prayer.title, title, type.heading, align = TextAlign.Center)
+                    }
+                    if (language == PrayerLanguage.BILINGUAL && latinTitle != null) {
+                        SacredText(latinTitle, Modifier.padding(top = 2.dp), type.whisper.inLatin, colors.secondary, TextAlign.Center)
+                    }
+                }
             }
             SacredFlourish(Modifier.padding(top = 10.dp, bottom = 16.dp))
             if (latin != null) {

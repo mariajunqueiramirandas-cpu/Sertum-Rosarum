@@ -9,6 +9,7 @@ import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextEquals
+import androidx.compose.ui.test.getUnclippedBoundsInRoot
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performSemanticsAction
@@ -17,6 +18,7 @@ import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.performTextInput
 import com.sertumrosarum.domain.prayer.FixedPrayer
 import com.sertumrosarum.domain.treasury.TreasuryCatalog
+import org.junit.Assert.assertEquals
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -74,6 +76,25 @@ class TreasuryShellTest {
         compose.onNodeWithTag("prayer-ave-maria").assertIsDisplayed()
         back()
         compose.onNodeWithTag("sanctuary").assertIsDisplayed()
+    }
+
+    @Test fun `choosing a moment or a language never moves the controls beneath the heading`() {
+        tap("tab-TREASURY")
+        fun at(tag: String) = compose.onNodeWithTag(tag, useUnmergedTree = true).getUnclippedBoundsInRoot()
+        val search = at("treasury-search").top
+        val night = at("category-NIGHT").left
+        listOf("category-WAKING", "category-NIGHT", "category-MARIAN", "category-ALL").forEach {
+            tap(it)
+            assertEquals("search moved after $it", search, at("treasury-search").top)
+            assertEquals("choices moved after $it", night, at("category-NIGHT").left)
+        }
+
+        tap("prayer-sob-a-vossa-protecao")
+        val choice = at("reading-language").top
+        listOf("language-LATIN", "language-BILINGUAL", "language-PORTUGUESE").forEach {
+            tap(it)
+            assertEquals("language choice moved after $it", choice, at("reading-language").top)
+        }
     }
 
     @Test fun `touching the actual annotated text opens its drawer and dragging the handle closes it`() {
