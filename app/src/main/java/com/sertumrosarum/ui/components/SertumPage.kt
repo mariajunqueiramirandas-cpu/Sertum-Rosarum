@@ -44,14 +44,22 @@ import kotlin.math.sin
  * Children add their own side padding, so a row may run from edge to edge.
  */
 @Composable
-fun SanctuaryPage(name: String, tag: String, scroll: ScrollState = rememberScrollState(), content: @Composable ColumnScope.() -> Unit) {
+fun SanctuaryPage(
+    name: String,
+    tag: String,
+    scroll: ScrollState = rememberScrollState(),
+    /** For a page opened from within a place: the way back takes the rose's seat. */
+    onBack: (() -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit,
+) {
     val colors = SertumTheme.colors
     Column(Modifier.fillMaxSize().testTag(tag)) {
         Row(
             Modifier.fillMaxWidth().padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, top = 10.dp, bottom = 2.dp).heightIn(min = 48.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp),
         ) {
-            RoseMark(Modifier.size(30.dp))
+            if (onBack != null) SacredIconButton(SacredIcon.BACK, "Voltar", onBack, Modifier.testTag("$tag-back"))
+            else RoseMark(Modifier.size(30.dp))
             SacredText(name, Modifier.semantics { heading() }, SertumTheme.typography.brand)
         }
         Box(Modifier.weight(1f)) {
@@ -68,6 +76,15 @@ fun PageWelcome(title: String, lead: String, modifier: Modifier = Modifier, alig
     Column(modifier.fillMaxWidth().padding(horizontal = SertumTheme.spacing.page)) {
         SacredText(title, Modifier.fillMaxWidth().semantics { heading() }, SertumTheme.typography.display, align = align)
         SacredText(lead, Modifier.fillMaxWidth().padding(top = 8.dp), SertumTheme.typography.body, SertumTheme.colors.secondary, align)
+    }
+}
+
+/** The name of a shelf and one line about what rests on it. */
+@Composable
+fun ShelfHeading(title: String, caption: String, modifier: Modifier = Modifier) {
+    Column(modifier.fillMaxWidth().padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, bottom = 14.dp)) {
+        SacredText(title, Modifier.semantics { heading() }, SertumTheme.typography.section)
+        SacredText(caption, Modifier.padding(top = 2.dp), SertumTheme.typography.body.copy(fontSize = 14.sp, lineHeight = 21.sp), SertumTheme.colors.secondary)
     }
 }
 

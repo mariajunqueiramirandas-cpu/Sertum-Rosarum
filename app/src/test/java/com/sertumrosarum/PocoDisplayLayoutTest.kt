@@ -20,6 +20,9 @@ import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.text.TextLayoutResult
@@ -128,6 +131,20 @@ class PocoDisplayLayoutTest {
             compose.runOnIdle { model.selectMystery(MysterySet.SORROWFUL) }
             shot("mysteries-one-row-$profile-${mode.name.lowercase()}")
         }
+    }
+
+    @Test fun treasuryBilingualReadingFitsPocoAtEnlargedText() {
+        val model = render(fontScale = 1.5f)
+        compose.runOnIdle { model.selectTab(SanctuaryTab.TREASURY) }
+        compose.onNodeWithTag("treasury-search").performTextInput("Ave Maria")
+        compose.onNodeWithTag("treasury-scroll").performScrollToNode(hasTestTag("prayer-ave-maria"))
+        allTextFits()
+        compose.onNodeWithTag("prayer-ave-maria").performSemanticsAction(SemanticsActions.OnClick)
+        compose.onNodeWithTag("language-BILINGUAL").performScrollTo().performSemanticsAction(SemanticsActions.OnClick)
+        compose.onNodeWithTag("verse-0").performScrollTo().performSemanticsAction(SemanticsActions.OnClick)
+        compose.onNodeWithTag("word-by-word").assertExists()
+        allTextFits()
+        shot("treasury-bilingual-large-text")
     }
 
     @Test

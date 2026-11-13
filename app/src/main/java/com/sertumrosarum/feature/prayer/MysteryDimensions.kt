@@ -81,6 +81,8 @@ internal fun MysteryDimensions(
     onToggleMeditated: () -> Unit,
     modifier: Modifier = Modifier,
     unfolded: Boolean = false,
+    /** Outside a prayer session there is no bead-by-bead rosary to switch on. */
+    showMeditatedToggle: Boolean = true,
     onLayerSelected: (Int) -> Unit = {},
 ) {
     val colors = SertumTheme.colors
@@ -170,8 +172,10 @@ internal fun MysteryDimensions(
                     }
                 }
             }
-            Box(Modifier.padding(top = 12.dp, bottom = 2.dp).fillMaxWidth().height(1.dp).background(colors.border))
-            SacredToggleRow("Terço meditado conta a conta", "Uma frase para contemplar em cada Ave-Maria.", meditated, onToggleMeditated, tag = "meditated-toggle")
+            if (showMeditatedToggle) {
+                Box(Modifier.padding(top = 12.dp, bottom = 2.dp).fillMaxWidth().height(1.dp).background(colors.border))
+                SacredToggleRow("Terço meditado conta a conta", "Uma frase para contemplar em cada Ave-Maria.", meditated, onToggleMeditated, tag = "meditated-toggle")
+            }
         }
     }
 }

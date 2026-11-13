@@ -40,7 +40,10 @@ import com.sertumrosarum.feature.prayer.PrayerSessionViewModel
 import com.sertumrosarum.feature.prayer.SanctuaryScreen
 import com.sertumrosarum.feature.prayer.SanctuaryTab
 import com.sertumrosarum.feature.sanctuary.SanctuaryScreen as SanctuaryHome
+import com.sertumrosarum.domain.treasury.TreasuryCatalog
 import com.sertumrosarum.feature.treasury.TreasuryScreen
+import com.sertumrosarum.feature.treasury.TreasurySheets
+import com.sertumrosarum.feature.treasury.TreasuryViewModel
 import com.sertumrosarum.ui.components.SacredBottomSheet
 import com.sertumrosarum.ui.components.SertumBottomBar
 import com.sertumrosarum.ui.components.SertumScaffold
@@ -65,6 +68,8 @@ fun SertumApp(model: PrayerSessionViewModel = viewModel()) {
         // The sheet keeps its guide while it slides away, so its words do not vanish mid-air.
         var openGuide by rememberSaveable { mutableStateOf<PrayerGuide?>(null) }
         var shownGuide by rememberSaveable { mutableStateOf(PrayerGuide.TRADITIONAL) }
+        val treasury: TreasuryViewModel = viewModel()
+        val treasuryState by treasury.state.collectAsStateWithLifecycle()
         BackHandler(!tabbed) { model.returnHome() }
         BackHandler(tabbed && state.tab != SanctuaryTab.HOME) { model.selectTab(SanctuaryTab.HOME) }
         SertumScaffold {
@@ -76,7 +81,7 @@ fun SertumApp(model: PrayerSessionViewModel = viewModel()) {
                                 when (tab) {
                                     SanctuaryTab.HOME -> SanctuaryHome(state, model)
                                     SanctuaryTab.GUIDES -> GuidesScreen { shownGuide = it; openGuide = it }
-                                    SanctuaryTab.TREASURY -> TreasuryScreen()
+                                    SanctuaryTab.TREASURY -> TreasuryScreen(treasuryState, treasury)
                                     SanctuaryTab.GARDEN -> GardenScreen()
                                 }
                             }
@@ -84,7 +89,7 @@ fun SertumApp(model: PrayerSessionViewModel = viewModel()) {
                             // font sizes reserve their actual height above the system bar.
                             SertumBottomBar(state.tab, model::selectTab)
                         }
-                        SanctuaryScreen.PRAYER -> ImmersivePrayerScreen(state, model) {
+                        SanctuaryScreen.PRAYER -> ImmersivePrayerScreen(state, model, state.language, model::selectLanguage, TreasuryCatalog.latinFor(state.step.prayer)) {
                             model.next()?.let { if (state.hapticsEnabled) haptics.play(it) }
                         }
                         SanctuaryScreen.DELIVERED -> CrownDeliveredScreen(state, model::returnHome)
@@ -94,6 +99,7 @@ fun SertumApp(model: PrayerSessionViewModel = viewModel()) {
                     openGuide != null && tabbed, { openGuide = null }, shownGuide.title, tag = "guide-sheet",
                     footer = { GuideSheetFooter { openGuide = null; model.start(shownGuide) } },
                 ) { GuideSheetContent(shownGuide, state.selectedSet, model::selectMystery, state.meditated, model::toggleMeditated, state.selectedMode, model::selectPrayerMode) }
+                TreasurySheets(treasuryState, treasury, visible = tabbed && state.tab == SanctuaryTab.TREASURY)
             }
         }
     }

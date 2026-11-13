@@ -43,6 +43,11 @@ jobs:
         run: python3 .github/scripts/configure_build.py
       - name: Verify release automation
         run: python3 -m unittest discover -s .github/scripts/tests -v
+      - name: Verify offline treasury and source importer
+        run: |
+          python3 -m unittest discover -s tools/treasury/tests -v
+          python3 tools/treasury/treasury.py fetch --offline
+          python3 tools/treasury/treasury.py generate --check
       - name: Build all APKs, unit tests, and lint once
         run: ./gradlew assembleDebug assembleDebugAndroidTest assembleRelease testDebugUnitTest lintDebug --build-cache --configuration-cache --parallel
       - name: Verify optimized APK signature and alignment

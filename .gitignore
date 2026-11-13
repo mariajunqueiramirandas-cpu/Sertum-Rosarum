@@ -15,3 +15,6 @@ __pycache__/
 *.jks
 *.p12
 !.github/signing/fallback.keystore
+
+# Source-fetch cache; reviewed extracts are tracked in content/treasury/sources.
+content/treasury/.cache/

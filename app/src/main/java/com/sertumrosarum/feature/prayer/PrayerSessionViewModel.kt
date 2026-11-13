@@ -2,6 +2,7 @@ package com.sertumrosarum.feature.prayer
 
 import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
+import com.sertumrosarum.domain.treasury.PrayerLanguage
 import com.sertumrosarum.domain.prayer.FixedPrayer
 import com.sertumrosarum.domain.prayer.MysterySet
 import com.sertumrosarum.domain.prayer.MysteryContent
@@ -41,6 +42,7 @@ data class PrayerUiState(
     val finishedAt: Long? = null,
     val eyesClosed: Boolean = false,
     val hapticsEnabled: Boolean = true,
+    val language: PrayerLanguage = PrayerLanguage.PORTUGUESE,
 ) {
     val script get() = sessionGuide.script
     val sequence = script.build(sessionSet)
@@ -106,6 +108,7 @@ class PrayerSessionViewModel(
             finishedAt = savedState["finishedAt"],
             eyesClosed = savedState["eyesClosed"] ?: false,
             hapticsEnabled = savedState["hapticsEnabled"] ?: true,
+            language = savedEnum<PrayerLanguage>("language")?.takeUnless { it == PrayerLanguage.BILINGUAL } ?: PrayerLanguage.PORTUGUESE,
         ),
     )
     val state = mutableState.asStateFlow()
@@ -128,8 +131,10 @@ class PrayerSessionViewModel(
         savedState["finishedAt"] = next.finishedAt
         savedState["eyesClosed"] = next.eyesClosed
         savedState["hapticsEnabled"] = next.hapticsEnabled
+        savedState["language"] = next.language.name
     }
 
+    fun selectLanguage(language: PrayerLanguage) = update { if (language != PrayerLanguage.BILINGUAL) it.copy(language = language) else it }
     fun selectMystery(set: MysterySet) = update { it.copy(selectedSet = set) }
     fun selectPrayerMode(mode: PrayerMode) = update { it.copy(selectedMode = mode) }
     fun refreshDay() {

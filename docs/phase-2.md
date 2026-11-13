@@ -1,6 +1,6 @@
 # Phase 2: implementation and content
 
-All ten guides in Roteiros now begin a complete local prayer session. Tesouro and Meu Jardim remain the Phase 3 and 4 placeholders. No account, network service, or new production dependency is required.
+All ten guides in Roteiros now begin a complete local prayer session. Tesouro has since received its [complete Phase 3 library](phase-3.md); Meu Jardim remains the Phase 4 placeholder. No account, network service, or new production dependency is required.
 
 The [devotional artwork collection](artwork/devotions/README.md) adds eight coordinated sacred paintings to the library, guide sheets, and delivered crowns. Portraits distinguish each devotion; the interactive stems and beads still show its exact structure. Denser delivered crowns scale their roses and leaves to retain all 49 or 72 flowers. Pages gently fade beneath their fixed headers in both Day and Vigil.
 

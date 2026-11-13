@@ -1,0 +1,10 @@
+{
+  "version": 1,
+  "sources": [
+    {
+      "id": "compendium",
+      "url": "https://www.vatican.va/archive/compendium_ccc/documents/archive_2005_compendium-ccc_po.html",
+      "sha256": "204de17a8efdef8dc205cf70355884fc3ab83b3d0a32a4539076669131531b1a"
+    }
+  ]
+}

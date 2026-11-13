@@ -48,6 +48,9 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sertumrosarum.domain.prayer.FixedPrayer
+import com.sertumrosarum.domain.treasury.PrayerLanguage
+import com.sertumrosarum.domain.treasury.TreasuryPrayer
+import com.sertumrosarum.feature.treasury.inLatin
 import com.sertumrosarum.domain.prayer.PrayerMode
 import com.sertumrosarum.domain.prayer.PrayerPhase
 import com.sertumrosarum.feature.guides.PrayerGuide
@@ -67,7 +70,15 @@ import kotlin.math.abs
 import kotlin.math.sin
 
 @Composable
-fun ImmersivePrayerScreen(state: PrayerUiState, model: PrayerSessionViewModel, onNext: () -> Unit) {
+fun ImmersivePrayerScreen(
+    state: PrayerUiState,
+    model: PrayerSessionViewModel,
+    language: PrayerLanguage = PrayerLanguage.PORTUGUESE,
+    onLanguage: (PrayerLanguage) -> Unit = {},
+    /** The Treasury's entry for the prayer being prayed, when it carries a Latin text. */
+    latin: TreasuryPrayer? = null,
+    onNext: () -> Unit,
+) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     val page = SertumTheme.spacing.page
@@ -81,6 +92,8 @@ fun ImmersivePrayerScreen(state: PrayerUiState, model: PrayerSessionViewModel, o
     val beadLabel = if (step.isSmallBead) "${state.beadLabel} ${requireNotNull(step.beadIndex) + 1} de ${step.beadCount}" else "Passo ${state.stepIndex + 1} de ${state.sequence.size}"
     val groups = state.groupCount
     val announcing = step.isAnnouncement
+    val latinText = if (state.sessionMode == com.sertumrosarum.domain.prayer.PrayerMode.SOLO) latin?.latinSolo ?: latin?.latin else latin?.latin
+    val inLatin = language == PrayerLanguage.LATIN && latinText != null
     var contemplating by rememberSaveable(state.stepIndex) { mutableStateOf(false) }
     var readingSection by rememberSaveable(state.stepIndex) { mutableIntStateOf(0) }
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -104,7 +117,7 @@ fun ImmersivePrayerScreen(state: PrayerUiState, model: PrayerSessionViewModel, o
                 if (shortScreen) Box(Modifier.padding(horizontal = 20.dp)) { CompactMysteries(state.completedDecades, step.decadeIndex, model::jumpToDecade, groups, state.groupLabel) }
                 else FiveMysteriesArc(state.completedDecades, step.decadeIndex, model::jumpToDecade, Modifier.padding(horizontal = 16.dp), groups = groups, groupLabel = state.groupLabel, compact = true)
             }
-            key(state.stepIndex, state.eyesClosed) {
+            key(state.stepIndex, state.eyesClosed, language) {
                 PrayerTextReader(
                     Modifier.weight(1f).fillMaxWidth().padding(horizontal = page - 6.dp),
                     // A scroll cue must not recenter the heading or first line.
@@ -113,7 +126,8 @@ fun ImmersivePrayerScreen(state: PrayerUiState, model: PrayerSessionViewModel, o
                     readingKey = readingSection,
                 ) {
                     if (state.eyesClosed) {
-                        SacredText(step.title, Modifier.fillMaxWidth().testTag("prayer-title"), if (shortScreen || largeText) type.section else type.heading, align = TextAlign.Center)
+                        val titleStyle = if (shortScreen || largeText) type.section else type.heading
+                        SacredText(if (inLatin) latin?.latinTitle ?: step.title else step.title, Modifier.fillMaxWidth().testTag("prayer-title"), if (inLatin) titleStyle.inLatin else titleStyle, align = TextAlign.Center)
                         if (!shortScreen && !largeText) {
                             SacredText("Reze no seu tempo.\nO toque acompanha sua oração.", Modifier.padding(top = 10.dp), type.whisper, colors.secondary, TextAlign.Center)
                         }
@@ -131,7 +145,8 @@ fun ImmersivePrayerScreen(state: PrayerUiState, model: PrayerSessionViewModel, o
                                 SacredText(chapter, style = type.micro, color = colors.accentInk, align = TextAlign.Center)
                                 Spacer(Modifier.height(4.dp))
                             }
-                            SacredText(step.title, Modifier.testTag("prayer-title"), if (shortScreen) type.section else type.heading, align = TextAlign.Center)
+                            val titleStyle = if (shortScreen) type.section else type.heading
+                            SacredText(if (inLatin) latin?.latinTitle ?: step.title else step.title, Modifier.testTag("prayer-title"), if (inLatin) titleStyle.inLatin else titleStyle, align = TextAlign.Center)
                             if (!shortScreen) {
                                 SacredFlourish(Modifier.padding(top = 6.dp, bottom = 8.dp))
                             } else Spacer(Modifier.height(8.dp))
@@ -152,7 +167,8 @@ fun ImmersivePrayerScreen(state: PrayerUiState, model: PrayerSessionViewModel, o
                                 FixedPrayer.SIGN_OF_CROSS, FixedPrayer.GLORY_BE -> TextAlign.Center
                                 else -> TextAlign.Start
                             }
-                            SacredText(state.prayerText, Modifier.widthIn(max = 480.dp).fillMaxWidth().testTag("prayer-text"), type.prayer, colors.ink, alignment)
+                            if (latinText != null) PrayerLanguageToggle(language, onLanguage, Modifier.padding(bottom = 4.dp))
+                            SacredText(if (inLatin) latinText.orEmpty() else state.prayerText, Modifier.widthIn(max = 480.dp).fillMaxWidth().testTag("prayer-text"), if (inLatin) type.prayer.inLatin else type.prayer, colors.ink, alignment)
                         }
                         if (step.intention != null) {
                             SacredText(step.intention, Modifier.padding(top = 16.dp), type.whisper, colors.gold, TextAlign.Center)
