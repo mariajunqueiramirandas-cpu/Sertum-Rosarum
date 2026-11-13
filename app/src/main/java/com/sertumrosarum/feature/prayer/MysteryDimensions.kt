@@ -43,6 +43,8 @@ import com.sertumrosarum.domain.prayer.Mystery
 import com.sertumrosarum.domain.prayer.MysteryContemplation
 import com.sertumrosarum.ui.canvas.LocalBotanicalArtwork
 import com.sertumrosarum.ui.canvas.paintBotanical
+import com.sertumrosarum.ui.canvas.DevotionalArtwork
+import com.sertumrosarum.ui.canvas.DevotionalIllustration
 import com.sertumrosarum.ui.components.SacredCard
 import com.sertumrosarum.ui.components.SacredChip
 import com.sertumrosarum.ui.components.SacredIcon
@@ -79,7 +81,10 @@ internal fun MysteryDimensions(
                 DimensionLayer(index, name, shown = unfolded || open == index, foldable = !unfolded, last = index == layers.lastIndex, onClick = { open = if (open == index) -1 else index }) {
                     when (index) {
                         0 -> {
-                            SacredChip(mystery.scripture, Modifier.padding(bottom = 8.dp))
+                            Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
+                                SacredChip(mystery.scripture)
+                                DevotionalArtwork(DevotionalIllustration.PRAYER_BOOK, Modifier.size(42.dp))
+                            }
                             SacredText("“${contemplation.scriptureQuote}”", Modifier.padding(bottom = 10.dp).testTag("scripture-quote"), type.whisper, colors.marian)
                             SacredText(contemplation.scene, style = type.whisper)
                         }
@@ -187,7 +192,7 @@ internal fun CatecheticalNote(text: String, modifier: Modifier = Modifier) {
         horizontalArrangement = Arrangement.spacedBy(12.dp),
     ) {
         Box(Modifier.size(32.dp).background(colors.gold.copy(alpha = .18f), CircleShape), contentAlignment = Alignment.Center) {
-            SacredIcon(SacredIcon.SUN, Modifier.size(17.dp), honey)
+            DevotionalArtwork(DevotionalIllustration.PRAYER_BOOK, Modifier.size(30.dp))
         }
         Column(Modifier.weight(1f)) {
             SacredText("Por que rezamos assim?", style = type.micro, color = honey)

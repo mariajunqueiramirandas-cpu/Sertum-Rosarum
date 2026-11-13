@@ -1,6 +1,10 @@
 package com.sertumrosarum.feature.treasury
 
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Modifier
+import androidx.compose.foundation.layout.fillMaxSize
+import com.sertumrosarum.ui.canvas.DevotionalArtwork
+import com.sertumrosarum.ui.canvas.DevotionalIllustration
 import com.sertumrosarum.feature.prayer.SanctuaryTab
 import com.sertumrosarum.ui.components.BuddingBed
 import com.sertumrosarum.ui.components.SanctuaryPage
@@ -20,6 +24,7 @@ fun TreasuryScreen() {
                 "Os vinte mistérios" to "Um guia para contemplar cada cena com calma.",
             ),
             closing = "Enquanto este canteiro cresce, o terço de hoje espera por você.",
+            hero = { DevotionalArtwork(DevotionalIllustration.PRAYER_BOOK, Modifier.fillMaxSize()) },
         )
     }
 }

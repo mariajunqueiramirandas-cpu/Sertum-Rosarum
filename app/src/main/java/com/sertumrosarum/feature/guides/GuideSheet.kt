@@ -40,6 +40,7 @@ import com.sertumrosarum.ui.canvas.BloomingBeadsArc
 import com.sertumrosarum.ui.canvas.FiveMysteriesArc
 import com.sertumrosarum.ui.canvas.LocalBotanicalArtwork
 import com.sertumrosarum.ui.canvas.paintBotanical
+import com.sertumrosarum.ui.canvas.DevotionalArtwork
 import com.sertumrosarum.ui.components.SacredChip
 import com.sertumrosarum.ui.components.SacredPrimaryButton
 import com.sertumrosarum.ui.components.SacredText
@@ -57,6 +58,7 @@ internal fun ColumnScope.GuideSheetContent(
 ) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
+    DevotionalArtwork(guide.illustration, Modifier.align(Alignment.CenterHorizontally).size(128.dp))
     SacredChip(guide.kicker, Modifier.align(Alignment.CenterHorizontally))
     SacredText(guide.title, Modifier.fillMaxWidth().padding(top = 10.dp).testTag("guide-title").semantics { heading() }, type.heading, align = TextAlign.Center)
     SacredText(guide.about, Modifier.fillMaxWidth().padding(top = 10.dp), type.body, colors.secondary, TextAlign.Center)

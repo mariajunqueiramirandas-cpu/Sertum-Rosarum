@@ -23,6 +23,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sertumrosarum.ui.canvas.RoseCrownEmblem
 import com.sertumrosarum.ui.canvas.RoseMark
+import com.sertumrosarum.feature.guides.offeringIllustration
 import com.sertumrosarum.ui.components.SacredFlourish
 import com.sertumrosarum.ui.components.SacredPrimaryButton
 import com.sertumrosarum.ui.components.SacredText
@@ -39,7 +40,7 @@ fun CrownDeliveredScreen(state: PrayerUiState, onReturn: () -> Unit) {
             SacredText("sertum", style = type.brand)
         }
         Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            RoseCrownEmblem(Modifier.size(286.dp), state.groupCount, state.crownBeadCount)
+            RoseCrownEmblem(Modifier.size(286.dp), state.groupCount, state.crownBeadCount, state.sessionGuide.offeringIllustration)
             SacredText(state.sessionGuide.title, Modifier.padding(top = 10.dp).testTag("delivered-guide"), type.micro, colors.marian, TextAlign.Center)
             SacredText("Sua Coroa de Rosas\nfoi entregue", Modifier.padding(top = 12.dp), type.display, align = TextAlign.Center)
             SacredText("Que a paz desta oração\nacompanhe o seu dia.", Modifier.padding(top = 14.dp), type.whisper, colors.secondary, TextAlign.Center)

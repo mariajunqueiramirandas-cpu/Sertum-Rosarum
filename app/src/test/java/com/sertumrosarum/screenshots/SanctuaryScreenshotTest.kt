@@ -45,4 +45,31 @@ class SanctuaryScreenshotTest {
         compose.onNodeWithTag("start-rosary").performClick()
         shot("prayer-first")
     }
+
+    private fun tap(tag: String) {
+        compose.onNodeWithTag(tag).performSemanticsAction(SemanticsActions.OnClick)
+        compose.waitForIdle()
+    }
+
+    private fun rosaryOffering(mode: String, suffix: String) {
+        tap("theme-menu")
+        tap("theme-$mode")
+        tap("start-rosary")
+        tap("decade-0")
+        tap("bead-2")
+        shot("prayer-$suffix")
+        if (mode == "DAY") {
+            tap("eyes-closed-toggle")
+            shot("prayer-eyes-closed")
+            tap("eyes-closed-toggle")
+        }
+        tap("decade-4")
+        tap("bead-9")
+        repeat(5) { tap("next-prayer") }
+        shot(if (mode == "DAY") "crown-delivered" else "crown-delivered-vigil")
+    }
+
+    @Test fun dayPrayerAndOffering() = rosaryOffering("DAY", "day")
+
+    @Test fun vigilPrayerAndOffering() = rosaryOffering("VIGIL", "vigil")
 }

@@ -34,6 +34,6 @@ The prayer beads, mystery stem, delivered crown, and small ornaments use a [coor
 
 ## Preview provenance
 
-The updated sanctuary screenshots in `docs/screenshots` are rendered from the actual Android Compose screen with Robolectric native graphics at 412 × 915 dp and 2× density. They are not photographs or emulator captures. A temporary review harness checks both appearances, all four mystery selections, and entry into prayer at that size, plus both appearances and entry into prayer at 320 × 640 dp. It is kept outside the application source and introduces no runtime or project dependencies.
+The current sanctuary screenshots in `docs/screenshots` are rendered from the actual Android Compose screen with Robolectric native graphics at 411 × 891 dp and 3× density. They are not photographs or emulator captures. Reproduce them with `./gradlew recordRoborazziDebug`. The scrolled previews show the garden dissolving beneath the fixed header, with a faint shadow in both appearances.
 
-The standard project verification passes: `assembleDebug`, all 19 JVM unit tests, `compileDebugAndroidTestKotlin`, and `lintDebug`. Lint reports 30 dependency-update warnings and no errors. The full instrumented device suite was not run; no device or emulator is attached to this environment.
+Run the standard build and test checks described in [Phase 2](../../phase-2.md#validation). A full instrumented run requires an attached device or emulator.

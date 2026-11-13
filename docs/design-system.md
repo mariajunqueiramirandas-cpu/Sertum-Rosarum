@@ -59,13 +59,15 @@ A soft floating shelf at the foot of the screen holds four places: **Início**, 
 
 Outside Início, the rose and the place's name sit where the wordmark sits at home.
 
+Once content scrolls beneath a fixed header, its first 32 dp fade to reveal the actual page wash. A faint sage shadow adds separation without an opaque strip. Both effects disappear at the top of the page; sheets use a shorter 16 dp fade beneath their handle.
+
 ### Sanctuary
 
 The Marian garden opens the screen, under a small floral wordmark and the appearance control. A centered greeting follows. Four soft mystery controls lead to one card that holds the chosen mysteries: their invitation, then five moments joined by a stem. The section heading always reserves the space for its “Hoje” badge, so selecting another set does not shift the controls or card. The hidden badge is excluded from accessibility. A quiet link beneath it leads to Roteiros. The page dissolves into the primary prayer action, which stays within reach above the shelf. A paused crown offers a gentle continuation card.
 
 ### Roteiros
 
-Every way of praying sits on one of three shelves. **O santo terço** and **Outras coroas devocionais** are single cards whose rows are separated by a hairline; **Terços temáticos** is a row of small painted cards that runs from edge to edge, each washed in the colour of its intention. A devotional crown is introduced by a small glyph of its own shape, seen from above: one dot for each small bead and a honey dot where each group begins, so five decades, seven septets, and seven decades differ at a glance. Small sage pills carry what distinguishes a guide (*Iniciante*, *Ladainha*, its shape).
+Every way of praying sits on one of three shelves. **O santo terço** and **Outras coroas devocionais** are single cards whose rows are separated by a hairline; **Terços temáticos** is a row of small painted cards that runs from edge to edge, each washed in the colour of its intention. An open prayer book welcomes the reader. Devotional rows carry their own classical sacred portraits; themed cards carry the Holy Family, a lily and lamp for consolation, or a dove of peace. Small sage pills carry what distinguishes a guide (*Iniciante*, *Ladainha*, its shape). The traditional rosary retains its small crown glyph. The [paintings, iconography, scales, and prompts](artwork/devotions/README.md) form one family with the home garden.
 
 Touching a guide raises its sheet: what it is, the crown's shape, and the path of the prayer as buds on a stem ending in a rose. The shape is drawn with the same stem and garland as the prayer screen and answers to touch, so a septet of seven can be felt before it is prayed. The complete rosary also shows the litany's two voices. Each guide has one petal action that stays in view and begins its own prayer sequence. Rosaries also offer the mystery selector and bead-by-bead switch. The stem, garland, and delivered crown use the active script’s actual group and bead counts.
 
@@ -75,7 +77,7 @@ A sheet is a rounded page of the background colour that rises over a dusk-green 
 
 ### Tesouro and Meu Jardim
 
-Until their own phases, these two places are flowerbeds in bud: a single painted bud in slow rings of light, the place's purpose in one line, and a card naming what will grow there, joined by the same stem as the mysteries. They promise nothing with a date, and Meu Jardim says outright that it will keep no goals or streaks.
+Until their own phases, these two places remain in bud: a painted prayer book in Tesouro and a single painted bud in slow rings of light in Meu Jardim. Each states its purpose in one line and names what will grow there on a card joined by the same stem as the mysteries. They promise nothing with a date, and Meu Jardim says outright that it will keep no goals or streaks.
 
 ### Prayer
 
@@ -95,7 +97,7 @@ Eyes-closed mode replaces the reading area with a concise prayer heading and cal
 
 ### Crown delivered
 
-A crown of fifty roses woven with leaves surrounds a large central blossom. The screen names the delivered crown, offers a gentle closing message, records the time in prayer in one quiet line, and returns to the sanctuary. There are no streaks, scores, or urgency cues.
+A crown of roses woven with leaves surrounds a large central blossom or the chosen devotion's sacred painting. The ring uses the script's actual bead and group counts; blossoms and leaves contract for denser rings, keeping all 72 Franciscan flowers distinct. The screen names the delivered crown, offers a gentle closing message, records the time in prayer in one quiet line, and returns to the sanctuary. There are no streaks, scores, or urgency cues.
 
 ## Motion, haptics, and accessibility
 

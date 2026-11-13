@@ -102,6 +102,7 @@ fun SacredBottomSheet(
             val pull = remember { Animatable(0f) }
             val scope = rememberCoroutineScope()
             val release = with(LocalDensity.current) { 96.dp.toPx() }
+            val scroll = rememberScrollState()
             Column(
                 Modifier.fillMaxWidth().heightIn(max = tallest).offset { IntOffset(0, pull.value.roundToInt()) }
                     .drawBehind {
@@ -132,7 +133,7 @@ fun SacredBottomSheet(
                     contentAlignment = Alignment.Center,
                 ) { Box(Modifier.width(42.dp).height(4.dp).background(colors.muted.copy(alpha = .38f), CircleShape)) }
                 Column(
-                    Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState()).testTag("$tag-scroll").padding(horizontal = 24.dp).padding(bottom = 20.dp),
+                    Modifier.weight(1f, fill = false).softScrollTop(scroll, 16.dp).verticalScroll(scroll).testTag("$tag-scroll").padding(horizontal = 24.dp).padding(bottom = 20.dp),
                     content = content,
                 )
                 if (footer != null) Column(Modifier.fillMaxWidth().padding(horizontal = 24.dp).padding(top = 4.dp, bottom = 16.dp), horizontalAlignment = Alignment.CenterHorizontally, content = footer)

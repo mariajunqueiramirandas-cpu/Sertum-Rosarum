@@ -63,6 +63,8 @@ import com.sertumrosarum.ui.components.SacredIcon
 import com.sertumrosarum.ui.components.SacredIconButton
 import com.sertumrosarum.ui.components.SacredPrimaryButton
 import com.sertumrosarum.ui.components.SacredText
+import com.sertumrosarum.ui.components.ScrollHeaderShadow
+import com.sertumrosarum.ui.components.softScrollTop
 import com.sertumrosarum.ui.theme.SertumTheme
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -71,10 +73,11 @@ import java.util.Locale
 fun SanctuaryScreen(state: PrayerUiState, model: PrayerSessionViewModel) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
+    val scroll = rememberScrollState()
     Column(Modifier.fillMaxSize().testTag("sanctuary")) {
         SanctuaryHeader(state.themeMode, model::setTheme)
         Box(Modifier.weight(1f)) {
-            Column(Modifier.fillMaxSize().verticalScroll(rememberScrollState()).padding(horizontal = 24.dp)) {
+            Column(Modifier.fillMaxSize().softScrollTop(scroll).verticalScroll(scroll).testTag("sanctuary-scroll").padding(horizontal = 24.dp)) {
                 SanctuaryGarden(Modifier.fillMaxWidth().height(292.dp))
                 SacredText(
                     state.today.format(DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM", Locale.forLanguageTag("pt-BR"))).replaceFirstChar { it.uppercaseChar() },
@@ -116,6 +119,7 @@ fun SanctuaryScreen(state: PrayerUiState, model: PrayerSessionViewModel) {
                 SacredText("Lucas 1, 46", Modifier.fillMaxWidth().padding(top = 6.dp), type.micro, colors.muted, TextAlign.Center)
                 SacredText("Uma oração de cada vez. Sem pressa.", Modifier.fillMaxWidth().padding(top = 22.dp, bottom = 40.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.secondary, TextAlign.Center)
             }
+            ScrollHeaderShadow(scroll, Modifier.align(Alignment.TopCenter))
             // The page dissolves into the action instead of being cut by it.
             Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(32.dp).background(Brush.verticalGradient(listOf(colors.background.copy(alpha = 0f), colors.background))))
         }

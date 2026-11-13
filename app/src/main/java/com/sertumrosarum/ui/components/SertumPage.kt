@@ -54,7 +54,8 @@ fun SanctuaryPage(name: String, tag: String, scroll: ScrollState = rememberScrol
             SacredText(name, Modifier.semantics { heading() }, SertumTheme.typography.brand)
         }
         Box(Modifier.weight(1f)) {
-            Column(Modifier.fillMaxSize().verticalScroll(scroll).testTag("$tag-scroll"), content = content)
+            Column(Modifier.fillMaxSize().softScrollTop(scroll).verticalScroll(scroll).testTag("$tag-scroll"), content = content)
+            ScrollHeaderShadow(scroll, Modifier.align(Alignment.TopCenter))
             Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(28.dp).background(Brush.verticalGradient(listOf(colors.background.copy(alpha = 0f), colors.background))))
         }
     }
@@ -74,14 +75,15 @@ fun PageWelcome(title: String, lead: String, modifier: Modifier = Modifier, alig
  * Used by the tabs whose season comes later.
  */
 @Composable
-fun BuddingBed(title: String, lead: String, promiseTitle: String, promises: List<Pair<String, String>>, closing: String, modifier: Modifier = Modifier) {
+fun BuddingBed(title: String, lead: String, promiseTitle: String, promises: List<Pair<String, String>>, closing: String, modifier: Modifier = Modifier, hero: (@Composable () -> Unit)? = null) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     val art = LocalBotanicalArtwork.current
     val breath = rememberGardenBreath("budding-bed", 7200)
     val halo = SertumTheme.atmosphere.accent
     Column(modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
-        Canvas(Modifier.padding(top = 18.dp).size(168.dp)) {
+        if (hero != null) Box(Modifier.padding(top = 18.dp).size(168.dp), contentAlignment = Alignment.Center) { hero() }
+        else Canvas(Modifier.padding(top = 18.dp).size(168.dp)) {
             // A single bud between two leaves, with slow rings of light for it to grow into.
             val swell = .5f + .5f * sin(breath.value)
             drawCircle(halo.copy(alpha = .10f + .05f * swell), size.minDimension * (.42f + .06f * swell))

@@ -27,6 +27,8 @@ import com.sertumrosarum.domain.prayer.MysterySet
 import com.sertumrosarum.feature.prayer.ThemeMode
 import com.sertumrosarum.ui.canvas.LocalBotanicalArtwork
 import com.sertumrosarum.ui.canvas.rememberBotanicalArtwork
+import com.sertumrosarum.ui.canvas.LocalDevotionalArtwork
+import com.sertumrosarum.ui.canvas.rememberDevotionalArtwork
 
 /**
  * [ruby] is the rose of the flowers and small accents. Actions are petals:
@@ -137,6 +139,7 @@ fun SertumTheme(mode: ThemeMode, mysterySet: MysterySet, content: @Composable ()
     }
     CompositionLocalProvider(
         LocalBotanicalArtwork provides rememberBotanicalArtwork(),
+        LocalDevotionalArtwork provides rememberDevotionalArtwork(),
         LocalSertumColors provides colors,
         LocalIndication provides remember(colors.marian) { SacredIndication(colors.marian) },
         LocalSertumTypography provides SertumTypography(),
