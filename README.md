@@ -26,7 +26,7 @@ Open Sertum and arrive in a small garden: warm cream, sage leaves, clay-colored 
 
 *Sertum Rosarum* means “crown of roses.” That image shapes the whole app: each prayer becomes a rose, five mysteries form a crown, and the completed rosary is gently offered at the end.
 
-**Phases 1 and 2 are implemented.** The interface and fixed prayers are in Brazilian Portuguese. Prayer content, fonts, and artwork are bundled; the prayer experience needs no network connection.
+**Phases 1 and 2 are implemented, and the Phase 3 interface is built** around one example prayer; its catalog and logic are still to come. The interface and fixed prayers are in Brazilian Portuguese. Prayer content, fonts, and artwork are bundled; the prayer experience needs no network connection.
 
 ## A garden in every screen
 
@@ -113,15 +113,25 @@ All ten Roteiros guides can be prayed offline. Each of the twenty rosary mysteri
 </table>
 
 <details>
-<summary><strong>See the catechetical notes, the litany's two voices, Vigil, and the places still in bud</strong></summary>
+<summary><strong>See the catechetical notes, the litany's two voices, Vigil, and Tesouro</strong></summary>
 
 <table>
-<tr><th>Why we pray this way</th><th>Two voices</th><th>Roteiros at dusk</th><th>Tesouro, in bud</th></tr>
+<tr><th>Why we pray this way</th><th>Two voices</th><th>Roteiros at dusk</th><th>Tesouro</th></tr>
 <tr>
 <td><img src="docs/screenshots/prayer-catechetical.png" width="200" alt="The Sign of the Cross with a honey-tinted note explaining why the rosary begins with it" /></td>
 <td><img src="docs/screenshots/guide-litany.png" width="200" alt="The complete rosary's sheet, showing the litany as a call and its answer in rose" /></td>
 <td><img src="docs/screenshots/roteiros-vigil.png" width="200" alt="The Roteiros tab in deep forest green" /></td>
-<td><img src="docs/screenshots/tesouro.png" width="200" alt="The Treasury tab as a flowerbed in bud, naming what will grow there" /></td>
+<td><img src="docs/screenshots/tesouro.png" width="200" alt="The Treasury tab: a search field, the moments of life, one prayer on its shelf, and the guide to the twenty mysteries" /></td>
+</tr>
+</table>
+
+<table>
+<tr><th>A prayer</th><th>Touch to understand</th><th>Side by side</th><th>Latin in the rosary</th></tr>
+<tr>
+<td><img src="docs/screenshots/tesouro-prayer.png" width="200" alt="The Ave-Maria in the Treasury, with one expression resting on a string of honey beads" /></td>
+<td><img src="docs/screenshots/tesouro-term.png" width="200" alt="A sheet explaining the expression cheia de graça: its origin, its Scripture, and what it means today" /></td>
+<td><img src="docs/screenshots/tesouro-word-by-word.png" width="200" alt="The Ave-Maria verse by verse in Portuguese and Latin, the first verse opened word by word" /></td>
+<td><img src="docs/screenshots/prayer-latin.png" width="200" alt="The rosary counter praying the Ave Maria in Latin" /></td>
 </tr>
 </table>
 
@@ -129,7 +139,7 @@ All ten Roteiros guides can be prayed offline. Each of the twenty rosary mysteri
 
 | Phase 2 capability | Delivered behavior |
 | --- | --- |
-| Four-place navigation | Início, Roteiros, Tesouro, and Meu Jardim; navigation hides during prayer. Tesouro and Meu Jardim remain the planned Phase 3 and 4 placeholders. |
+| Four-place navigation | Início, Roteiros, Tesouro, and Meu Jardim; navigation hides during prayer. Meu Jardim remains the planned Phase 4 placeholder. |
 | Mysteries in four dimensions | Twenty complete contemplations and 200 bead meditations, accessible before and during each rosary decade. |
 | Rosary scripts | Traditional, catechetical, complete with all 67 responsive litany invocations, and themed rosaries for family, the sick, and peace. |
 | Divine Mercy | Five groups of Eterno Pai and ten Passion invocations, followed by three Deus Santo prayers. |
@@ -298,7 +308,8 @@ flowchart LR
 | Prayer session | [`feature/prayer`](app/src/main/java/com/sertumrosarum/feature/prayer) | State transitions, saved-state recovery, immersive prayer, and crown delivery |
 | Sanctuary | [`feature/sanctuary`](app/src/main/java/com/sertumrosarum/feature/sanctuary) | Greeting, garden, mystery controls, appearance, and session continuation |
 | Roteiros | [`feature/guides`](app/src/main/java/com/sertumrosarum/feature/guides) | The guide catalogue's interface copy and crown shapes, the three shelves, and each guide's sheet |
-| Places in bud | [`feature/treasury`](app/src/main/java/com/sertumrosarum/feature/treasury), [`feature/garden`](app/src/main/java/com/sertumrosarum/feature/garden) | The Tesouro and Meu Jardim tabs, ready for Phases 3 and 4 |
+| Tesouro | [`feature/treasury`](app/src/main/java/com/sertumrosarum/feature/treasury), [`domain/treasury`](app/src/main/java/com/sertumrosarum/domain/treasury) | The Phase 3 interface: library, reading in Portuguese and Latin, explained expressions, and the mysteries to study. [What is built and what is a stand-in](docs/phase-3.md) |
+| Place in bud | [`feature/garden`](app/src/main/java/com/sertumrosarum/feature/garden) | The Meu Jardim tab, ready for Phase 4 |
 | Design system | [`ui/theme`](app/src/main/java/com/sertumrosarum/ui/theme), [`ui/components`](app/src/main/java/com/sertumrosarum/ui/components) | Custom tokens, fonts, controls, and press feedback |
 | Original artwork | [`ui/canvas`](app/src/main/java/com/sertumrosarum/ui/canvas) | Marian garden, roses, living bead arcs, and the completed crown |
 | Tactile feedback | [`core/haptics`](app/src/main/java/com/sertumrosarum/core/haptics) | Android `VibratorManager` and differentiated `VibrationEffect` patterns |
@@ -324,7 +335,7 @@ The current app completes **Phases 1 and 2**. Phases 3–5 remain planned.
 | --- | --- | --- |
 | **1** | Garden sanctuary, custom design system, complete rosary counter, living roses, tactile navigation, and crown delivery | **Implemented** |
 | **2** | Four-dimensional mysteries, bead-by-bead meditations, prayer scripts, and devotional chaplets | **Implemented** |
-| **3** | Prayer treasury, Portuguese / Latin mode, prayer annotations, and a mystery study guide | Planned |
+| **3** | Prayer treasury, Portuguese / Latin mode, prayer annotations, and a mystery study guide | Interface built with one example prayer; catalog and logic planned |
 | **4** | Persistent intentions, prayer history, preference storage, and the personal garden | Planned |
 | **5** | Lumen catechist and custom rosary supplements with doctrinal guardrails | Planned |
 

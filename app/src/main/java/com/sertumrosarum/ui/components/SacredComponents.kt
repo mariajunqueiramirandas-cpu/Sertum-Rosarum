@@ -1,5 +1,6 @@
 package com.sertumrosarum.ui.components
 
+import androidx.compose.animation.animateColorAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
@@ -20,6 +21,8 @@ import androidx.compose.animation.core.spring
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.graphics.lerp
@@ -67,7 +70,7 @@ fun SacredText(
     maxLines: Int = Int.MAX_VALUE,
 ) = BasicText(text, modifier, style.copy(color = color, textAlign = align ?: style.textAlign), overflow = TextOverflow.Ellipsis, maxLines = maxLines)
 
-enum class SacredIcon { SUN, MOON, SYSTEM, BACK, CLOSE, EYE, HAPTIC, CHEVRON, CROSS, CHECK, ROSE, ARCH, BEADS, BOOK, SPROUT }
+enum class SacredIcon { SUN, MOON, SYSTEM, BACK, CLOSE, EYE, HAPTIC, CHEVRON, CROSS, CHECK, ROSE, ARCH, BEADS, BOOK, SPROUT, SEARCH }
 
 @Composable
 fun SacredIcon(icon: SacredIcon, modifier: Modifier = Modifier, color: Color = SertumTheme.colors.ink) {
@@ -161,6 +164,10 @@ fun SacredIcon(icon: SacredIcon, modifier: Modifier = Modifier, color: Color = S
                 }
                 drawPath(leaves, color, style = Stroke(stroke, cap = StrokeCap.Round))
                 line(12f, 21.5f, 12f, 11.5f)
+            }
+            SacredIcon.SEARCH -> {
+                drawCircle(color, 6.5f * unit, point(10.5f, 10.5f), style = Stroke(stroke))
+                line(15.4f, 15.4f, 20.5f, 20.5f)
             }
             SacredIcon.ROSE -> Unit // The painted rose is rendered above.
         }
@@ -272,5 +279,31 @@ fun SacredToggleRow(title: String, caption: String, checked: Boolean, onToggle: 
             SacredText(caption, Modifier.padding(top = 1.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.secondary)
         }
         SacredSwitch(checked)
+    }
+}
+
+/**
+ * A few exclusive choices on one soft track; the chosen one rests on a raised leaf of paper.
+ * The same form as the mystery selector, for any small set of options.
+ */
+@Composable
+fun <T> SacredSegmented(options: List<T>, selected: T, label: (T) -> String, onSelect: (T) -> Unit, modifier: Modifier = Modifier, tag: (T) -> String = { label(it) }) {
+    val colors = SertumTheme.colors
+    val track = RoundedCornerShape(26.dp)
+    Row(modifier.fillMaxWidth().clip(track).background(colors.surface).border(1.dp, colors.border.copy(alpha = .7f), track).selectableGroup().padding(5.dp), horizontalArrangement = Arrangement.spacedBy(2.dp)) {
+        options.forEach { option ->
+            val active = option == selected
+            val fill by animateColorAsState(if (active) colors.elevated else colors.elevated.copy(alpha = 0f), label = "segment-fill")
+            val pill = RoundedCornerShape(21.dp)
+            Box(
+                Modifier.weight(1f)
+                    .shadow(if (active && !colors.isDark) 5.dp else 0.dp, pill, ambientColor = colors.marian.copy(alpha = .2f), spotColor = colors.marian.copy(alpha = .28f))
+                    .clip(pill).background(fill)
+                    .selectable(active, role = Role.RadioButton, onClick = { onSelect(option) }).testTag(tag(option)).heightIn(min = 48.dp).padding(horizontal = 4.dp),
+                contentAlignment = Alignment.Center,
+            ) {
+                SacredText(label(option), style = SertumTheme.typography.label.copy(fontSize = 13.5.sp, fontWeight = if (active) FontWeight.Bold else FontWeight.Medium), color = if (active) colors.ink else colors.secondary, align = TextAlign.Center)
+            }
+        }
     }
 }

@@ -42,6 +42,7 @@ import com.sertumrosarum.ui.components.SacredCard
 import com.sertumrosarum.ui.components.SacredIcon
 import com.sertumrosarum.ui.components.SacredText
 import com.sertumrosarum.ui.components.SanctuaryPage
+import com.sertumrosarum.ui.components.ShelfHeading
 import com.sertumrosarum.ui.theme.SertumTheme
 
 /** Roteiros: every way of praying the app knows, on three shelves. Touching one opens its sheet. */
@@ -72,10 +73,7 @@ fun GuidesScreen(onOpen: (PrayerGuide) -> Unit) {
 
 @Composable
 private fun ShelfHeading(shelf: GuideShelf, modifier: Modifier = Modifier) {
-    Column(modifier.fillMaxWidth().testTag("shelf-${shelf.name}").padding(start = 24.dp, end = 24.dp, bottom = 14.dp)) {
-        SacredText(shelf.title, Modifier.semantics { heading() }, SertumTheme.typography.section)
-        SacredText(shelf.caption, Modifier.padding(top = 2.dp), SertumTheme.typography.body.copy(fontSize = 14.sp, lineHeight = 21.sp), SertumTheme.colors.secondary)
-    }
+    ShelfHeading(shelf.title, shelf.caption, modifier.testTag("shelf-${shelf.name}"))
 }
 
 /** One card for a whole shelf, its guides separated by a hairline. */

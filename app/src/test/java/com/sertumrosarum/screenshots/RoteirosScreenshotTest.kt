@@ -132,7 +132,7 @@ class RoteirosScreenshotTest {
         shot("prayer-meditated-vigil")
     }
 
-    @Test fun placesStillInBud() {
+    @Test fun tesouroAndThePlaceStillInBud() {
         appearance("DAY")
         tap("tab-TREASURY")
         shot("tesouro")

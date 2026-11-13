@@ -76,9 +76,23 @@ Touching a guide raises its sheet: what it is, the crown's shape, and the path o
 
 A sheet is a rounded page of the background colour that rises over a dusk-green veil, never a grey one. It closes by dragging its handle down, touching the veil, or going back. Its content scrolls beneath the handle, and an action, when there is one, stays at its foot.
 
-### Tesouro and Meu Jardim
+### Tesouro
 
-Until their own phases, these two places remain in bud: a painted prayer book in Tesouro and a single painted bud in slow rings of light in Meu Jardim. “Ainda em botão” is a plain caption beneath the illustration. Each states its purpose in one line and names what will grow there on a card joined by the same stem as the mysteries. They promise nothing with a date, and Meu Jardim says outright that it will keep no goals or streaks.
+The library opens under the painted prayer book. A soft search field sits on the surface colour; its cross appears only when there is something to clear. The moments of life follow as plain words in a row that runs past the edge, with a small sage bead under the chosen one. Each moment that has prayers is a shelf in the Roteiros form: a heading, a caption, and one card whose rows are separated by a hairline. What a prayer offers beyond its text (*Português e latim*, *Toque para entender*) stays typographic. A moment with nothing on it, or a search with no result, says so under a single bud. A **Formação** shelf leads to the twenty mysteries.
+
+A prayer or the mysteries guide opens as a page of the same place: the way back takes the rose's seat beside **Tesouro**, and the shelf of four places stays. The prayer is set exactly as in the rosary, at 21 / 34 sp. When it has a Latin text, one soft track offers **Português**, **Latim**, and **Lado a lado**, in the mystery selector's form.
+
+- An explained expression rests on a short string of honey beads; the wording and its colour are untouched. Beneath the prayer the same expressions are listed as open links with a 48 dp target. Either one raises a sheet with three parts: where the expression comes from, where Scripture says it, and what it asks of us today, with the Catechism reference as a closing line.
+- Side by side sets Portuguese beside Latin, verse by verse, with the Latin in the rose of a litany's answer. On a narrow screen or with enlarged text the Latin steps in beneath its verse instead. A verse that has been broken down carries a small chevron and opens a washed panel, **Palavra por palavra**.
+- Latin text is marked as Latin for screen readers.
+
+The mysteries guide reuses the mystery selector, then lists the five mysteries of the chosen set on one card, each with its fruit and Scripture citation. Touching one raises the same contemplation sheet used during prayer, with the ten bead lines and without the bead-by-bead switch.
+
+Inside the rosary, a prayer that has a Latin text shows **Português** and **Latim** as two plain words above it, in the form of the choice between praying alone and in a group.
+
+### Meu Jardim
+
+Until its own phase, this place remains in bud: a single painted bud in slow rings of light. “Ainda em botão” is a plain caption beneath the illustration. It states its purpose in one line and names what will grow there on a card joined by the same stem as the mysteries. It promises nothing with a date, and says outright that it will keep no goals or streaks.
 
 ### Prayer
 
