@@ -1,6 +1,7 @@
 package com.sertumrosarum.screenshots
 
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -55,6 +56,14 @@ class SanctuaryScreenshotTest {
         tap("theme-menu")
         tap("theme-$mode")
         tap("start-rosary")
+        tap("next-prayer")
+        compose.onNodeWithTag("prayer-scroll-cue").assertIsDisplayed()
+        shot("prayer-reading-$suffix")
+        if (mode == "VIGIL") {
+            compose.onNodeWithTag("prayer-scroll").performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, 100_000f) }
+            compose.waitForIdle()
+            shot("prayer-reading-end-vigil")
+        }
         tap("decade-0")
         tap("bead-2")
         shot("prayer-$suffix")

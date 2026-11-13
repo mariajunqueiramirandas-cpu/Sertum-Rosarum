@@ -138,6 +138,10 @@ class RoteirosScreenshotTest {
         shot("tesouro")
         tap("tab-GARDEN")
         shot("meu-jardim")
+        tap("tab-HOME")
+        appearance("VIGIL")
+        tap("tab-TREASURY")
+        shot("tesouro-vigil")
     }
 
     @Test fun devotionalPortraitsAndThemedCards() {

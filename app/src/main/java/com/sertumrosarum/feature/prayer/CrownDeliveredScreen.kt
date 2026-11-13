@@ -1,7 +1,5 @@
 package com.sertumrosarum.feature.prayer
 
-import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,12 +8,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -47,7 +43,7 @@ fun CrownDeliveredScreen(state: PrayerUiState, onReturn: () -> Unit) {
             SacredFlourish(Modifier.padding(top = 24.dp, bottom = 20.dp))
             // A quiet record of the time given, with no score to keep.
             Row(
-                Modifier.clip(CircleShape).background(colors.surface).border(1.dp, colors.border, CircleShape).padding(horizontal = 18.dp, vertical = 10.dp),
+                Modifier.padding(vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
             ) {
                 SacredText("${state.groupCount} ${if (state.script.isRosary) "mistérios" else if (state.groupLabel == "setena") "setenas" else "dezenas"}, ", style = type.body.copy(fontSize = 14.sp), color = colors.secondary)

@@ -94,7 +94,7 @@ fun BuddingBed(title: String, lead: String, promiseTitle: String, promises: List
             paintLeaf(art.leaf, foot - Offset(0f, 12.dp.toPx()), foot + Offset(34.dp.toPx(), -30.dp.toPx()), .92f)
             paintBotanical(art.bud, center - Offset(0f, 14.dp.toPx()), 62.dp.toPx())
         }
-        SacredChip("Ainda em botão", Modifier.padding(top = 4.dp))
+        SacredText("Ainda em botão", Modifier.padding(top = 4.dp), type.micro, colors.marian)
         PageWelcome(title, lead, Modifier.padding(top = 14.dp), TextAlign.Center)
         SacredFlourish(Modifier.padding(vertical = 24.dp))
         SacredCard(Modifier.padding(horizontal = 24.dp).fillMaxWidth()) {

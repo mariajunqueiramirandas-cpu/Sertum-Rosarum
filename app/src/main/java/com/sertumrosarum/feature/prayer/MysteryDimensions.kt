@@ -46,7 +46,6 @@ import com.sertumrosarum.ui.canvas.paintBotanical
 import com.sertumrosarum.ui.canvas.DevotionalArtwork
 import com.sertumrosarum.ui.canvas.DevotionalIllustration
 import com.sertumrosarum.ui.components.SacredCard
-import com.sertumrosarum.ui.components.SacredChip
 import com.sertumrosarum.ui.components.SacredIcon
 import com.sertumrosarum.ui.components.SacredText
 import com.sertumrosarum.ui.components.SacredToggleRow
@@ -82,7 +81,7 @@ internal fun MysteryDimensions(
                     when (index) {
                         0 -> {
                             Row(Modifier.fillMaxWidth().padding(bottom = 8.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
-                                SacredChip(mystery.scripture)
+                                SacredText(mystery.scripture, style = type.micro, color = colors.marian)
                                 DevotionalArtwork(DevotionalIllustration.PRAYER_BOOK, Modifier.size(42.dp))
                             }
                             SacredText("“${contemplation.scriptureQuote}”", Modifier.padding(bottom = 10.dp).testTag("scripture-quote"), type.whisper, colors.marian)
@@ -134,29 +133,24 @@ private fun DimensionLayer(index: Int, name: String, shown: Boolean, foldable: B
 
 /** During a decade, the mystery stays one touch away: this opens its contemplation sheet. */
 @Composable
-internal fun MysteryChip(decade: Int, mystery: Mystery, onOpen: () -> Unit, modifier: Modifier = Modifier) {
+internal fun MysteryLink(decade: Int, mystery: Mystery, onOpen: () -> Unit, modifier: Modifier = Modifier) {
     val colors = SertumTheme.colors
     val ink = lerp(colors.secondary, colors.ink, .3f)
     val art = LocalBotanicalArtwork.current
-    Box(
-        modifier.clip(CircleShape).clickable(role = Role.Button, onClickLabel = "Contemplar este mistério", onClick = onOpen)
-            .testTag("mystery-chip").heightIn(min = 44.dp).padding(horizontal = 6.dp),
-        contentAlignment = Alignment.Center,
+    Row(
+        modifier.clip(RoundedCornerShape(12.dp)).clickable(role = Role.Button, onClickLabel = "Contemplar este mistério", onClick = onOpen)
+            .testTag("mystery-chip").heightIn(min = 48.dp).padding(horizontal = 8.dp, vertical = 6.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically,
     ) {
-        Row(
-            Modifier.clip(CircleShape).background(colors.marian.copy(alpha = .1f)).border(1.dp, colors.marian.copy(alpha = .2f), CircleShape).padding(start = 8.dp, end = 13.dp, top = 5.dp, bottom = 5.dp),
-            horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Canvas(Modifier.size(18.dp)) { paintBotanical(art.ivoryRose, center, size.minDimension) }
-            SacredText("${decade + 1}º mistério · ${mystery.title}", Modifier.weight(1f, fill = false), SertumTheme.typography.micro, ink, maxLines = 1)
-            SacredIcon(SacredIcon.CHEVRON, Modifier.size(11.dp), ink)
-        }
+        Canvas(Modifier.size(18.dp)) { paintBotanical(art.ivoryRose, center, size.minDimension) }
+        SacredText("${decade + 1}º mistério · ${mystery.title}", Modifier.weight(1f, fill = false), SertumTheme.typography.micro, ink, maxLines = 1)
+        SacredIcon(SacredIcon.CHEVRON, Modifier.size(11.dp), ink)
     }
 }
 
 /**
  * One Ave-Maria of the bead-by-bead rosary: the mystery it belongs to, and the line to hold while praying.
- * It takes the place of the heading so the whole prayer still fits beneath it, and opens the same sheet as [MysteryChip].
+ * It takes the place of the heading so the whole prayer still fits beneath it, and opens the same sheet as [MysteryLink].
  */
 @Composable
 internal fun MeditatedBead(decade: Int, mystery: Mystery, line: String, onOpen: () -> Unit, modifier: Modifier = Modifier) {

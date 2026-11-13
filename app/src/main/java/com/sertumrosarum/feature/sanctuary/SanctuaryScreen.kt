@@ -90,12 +90,12 @@ fun SanctuaryScreen(state: PrayerUiState, model: PrayerSessionViewModel) {
                 Row(Modifier.fillMaxWidth().heightIn(min = 32.dp), horizontalArrangement = Arrangement.SpaceBetween, verticalAlignment = Alignment.CenterVertically) {
                     SacredText("O que vamos contemplar?", Modifier.weight(1f), type.section)
                     val isToday = state.selectedSet == MysterySet.forDay(state.today.dayOfWeek)
-                    // Reserve the badge's width and height for every set so changing
+                    // Reserve the label's width and height for every set so changing
                     // mysteries never reflows the heading or moves the selector.
                     Row(
                         Modifier.then(if (isToday) Modifier else Modifier.clearAndSetSemantics {})
                             .alpha(if (isToday) 1f else 0f)
-                            .clip(CircleShape).background(colors.marian.copy(alpha = .13f)).padding(horizontal = 12.dp, vertical = 5.dp),
+                            .padding(start = 12.dp, top = 5.dp, bottom = 5.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
                     ) {
                         Box(Modifier.size(6.dp).background(colors.marian, CircleShape))

@@ -39,7 +39,6 @@ import com.sertumrosarum.ui.canvas.DevotionalIllustration
 import com.sertumrosarum.ui.canvas.CrownGlyph
 import com.sertumrosarum.ui.components.PageWelcome
 import com.sertumrosarum.ui.components.SacredCard
-import com.sertumrosarum.ui.components.SacredChip
 import com.sertumrosarum.ui.components.SacredIcon
 import com.sertumrosarum.ui.components.SacredText
 import com.sertumrosarum.ui.components.SanctuaryPage
@@ -108,11 +107,14 @@ private fun GuideRow(guide: PrayerGuide, onOpen: (PrayerGuide) -> Unit) {
         Column(Modifier.weight(1f)) {
             SacredText(guide.title, style = type.label.copy(fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold))
             SacredText(guide.summary, Modifier.padding(top = 2.dp), type.body.copy(fontSize = 14.sp, lineHeight = 20.sp), colors.secondary)
-            if (guide.shelf == GuideShelf.CROWN || guide.catechetical || guide.litany) Row(Modifier.padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-                // Every rosary has the same five decades, so only the other crowns state their shape.
-                if (guide.shelf == GuideShelf.CROWN) SacredChip(guide.shape.badge)
-                if (guide.catechetical) SacredChip("Iniciante")
-                if (guide.litany) SacredChip("Ladainha")
+            // Metadata stays typographic; the whole row already provides the action surface.
+            val details = buildList {
+                if (guide.shelf == GuideShelf.CROWN) add(guide.shape.badge)
+                if (guide.catechetical) add("Iniciante")
+                if (guide.litany) add("Ladainha")
+            }
+            if (details.isNotEmpty()) {
+                SacredText(details.joinToString(" · "), Modifier.padding(top = 7.dp), type.micro.copy(fontWeight = FontWeight.Medium), colors.marian)
             }
         }
         SacredIcon(SacredIcon.CHEVRON, Modifier.size(13.dp), colors.muted)
