@@ -1,6 +1,9 @@
 package com.sertumrosarum
 
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsNotDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -8,8 +11,10 @@ import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
+import androidx.compose.ui.test.performSemanticsAction
 import com.sertumrosarum.domain.prayer.FixedPrayer
 import com.sertumrosarum.domain.prayer.PrayerMode
+import org.junit.Assert.assertTrue
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -23,7 +28,32 @@ import org.robolectric.annotation.GraphicsMode
 class PrayerModeFlowTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
 
-    private fun tap(tag: String) { compose.onNodeWithTag(tag).performClick() }
+    private fun tap(tag: String) {
+        val node = compose.onNodeWithTag(tag)
+        if (tag.startsWith("prayer-mode-")) node.performScrollTo()
+        node.performClick()
+    }
+
+    private fun checkScrollingModeChoice() {
+        compose.onNodeWithTag("prayer-mode-SOLO").assertIsSelected().assertIsNotDisplayed()
+        compose.onNodeWithTag("start-rosary").assertIsDisplayed()
+        compose.onNodeWithTag("sanctuary-scroll-cue").assertIsDisplayed().performClick()
+        compose.waitForIdle()
+        val scroll = compose.onNodeWithTag("sanctuary-scroll")
+        assertTrue(scroll.fetchSemanticsNode().config[SemanticsProperties.VerticalScrollAxisRange].value() > 0f)
+        scroll.performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, 100_000f) }
+        compose.waitForIdle()
+        compose.onNodeWithTag("sanctuary-scroll-cue").assertDoesNotExist()
+        compose.onNodeWithTag("prayer-mode-GROUP").performScrollTo().assertIsDisplayed().performClick().assertIsSelected()
+        tap("start-rosary")
+        compose.onNodeWithTag("session-mode").assertTextEquals("Oração em grupo")
+    }
+
+    @Test fun `solo is the default and mode choices appear after scrolling with a working cue`() = checkScrollingModeChoice()
+
+    @Test
+    @Config(qualifiers = "w320dp-h640dp-xxhdpi")
+    fun `a small phone can scroll to mode choices and the cue disappears at the end`() = checkScrollingModeChoice()
 
     @Test fun `paused group prayer keeps its mode while a new solo rosary uses personal texts`() {
         compose.onNodeWithTag("prayer-mode-SOLO").assertIsSelected()
@@ -67,13 +97,13 @@ class PrayerModeFlowTest {
 
     @Test
     @Config(qualifiers = "w851dp-h393dp-land-xxhdpi")
-    fun `landscape keeps the mode start resume and mystery controls accessible`() {
-        compose.onNodeWithTag("prayer-mode-SOLO").assertIsDisplayed()
+    fun `landscape keeps start and resume visible while modes and mysteries scroll`() {
+        compose.onNodeWithTag("prayer-mode-SOLO").assertIsNotDisplayed()
         tap("prayer-mode-GROUP")
         compose.onNodeWithTag("start-rosary").assertIsDisplayed().performClick()
         tap("pause-prayer")
         compose.onNodeWithTag("resume").assertIsDisplayed()
-        compose.onNodeWithTag("prayer-mode-SOLO").assertIsDisplayed()
+        compose.onNodeWithTag("prayer-mode-SOLO").performScrollTo().assertIsDisplayed()
         compose.onNodeWithTag("start-rosary").assertIsDisplayed()
         compose.onNodeWithTag("mystery-GLORIOUS").performScrollTo().assertIsDisplayed().performClick()
     }

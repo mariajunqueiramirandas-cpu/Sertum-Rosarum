@@ -64,7 +64,7 @@ Once content scrolls beneath a fixed header, its first 32 dp fade to reveal the 
 
 ### Sanctuary
 
-The Marian garden opens the screen, under a small floral wordmark and the appearance control. A centered greeting follows. Four soft mystery controls lead to one card that holds the chosen mysteries: their invitation, then five moments joined by a stem. The section heading always reserves the space for its plain “Hoje” label and small dot, so selecting another set does not shift the controls or card. The hidden label is excluded from accessibility. A quiet link beneath it leads to Roteiros. The page dissolves into the primary prayer action, which stays within reach above the shelf. A paused crown offers a gentle continuation card.
+The Marian garden opens the screen, under a small floral wordmark and the appearance control. A centered greeting follows. Four soft mystery controls lead to one card that holds the chosen mysteries: their invitation, then five moments joined by a stem. The section heading always reserves the space for its plain “Hoje” label and small dot, so selecting another set does not shift the controls or card. The hidden label is excluded from accessibility. Below the mysteries, **A sós** and **Em grupo** appear as small text choices with a check beside the selected mode, without a filled track or border. New users begin in **A sós**. The mode choice scrolls with the page and keeps a 48 dp touch target. A quiet link beneath it leads to Roteiros. The page dissolves into the primary prayer action, which stays within reach above the shelf. A faint downward chevron invites scrolling and advances part of a page when touched; it disappears at the end. A paused crown offers a gentle continuation card.
 
 ### Roteiros
 
