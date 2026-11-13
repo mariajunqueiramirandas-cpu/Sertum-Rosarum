@@ -3,6 +3,8 @@
 from __future__ import annotations
 import argparse
 import hashlib
+from email.utils import parsedate_to_datetime
+from datetime import timezone
 import json
 import re
 import sys
@@ -105,8 +107,19 @@ def request(url, headers=None, attempts=3):
         except urllib.error.HTTPError as error:
             if error.code == 304: return None, {key.lower(): value for key, value in error.headers.items()}
             if error.code not in (429, 500, 502, 503, 504) or attempt == attempts - 1: raise
-            delay = error.headers.get('Retry-After', '')
-            time.sleep(min(int(delay) if delay.isdigit() else 2 ** attempt, 10))
+            retry_after = error.headers.get('Retry-After', '')
+            delay = 2 ** attempt
+            if retry_after.isdigit():
+                delay = int(retry_after)
+            elif retry_after:
+                try:
+                    when = parsedate_to_datetime(retry_after)
+                    if when.tzinfo is None: when = when.replace(tzinfo=timezone.utc)
+                    delay = max(0, when.timestamp() - time.time())
+                except (ValueError, TypeError, OverflowError): pass
+            # A long deferral is returned to the editor, never retried before the server permits.
+            if delay > 10: raise
+            time.sleep(delay)
         except (urllib.error.URLError, TimeoutError):
             if attempt == attempts - 1: raise
             time.sleep(2 ** attempt)

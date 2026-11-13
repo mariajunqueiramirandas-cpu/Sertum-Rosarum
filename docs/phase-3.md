@@ -31,7 +31,7 @@ The editable source is [`content/treasury/catalog.json`](../content/treasury/cat
 The source importer fetches the Holy See's Portuguese Compendium, whose common-prayer appendix includes Portuguese and Latin. It preserves the source separately from published edits:
 
 - HTTPS host restriction, identifiable user agent and `robots.txt` check;
-- 30-second request timeout, 2 MiB response limit, bounded retries and `Retry-After` handling;
+- 30-second request timeout, 2 MiB response limit and bounded retries; numeric and HTTP-date `Retry-After` values are honored, with long deferrals returned to the editor instead of retrying early;
 - conditional requests from a verified local cache;
 - pinned source SHA-256 and extraction hash;
 - explicit appendix boundaries and minimum expected sections, so layout drift fails;

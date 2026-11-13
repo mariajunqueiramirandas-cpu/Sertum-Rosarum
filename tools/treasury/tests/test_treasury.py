@@ -77,6 +77,14 @@ class ImporterTest(unittest.TestCase):
             with self.assertRaises(urllib.error.HTTPError): t.request(error.url)
             self.assertEqual(1, opening.call_count)
 
+    def test_long_retry_after_is_not_shortened_or_retried_early(self):
+        for value in ('120', 'Thu, 01 Jan 1970 00:01:00 GMT'):
+            error = urllib.error.HTTPError('https://www.vatican.va/x', 429, 'busy', {'Retry-After': value}, None)
+            with patch.object(t.urllib.request, 'urlopen', side_effect=error) as opening, patch.object(t.time, 'sleep') as sleep, patch.object(t.time, 'time', return_value=0):
+                with self.assertRaises(urllib.error.HTTPError): t.request(error.url)
+                self.assertEqual(1, opening.call_count)
+                sleep.assert_not_called()
+
     def test_changed_source_does_not_overwrite_snapshot_or_catalog(self):
         with tempfile.TemporaryDirectory() as tmp:
             root = Path(tmp); (root / 'source-manifest.json').write_text((t.CONTENT / 'source-manifest.json').read_text())
