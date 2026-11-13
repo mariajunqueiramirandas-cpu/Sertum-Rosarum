@@ -132,6 +132,8 @@ Transform the app from a beautiful Rosary counter into a **school of contemplati
 
 ## Phase 3: The Treasury of Prayers — Bilingual Latin & "Touch to Understand" (`Tesouro`)
 
+**Implemented.** The offline Treasury includes 61 prayers, 28 aligned Portuguese/Latin readings, 78 explanations, saved reading state, Latin for all ten fixed rosary prayers and the complete mystery study guide. The reproducible source importer and content checks are part of CI. See [implementation, provenance and verification](docs/phase-3.md).
+
 ### Goal & Milestone Vision
 Complete the **Tesouro (Orações e Formação)** tab, turning the app into a rich liturgical and catechetical reference library. Users can browse prayers by moment of life, tap highlighted theological terms to understand their biblical roots (**"Toque para Entender"**), pray or study in **Portuguese / Latin Bilingual Mode** (including inside the Rosary counter itself), and explore the full **20 Mysteries Study Guide**.
 

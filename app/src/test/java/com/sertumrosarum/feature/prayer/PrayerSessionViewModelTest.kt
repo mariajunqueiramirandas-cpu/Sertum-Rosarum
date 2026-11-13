@@ -16,6 +16,21 @@ class PrayerSessionViewModelTest {
     private val fixedClock = Clock.fixed(Instant.parse("2026-11-12T12:00:00Z"), ZoneOffset.UTC)
     private fun model(handle: SavedStateHandle = SavedStateHandle(), clock: Clock = fixedClock) = PrayerSessionViewModel(handle, clock)
 
+    @Test fun `Latin choice survives stepping pause restoration and a new crown`() {
+        val handle = SavedStateHandle()
+        val first = model(handle)
+        first.selectLanguage(com.sertumrosarum.domain.treasury.PrayerLanguage.LATIN)
+        first.start(); repeat(10) { first.next() }; first.returnHome()
+        val restored = model(SavedStateHandle(handle.keys().associateWith { handle.get<Any?>(it) }))
+        assertEquals(com.sertumrosarum.domain.treasury.PrayerLanguage.LATIN, restored.state.value.language)
+        restored.resume(); restored.next()
+        assertEquals(com.sertumrosarum.domain.treasury.PrayerLanguage.LATIN, restored.state.value.language)
+        restored.returnHome(); restored.start()
+        assertEquals(com.sertumrosarum.domain.treasury.PrayerLanguage.LATIN, restored.state.value.language)
+        restored.selectLanguage(com.sertumrosarum.domain.treasury.PrayerLanguage.BILINGUAL)
+        assertEquals(com.sertumrosarum.domain.treasury.PrayerLanguage.LATIN, restored.state.value.language)
+    }
+
     @Test fun `today selects luminous mysteries on Thursday`() {
         assertEquals(MysterySet.LUMINOUS, model().state.value.selectedSet)
     }

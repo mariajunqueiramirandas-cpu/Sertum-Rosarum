@@ -35,6 +35,12 @@ data class TreasuryPrayer(
     val annotations: List<PrayerTermAnnotation> = emptyList(),
     /** Where the wording comes from, shown beneath the prayer. */
     val source: String? = null,
+    /** Guidance and variant notes for personal prayer, distinct from the prayer itself. */
+    val context: String = "",
+    val sourceUrls: List<String> = emptyList(),
+    val keywords: List<String> = emptyList(),
+    val fixedPrayer: com.sertumrosarum.domain.prayer.FixedPrayer? = null,
+    val latinSolo: String? = null,
 )
 
 data class BilingualVerse(

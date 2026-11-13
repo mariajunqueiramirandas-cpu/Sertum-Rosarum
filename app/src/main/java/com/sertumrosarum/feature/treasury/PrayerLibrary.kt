@@ -1,7 +1,12 @@
 package com.sertumrosarum.feature.treasury
 
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.ui.semantics.heading
+import com.sertumrosarum.ui.canvas.RoseMark
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -40,7 +45,6 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sertumrosarum.domain.treasury.PrayerCategory
 import com.sertumrosarum.domain.treasury.TreasuryPrayer
-import com.sertumrosarum.feature.prayer.SanctuaryTab
 import com.sertumrosarum.ui.canvas.CrownGlyph
 import com.sertumrosarum.ui.canvas.DevotionalArtwork
 import com.sertumrosarum.ui.canvas.DevotionalIllustration
@@ -50,60 +54,67 @@ import com.sertumrosarum.ui.components.PageWelcome
 import com.sertumrosarum.ui.components.SacredCard
 import com.sertumrosarum.ui.components.SacredIcon
 import com.sertumrosarum.ui.components.SacredText
-import com.sertumrosarum.ui.components.SanctuaryPage
 import com.sertumrosarum.ui.components.ShelfHeading
 import com.sertumrosarum.ui.theme.SertumTheme
 
 /** The library: a search, the moments of life, and one shelf for each moment that has prayers. */
 @Composable
-internal fun PrayerLibrary(state: TreasuryUiState, actions: TreasuryActions, scroll: ScrollState) {
+internal fun PrayerLibrary(state: TreasuryUiState, actions: TreasuryActions, scroll: LazyListState) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
-    SanctuaryPage(SanctuaryTab.TREASURY.label, "treasury", scroll) {
-        DevotionalArtwork(DevotionalIllustration.PRAYER_BOOK, Modifier.align(Alignment.CenterHorizontally).padding(top = 12.dp).size(width = 144.dp, height = 88.dp))
-        PageWelcome("Rezar e compreender.", "Orações para cada momento, e o sentido de cada palavra.", Modifier.padding(top = 14.dp))
-        PrayerSearchField(state.query, actions::search, Modifier.padding(start = 24.dp, end = 24.dp, top = 22.dp))
-        CategoryChoices(state.category, actions::selectCategory, Modifier.padding(top = 4.dp))
-
-        if (state.prayers.isEmpty()) {
-            EmptyShelf(if (state.query.isNotBlank()) "Nenhuma oração encontrada para “${state.query.trim()}”." else "As orações para este momento ainda não foram plantadas.")
-        } else {
-            val shelves = state.prayers.groupBy { it.category }
-            PrayerCategory.entries.filter { it in shelves }.forEach { category ->
-                ShelfHeading(category.label, category.caption, Modifier.padding(top = 22.dp).testTag("shelf-${category.name}"))
-                SacredCard(Modifier.padding(horizontal = 24.dp).fillMaxWidth()) {
-                    Column(Modifier.padding(vertical = 6.dp)) {
-                        shelves.getValue(category).forEachIndexed { index, prayer ->
-                            if (index > 0) Box(Modifier.padding(start = 64.dp, end = 20.dp).fillMaxWidth().height(1.dp).background(colors.border.copy(alpha = .8f)))
-                            PrayerRow(prayer) { actions.openPrayer(prayer) }
+    Column(Modifier.fillMaxSize().testTag("treasury")) {
+        Row(Modifier.fillMaxWidth().padding(start = 24.dp, top = 10.dp, bottom = 2.dp).height(48.dp),
+            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
+            RoseMark(Modifier.size(30.dp))
+            SacredText("Tesouro", Modifier.semantics { heading() }, type.brand)
+        }
+        LazyColumn(Modifier.fillMaxSize().testTag("treasury-scroll"), state = scroll) {
+            item("welcome") {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    DevotionalArtwork(DevotionalIllustration.PRAYER_BOOK, Modifier.padding(top = 12.dp).size(width = 144.dp, height = 88.dp))
+                    PageWelcome("Rezar e compreender.", "Orações para cada momento, e o sentido de cada palavra.", Modifier.padding(top = 14.dp))
+                }
+            }
+            item("search") { PrayerSearchField(state.query, actions::search, Modifier.padding(start = 24.dp, end = 24.dp, top = 22.dp)) }
+            item("categories") { CategoryChoices(state.category, actions::selectCategory, Modifier.padding(top = 4.dp)) }
+            if (state.query.isBlank() && state.category == null) {
+                item("formation") {
+                    SacredCard(Modifier.padding(horizontal = 24.dp, vertical = 14.dp).fillMaxWidth()) {
+                        Row(Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = "Abrir o guia de estudo", onClick = actions::openMysteries)
+                            .testTag("open-mysteries").heightIn(min = 84.dp).padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                            CrownGlyph(5, 10, Modifier.size(48.dp))
+                            Column(Modifier.weight(1f)) {
+                                SacredText("Os vinte mistérios", style = type.label)
+                                SacredText("A cena, o sentido, o fruto e as dez meditações.", Modifier.padding(top = 4.dp), type.body, colors.secondary)
+                            }
+                            SacredIcon(SacredIcon.CHEVRON, Modifier.size(13.dp), colors.muted)
                         }
                     }
                 }
             }
-        }
-
-        // Formation keeps its shelf whenever the reader is not looking for one prayer.
-        if (state.query.isBlank() && state.category == null) {
-            ShelfHeading("Formação", "Para conhecer o que se reza.", Modifier.padding(top = 30.dp).testTag("shelf-FORMATION"))
-            SacredCard(Modifier.padding(horizontal = 24.dp).fillMaxWidth()) {
-                Row(
-                    Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = "Abrir o guia de estudo", onClick = actions::openMysteries).testTag("open-mysteries")
-                        .heightIn(min = 84.dp).padding(start = 16.dp, end = 18.dp, top = 14.dp, bottom = 14.dp),
-                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp),
-                ) {
-                    CrownGlyph(5, 10, Modifier.size(64.dp))
-                    Column(Modifier.weight(1f)) {
-                        SacredText("Os vinte mistérios", style = type.label.copy(fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold))
-                        SacredText("A cena, o sentido e o fruto de cada mistério do rosário.", Modifier.padding(top = 2.dp), type.body.copy(fontSize = 14.sp, lineHeight = 20.sp), colors.secondary)
-                        SacredText("Guia de estudo", Modifier.padding(top = 7.dp), type.micro.copy(fontWeight = FontWeight.Medium), colors.marian)
+            item("result-count") {
+                SacredText("${state.prayers.size} ${if (state.prayers.size == 1) "oração" else "orações"}",
+                    Modifier.padding(horizontal = 24.dp, vertical = 8.dp).testTag("treasury-result-count"), type.micro, colors.secondary)
+            }
+            if (state.prayers.isEmpty()) {
+                item("empty") { EmptyShelf(if (state.query.isNotBlank()) "Nenhuma oração encontrada para “${state.query.trim()}”." else "Nenhuma oração neste momento.") }
+            } else {
+                val shelves = state.prayers.groupBy { it.category }
+                PrayerCategory.entries.filter { it in shelves }.forEach { category ->
+                    item("heading-${category.name}") {
+                        ShelfHeading(category.label, category.caption, Modifier.padding(top = 18.dp).testTag("shelf-${category.name}"))
                     }
-                    SacredIcon(SacredIcon.CHEVRON, Modifier.size(13.dp), colors.muted)
+                    items(shelves.getValue(category), key = { "prayer-${it.id}" }, contentType = { "prayer" }) { prayer ->
+                        SacredCard(Modifier.padding(horizontal = 24.dp).padding(bottom = 6.dp).fillMaxWidth()) { PrayerRow(prayer) { actions.openPrayer(prayer) } }
+                    }
                 }
             }
+            item("closing") {
+                SacredText("“Maria guardava todas estas coisas, meditando-as no seu coração.”", Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 28.dp), type.whisper, colors.secondary, TextAlign.Center)
+                SacredText("Lucas 2, 19", Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 44.dp), type.micro, colors.muted, TextAlign.Center)
+            }
         }
-
-        SacredText("“Maria guardava todas estas coisas, meditando-as no seu coração.”", Modifier.fillMaxWidth().padding(start = 24.dp, end = 24.dp, top = 34.dp), type.whisper, colors.secondary, TextAlign.Center)
-        SacredText("Lucas 2, 19", Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 44.dp), type.micro, colors.muted, TextAlign.Center)
     }
 }
 

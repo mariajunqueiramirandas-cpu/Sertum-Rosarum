@@ -89,7 +89,7 @@ fun ImmersivePrayerScreen(
     val beadLabel = if (step.isSmallBead) "${state.beadLabel} ${requireNotNull(step.beadIndex) + 1} de ${step.beadCount}" else "Passo ${state.stepIndex + 1} de ${state.sequence.size}"
     val groups = state.groupCount
     val announcing = step.isAnnouncement
-    val latinText = latin?.latin
+    val latinText = if (state.sessionMode == com.sertumrosarum.domain.prayer.PrayerMode.SOLO) latin?.latinSolo ?: latin?.latin else latin?.latin
     val inLatin = language == PrayerLanguage.LATIN && latinText != null
     var contemplating by rememberSaveable(state.stepIndex) { mutableStateOf(false) }
     var readingSection by rememberSaveable(state.stepIndex) { mutableIntStateOf(0) }
@@ -114,7 +114,7 @@ fun ImmersivePrayerScreen(
                 if (shortScreen) Box(Modifier.padding(horizontal = 20.dp)) { CompactMysteries(state.completedDecades, step.decadeIndex, model::jumpToDecade, groups, state.groupLabel) }
                 else FiveMysteriesArc(state.completedDecades, step.decadeIndex, model::jumpToDecade, Modifier.padding(horizontal = 16.dp), groups = groups, groupLabel = state.groupLabel, compact = true)
             }
-            key(state.stepIndex, state.eyesClosed) {
+            key(state.stepIndex, state.eyesClosed, language) {
                 PrayerTextReader(
                     Modifier.weight(1f).fillMaxWidth().padding(horizontal = 14.dp),
                     centerContent = !announcing && state.catecheticalNote == null,

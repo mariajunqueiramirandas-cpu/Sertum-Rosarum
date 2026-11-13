@@ -7,6 +7,8 @@ import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.hasTestTag
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.sertumrosarum.MainActivity
 import org.junit.Rule
@@ -32,7 +34,10 @@ class TesouroScreenshotTest {
         compose.onRoot().captureRoboImage("build/outputs/roborazzi/$name.png")
     }
 
-    private fun tap(tag: String) = compose.onNodeWithTag(tag).performSemanticsAction(SemanticsActions.OnClick)
+    private fun tap(tag: String) {
+        if (tag.startsWith("prayer-")) compose.onNodeWithTag("treasury-scroll").performScrollToNode(hasTestTag(tag))
+        compose.onNodeWithTag(tag).performSemanticsAction(SemanticsActions.OnClick)
+    }
 
     private fun appearance(mode: String) {
         compose.onNodeWithTag("theme-menu").performClick()
@@ -40,12 +45,12 @@ class TesouroScreenshotTest {
         compose.waitForIdle()
     }
 
-    @Test fun libraryAndItsEmptyShelf() {
+    @Test fun libraryAndItsMorningShelf() {
         appearance("DAY")
         tap("tab-TREASURY")
         shot("tesouro-library")
         tap("category-WAKING")
-        shot("tesouro-empty")
+        shot("tesouro-morning")
     }
 
     @Test fun prayerInThreeReadings() {

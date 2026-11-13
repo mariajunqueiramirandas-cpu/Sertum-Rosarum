@@ -34,11 +34,8 @@ import com.sertumrosarum.ui.components.SacredFlourish
 import com.sertumrosarum.ui.components.SacredText
 import com.sertumrosarum.ui.theme.SertumTheme
 
-/** Where each annotated expression sits in [text]: its first exact occurrence, or nowhere. */
-internal fun termRanges(text: String, annotations: List<PrayerTermAnnotation>): List<Pair<PrayerTermAnnotation, IntRange>> =
-    annotations.mapNotNull { annotation ->
-        text.indexOf(annotation.term).takeIf { it >= 0 && annotation.term.isNotEmpty() }?.let { annotation to (it until it + annotation.term.length) }
-    }
+internal fun termRanges(text: String, annotations: List<PrayerTermAnnotation>) =
+    com.sertumrosarum.domain.treasury.PrayerAnnotationParser.parse(text, annotations).map { it.annotation to it.range }
 
 /**
  * A prayer whose explained expressions rest on a short string of honey beads.

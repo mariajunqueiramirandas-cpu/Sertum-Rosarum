@@ -30,6 +30,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -66,6 +67,7 @@ internal val TextStyle.inLatin get() = copy(localeList = LocaleList("la"))
 internal fun PrayerReadingPage(prayer: TreasuryPrayer, language: PrayerLanguage, openVerse: Int?, actions: TreasuryActions) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
+    val uri = LocalUriHandler.current
     val latin = prayer.latin
     // A prayer without Latin is always read in Portuguese, whatever was chosen before.
     val shown = if (latin == null) PrayerLanguage.PORTUGUESE else language
@@ -93,12 +95,24 @@ internal fun PrayerReadingPage(prayer: TreasuryPrayer, language: PrayerLanguage,
                             if (prayer.annotations.isNotEmpty()) TermLinks(prayer.annotations, actions::openTerm, Modifier.padding(top = 26.dp))
                         }
                         PrayerLanguage.LATIN -> SacredText(latin.orEmpty(), Modifier.fillMaxWidth().testTag("reading-text"), type.prayer.inLatin, align = TextAlign.Start)
-                        PrayerLanguage.BILINGUAL -> BilingualVerses(prayer.verses, openVerse, actions::toggleVerse)
+                        PrayerLanguage.BILINGUAL -> {
+                            BilingualVerses(prayer.verses, openVerse, actions::toggleVerse, annotations = prayer.annotations, onTerm = actions::openTerm)
+                            if (prayer.annotations.isNotEmpty()) TermLinks(prayer.annotations, actions::openTerm, Modifier.padding(top = 26.dp))
+                        }
                     }
                 }
             }
+            if (prayer.context.isNotBlank()) {
+                SacredText("Para rezar e compreender", Modifier.widthIn(max = 480.dp).fillMaxWidth().padding(top = 28.dp).semantics { heading() }, type.section)
+                SacredText(prayer.context, Modifier.widthIn(max = 480.dp).fillMaxWidth().padding(top = 6.dp).testTag("reading-context"), type.body, colors.secondary)
+            }
             prayer.source?.let {
                 SacredText(it, Modifier.widthIn(max = 480.dp).fillMaxWidth().padding(top = 28.dp).testTag("reading-source"), type.micro.copy(fontWeight = FontWeight.Normal), colors.muted)
+            }
+            prayer.sourceUrls.forEachIndexed { index, url ->
+                SacredText("Consultar fonte ${index + 1}", Modifier.widthIn(max = 480.dp).fillMaxWidth()
+                    .clickable(role = Role.Button, onClickLabel = "Abrir referência no navegador") { runCatching { uri.openUri(url) } }
+                    .heightIn(min = 48.dp).padding(vertical = 12.dp), type.label, colors.marian)
             }
             Box(Modifier.height(44.dp))
         }
@@ -137,7 +151,7 @@ private fun TermLinks(annotations: List<PrayerTermAnnotation>, onTerm: (PrayerTe
  * on touch to show its Latin word by word.
  */
 @Composable
-internal fun BilingualVerses(verses: List<BilingualVerse>, openVerse: Int?, onToggle: (Int) -> Unit, modifier: Modifier = Modifier) {
+internal fun BilingualVerses(verses: List<BilingualVerse>, openVerse: Int?, onToggle: (Int) -> Unit, modifier: Modifier = Modifier, annotations: List<PrayerTermAnnotation> = emptyList(), onTerm: (PrayerTermAnnotation) -> Unit = {}) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     val latinInk = lerp(colors.ruby, colors.ink, if (colors.isDark) .05f else .35f)
@@ -166,12 +180,12 @@ internal fun BilingualVerses(verses: List<BilingualVerse>, openVerse: Int?, onTo
                 ) {
                     if (stacked) {
                         Column(Modifier.weight(1f)) {
-                            SacredText(verse.portuguese, style = type.whisper)
+                            AnnotatedPrayerText(verse.portuguese, annotations, onTerm, style = type.whisper)
                             SacredText(verse.latin, Modifier.padding(start = 22.dp), type.whisper.inLatin, latinInk)
                         }
                     } else {
                         Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            SacredText(verse.portuguese, Modifier.weight(1f), type.whisper)
+                            AnnotatedPrayerText(verse.portuguese, annotations, onTerm, Modifier.weight(1f), type.whisper)
                             SacredText(verse.latin, Modifier.weight(1f), type.whisper.inLatin, latinInk)
                         }
                     }

@@ -1,5 +1,10 @@
 package com.sertumrosarum
 
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.text.TextLayoutResult
+import androidx.compose.ui.test.performTouchInput
+import androidx.compose.ui.test.click
+import androidx.compose.ui.test.swipe
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
@@ -7,9 +12,11 @@ import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.performSemanticsAction
+import androidx.compose.ui.test.performScrollToNode
+import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.performTextInput
 import com.sertumrosarum.domain.prayer.FixedPrayer
-import com.sertumrosarum.domain.treasury.TreasurySamples
+import com.sertumrosarum.domain.treasury.TreasuryCatalog
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
@@ -17,15 +24,18 @@ import org.robolectric.RobolectricTestRunner
 import org.robolectric.annotation.Config
 import org.robolectric.annotation.GraphicsMode
 
-/** The Phase 3 interface on the JVM, walked through with its one example prayer. */
+/** The offline Treasury walked through the real activity with the complete catalog. */
 @RunWith(RobolectricTestRunner::class)
 @GraphicsMode(GraphicsMode.Mode.NATIVE)
 @Config(sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
 class TreasuryShellTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
-    private val ave = TreasurySamples.AVE_MARIA
+    private val ave = requireNotNull(TreasuryCatalog.find("ave-maria"))
 
     private fun tap(tag: String) {
+        if (tag.startsWith("prayer-") && !tag.startsWith("prayer-language")) {
+            compose.onNodeWithTag("treasury-scroll").performScrollToNode(hasTestTag(tag))
+        }
         compose.onNodeWithTag(tag, useUnmergedTree = true).performSemanticsAction(SemanticsActions.OnClick)
         compose.waitForIdle()
     }
@@ -37,7 +47,7 @@ class TreasuryShellTest {
 
     @Test fun `a prayer opens from its shelf and reads in Portuguese, Latin, and side by side`() {
         tap("tab-TREASURY")
-        compose.onNodeWithTag("shelf-MARIAN").assertExists()
+
         tap("prayer-ave-maria")
         compose.onNodeWithTag("treasury-reading").assertIsDisplayed()
         compose.onNodeWithTag("reading-title").assertTextEquals("Ave-Maria")
@@ -61,8 +71,26 @@ class TreasuryShellTest {
         back()
         compose.onNodeWithTag("treasury").assertIsDisplayed()
         compose.onNodeWithTag("tab-TREASURY").assertIsSelected()
+        compose.onNodeWithTag("prayer-ave-maria").assertIsDisplayed()
         back()
         compose.onNodeWithTag("sanctuary").assertIsDisplayed()
+    }
+
+    @Test fun `touching the actual annotated text opens its drawer and dragging the handle closes it`() {
+        tap("tab-TREASURY")
+        tap("prayer-ave-maria")
+        val layouts = mutableListOf<TextLayoutResult>()
+        val text = compose.onNodeWithTag("reading-text")
+        text.performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(layouts) }
+        val layout = layouts.single()
+        val offset = layout.layoutInput.text.text.indexOf("cheia de graça")
+        text.performTouchInput { click(layout.getBoundingBox(offset).center) }
+        compose.waitForIdle()
+        compose.onNodeWithTag("term-title").assertTextEquals("“cheia de graça”")
+        compose.onNodeWithTag("term-sheet-handle").performTouchInput { swipe(center, center + Offset(0f, 450f), 350) }
+        compose.waitForIdle()
+        compose.onNodeWithTag("term-sheet").assertDoesNotExist()
+        compose.onNodeWithTag("treasury-reading").assertIsDisplayed()
     }
 
     @Test fun `an expression opens its explanation and the sheet closes back to the prayer`() {
@@ -80,19 +108,32 @@ class TreasuryShellTest {
         compose.onNodeWithTag("treasury").assertIsDisplayed()
     }
 
-    @Test fun `an empty moment and a search without results say so`() {
+    @Test fun `every category is populated and search ignores accents`() {
         tap("tab-TREASURY")
-        compose.onNodeWithTag("category-ALL").assertIsSelected()
         tap("category-WAKING")
         compose.onNodeWithTag("category-WAKING").assertIsSelected()
-        compose.onNodeWithTag("treasury-empty-message", useUnmergedTree = true).assertTextEquals("As orações para este momento ainda não foram plantadas.")
-        compose.onNodeWithTag("open-mysteries").assertDoesNotExist()
-        tap("category-MARIAN")
-        compose.onNodeWithTag("prayer-ave-maria").assertExists()
-        compose.onNodeWithTag("treasury-search").performTextInput("Credo")
-        compose.onNodeWithTag("treasury-empty-message", useUnmergedTree = true).assertTextEquals("Nenhuma oração encontrada para “Credo”.")
+        compose.onNodeWithTag("treasury-search").performTextInput("espirito")
+        compose.onNodeWithTag("treasury-scroll").performScrollToNode(hasTestTag("prayer-veni-sancte-spiritus"))
+        compose.onNodeWithTag("prayer-veni-sancte-spiritus").assertExists()
+        tap("prayer-veni-sancte-spiritus")
+        compose.onNodeWithTag("reading-context").assertExists()
+        back()
+        compose.onNodeWithTag("treasury-scroll").performScrollToNode(hasTestTag("treasury-search"))
         tap("treasury-search-clear")
-        compose.onNodeWithTag("prayer-ave-maria").assertExists()
+        compose.onNodeWithTag("treasury-search").performTextInput("xyznenhuma")
+        compose.onNodeWithTag("treasury-empty-message", useUnmergedTree = true).assertTextEquals("Nenhuma oração encontrada para “xyznenhuma”.")
+    }
+
+    @Test fun `reading language and open explanation survive activity recreation`() {
+        tap("tab-TREASURY")
+        tap("prayer-ave-maria")
+        tap("language-BILINGUAL")
+        tap("term-0")
+        compose.activityRule.scenario.recreate()
+        compose.waitForIdle()
+        compose.onNodeWithTag("term-title").assertTextEquals("“cheia de graça”")
+        back()
+        compose.onNodeWithTag("language-BILINGUAL").assertIsSelected()
     }
 
     @Test fun `the twenty mysteries can be studied outside prayer`() {
@@ -114,10 +155,10 @@ class TreasuryShellTest {
         compose.onNodeWithTag("treasury").assertIsDisplayed()
     }
 
-    @Test fun `the rosary offers Latin only on a prayer that has it`() {
+    @Test fun `the rosary offers Latin on fixed prayers and keeps it across beads`() {
         tap("start-rosary")
         compose.onNodeWithTag("prayer-title").assertTextEquals("Sinal da Cruz")
-        compose.onNodeWithTag("rosary-language").assertDoesNotExist()
+        compose.onNodeWithTag("rosary-language-PORTUGUESE").assertIsSelected()
         tap("decade-0")
         tap("bead-0")
         compose.onNodeWithTag("rosary-language-PORTUGUESE").assertIsSelected()

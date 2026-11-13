@@ -5,7 +5,13 @@ import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.runtime.key
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.setValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -31,14 +37,23 @@ import com.sertumrosarum.ui.theme.SertumTheme
 @Composable
 fun TreasuryScreen(state: TreasuryUiState, actions: TreasuryActions) {
     // The library keeps its place while a prayer is read.
-    val libraryScroll = rememberScrollState()
+    val libraryScroll = rememberLazyListState()
+    var listedQuery by rememberSaveable { mutableStateOf(state.query) }
+    var listedCategory by rememberSaveable { mutableStateOf(state.category?.name) }
+    LaunchedEffect(state.query, state.category) {
+        if (listedQuery != state.query || listedCategory != state.category?.name) {
+            listedQuery = state.query
+            listedCategory = state.category?.name
+            libraryScroll.scrollToItem(0)
+        }
+    }
     val reading = rememberLast(state.reading)
     // This page joins the back stack after the sheets do, so it steps aside while one is raised.
     BackHandler(state.place != TreasuryPlace.LIBRARY && state.term == null && state.studyMystery == null) { actions.backToLibrary() }
     Crossfade(state.place, animationSpec = tween(if (SertumTheme.reducedMotion) 0 else 320), label = "treasury-place") { place ->
         when (place) {
             TreasuryPlace.LIBRARY -> PrayerLibrary(state, actions, libraryScroll)
-            TreasuryPlace.READING -> if (reading != null) PrayerReadingPage(reading, state.language, state.openVerse, actions)
+            TreasuryPlace.READING -> if (reading != null) key(reading.id) { PrayerReadingPage(reading, state.language, state.openVerse, actions) }
             TreasuryPlace.MYSTERIES -> MysteriesStudyPage(state.studySet, actions)
         }
     }

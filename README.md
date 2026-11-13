@@ -26,7 +26,7 @@ Open Sertum and arrive in a small garden: warm cream, sage leaves, clay-colored 
 
 *Sertum Rosarum* means “crown of roses.” That image shapes the whole app: each prayer becomes a rose, five mysteries form a crown, and the completed rosary is gently offered at the end.
 
-**Phases 1 and 2 are implemented, and the Phase 3 interface is built** around one example prayer; its catalog and logic are still to come. The interface and fixed prayers are in Brazilian Portuguese. Prayer content, fonts, and artwork are bundled; the prayer experience needs no network connection.
+**Phases 1–3 are implemented.** Tesouro includes 61 offline prayers, 28 Portuguese/Latin readings, 78 explained expressions and all twenty mysteries to study. The interface and fixed prayers are in Brazilian Portuguese. Prayer content, fonts, and artwork are bundled; the prayer experience needs no network connection.
 
 ## A garden in every screen
 
@@ -308,7 +308,7 @@ flowchart LR
 | Prayer session | [`feature/prayer`](app/src/main/java/com/sertumrosarum/feature/prayer) | State transitions, saved-state recovery, immersive prayer, and crown delivery |
 | Sanctuary | [`feature/sanctuary`](app/src/main/java/com/sertumrosarum/feature/sanctuary) | Greeting, garden, mystery controls, appearance, and session continuation |
 | Roteiros | [`feature/guides`](app/src/main/java/com/sertumrosarum/feature/guides) | The guide catalogue's interface copy and crown shapes, the three shelves, and each guide's sheet |
-| Tesouro | [`feature/treasury`](app/src/main/java/com/sertumrosarum/feature/treasury), [`domain/treasury`](app/src/main/java/com/sertumrosarum/domain/treasury) | The Phase 3 interface: library, reading in Portuguese and Latin, explained expressions, and the mysteries to study. [What is built and what is a stand-in](docs/phase-3.md) |
+| Tesouro | [`feature/treasury`](app/src/main/java/com/sertumrosarum/feature/treasury), [`domain/treasury`](app/src/main/java/com/sertumrosarum/domain/treasury) | Offline library, full-text search, saved reading state, Portuguese/Latin prayer readings, 78 explanations and the twenty mysteries. [Implementation and sources](docs/phase-3.md) |
 | Place in bud | [`feature/garden`](app/src/main/java/com/sertumrosarum/feature/garden) | The Meu Jardim tab, ready for Phase 4 |
 | Design system | [`ui/theme`](app/src/main/java/com/sertumrosarum/ui/theme), [`ui/components`](app/src/main/java/com/sertumrosarum/ui/components) | Custom tokens, fonts, controls, and press feedback |
 | Original artwork | [`ui/canvas`](app/src/main/java/com/sertumrosarum/ui/canvas) | Marian garden, roses, living bead arcs, and the completed crown |
@@ -329,13 +329,13 @@ Versions live in [`gradle/libs.versions.toml`](gradle/libs.versions.toml). The a
 
 ## Roadmap
 
-The current app completes **Phases 1 and 2**. Phases 3–5 remain planned.
+The current app completes **Phases 1–3**. Phases 4 and 5 remain planned.
 
 | Phase | Milestone | Status |
 | --- | --- | --- |
 | **1** | Garden sanctuary, custom design system, complete rosary counter, living roses, tactile navigation, and crown delivery | **Implemented** |
 | **2** | Four-dimensional mysteries, bead-by-bead meditations, prayer scripts, and devotional chaplets | **Implemented** |
-| **3** | Prayer treasury, Portuguese / Latin mode, prayer annotations, and a mystery study guide | Interface built with one example prayer; catalog and logic planned |
+| **3** | Prayer treasury, Portuguese / Latin mode, prayer annotations, and a mystery study guide | **Implemented** |
 | **4** | Persistent intentions, prayer history, preference storage, and the personal garden | Planned |
 | **5** | Lumen catechist and custom rosary supplements with doctrinal guardrails | Planned |
 
