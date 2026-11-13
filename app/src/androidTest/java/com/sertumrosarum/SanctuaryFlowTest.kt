@@ -66,14 +66,14 @@ class SanctuaryFlowTest {
     }
 
     @Test fun `group mode survives recreation and resumes independently of the next crown mode`() {
-        compose.onNodeWithTag("prayer-mode-GROUP").performClick().assertIsSelected()
+        compose.onNodeWithTag("prayer-mode-GROUP").performScrollTo().performClick().assertIsSelected()
         compose.onNodeWithTag("start-rosary").performClick()
         compose.onNodeWithTag("next-prayer").performClick()
         compose.activityRule.scenario.recreate()
         compose.onNodeWithTag("session-mode").assertTextEquals("Oração em grupo")
         compose.onNodeWithTag("prayer-text").assertTextEquals(FixedPrayer.OFFERING.text)
         compose.onNodeWithTag("pause-prayer").performClick()
-        compose.onNodeWithTag("prayer-mode-SOLO").performClick().assertIsSelected()
+        compose.onNodeWithTag("prayer-mode-SOLO").performScrollTo().performClick().assertIsSelected()
         compose.onNodeWithTag("resume").performClick()
         compose.onNodeWithTag("session-mode").assertTextEquals("Oração em grupo")
         compose.onNodeWithTag("prayer-text").assertTextEquals(FixedPrayer.OFFERING.text)

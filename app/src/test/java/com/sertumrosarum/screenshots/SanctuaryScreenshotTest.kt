@@ -33,6 +33,8 @@ class SanctuaryScreenshotTest {
         compose.onNodeWithTag("theme-DAY").performSemanticsAction(SemanticsActions.OnClick)
         compose.waitForIdle()
         shot("sanctuary-day")
+        compose.onNodeWithTag("sanctuary-scroll").performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, 100_000f) }
+        shot("sanctuary-mode-day")
     }
 
     @Test fun sanctuaryVigil() {
@@ -40,6 +42,8 @@ class SanctuaryScreenshotTest {
         compose.onNodeWithTag("theme-VIGIL").performSemanticsAction(SemanticsActions.OnClick)
         compose.waitForIdle()
         shot("sanctuary-vigil")
+        compose.onNodeWithTag("sanctuary-scroll").performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, 100_000f) }
+        shot("sanctuary-mode-vigil")
     }
 
     @Test fun firstPrayer() {
