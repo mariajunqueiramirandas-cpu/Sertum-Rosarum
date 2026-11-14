@@ -54,6 +54,7 @@ import com.sertumrosarum.ui.canvas.LocalBotanicalArtwork
 import com.sertumrosarum.ui.canvas.paintBotanical
 import com.sertumrosarum.ui.components.PageWelcome
 import com.sertumrosarum.ui.components.SacredCard
+import com.sertumrosarum.ui.components.SacredChips
 import com.sertumrosarum.ui.components.SacredIcon
 import com.sertumrosarum.ui.components.SacredText
 import com.sertumrosarum.ui.components.SteadySlot
@@ -86,7 +87,7 @@ internal fun PrayerLibrary(state: TreasuryUiState, actions: TreasuryActions, scr
             }
             item("formation-entry") { formation() }
             item("search") { PrayerSearchField(state.query, actions::search, Modifier.padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, top = 22.dp)) }
-            item("categories") { CategoryChoices(state.category, actions::selectCategory, Modifier.padding(top = 4.dp)) }
+            item("categories") { CategoryChoices(state.category, actions::selectCategory, Modifier.padding(top = 10.dp)) }
             if (state.query.isBlank() && state.category == null) {
                 item("formation") {
                     SacredCard(Modifier.padding(horizontal = SertumTheme.spacing.page, vertical = 14.dp).fillMaxWidth()) {
@@ -169,30 +170,11 @@ private fun PrayerSearchField(query: String, onQuery: (String) -> Unit, modifier
     )
 }
 
-/** The moments of life as plain words in a row that runs past the edge; a small sage bead rests under the chosen one. */
+/** The moments of life as filter chips in a row that runs past the edge. */
 @Composable
 private fun CategoryChoices(selected: PrayerCategory?, onSelect: (PrayerCategory?) -> Unit, modifier: Modifier = Modifier) {
-    val colors = SertumTheme.colors
-    val type = SertumTheme.typography
-    Row(modifier.horizontalScroll(rememberScrollState()).selectableGroup().testTag("category-choices").padding(horizontal = 14.dp)) {
-        (listOf<PrayerCategory?>(null) + PrayerCategory.entries).forEach { category ->
-            val active = category == selected
-            Column(
-                Modifier.clip(RoundedCornerShape(14.dp)).selectable(active, role = Role.RadioButton, onClick = { onSelect(category) })
-                    .testTag("category-${category?.name ?: "ALL"}").heightIn(min = 48.dp).padding(horizontal = 10.dp),
-                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
-            ) {
-                val label = category?.label ?: "Todas"
-                val style = type.label.copy(fontSize = 14.sp)
-                // The word keeps the width of its bold form, so choosing it never nudges its neighbours.
-                Box(contentAlignment = Alignment.Center) {
-                    SacredText(label, Modifier.alpha(0f).clearAndSetSemantics {}, style.copy(fontWeight = FontWeight.Bold), maxLines = 1)
-                    SacredText(label, style = style.copy(fontWeight = if (active) FontWeight.Bold else FontWeight.Medium), color = if (active) colors.ink else colors.secondary, maxLines = 1)
-                }
-                Box(Modifier.padding(top = 4.dp).size(5.dp).background(colors.marian.copy(alpha = if (active) 1f else 0f), CircleShape))
-            }
-        }
-    }
+    SacredChips(listOf<PrayerCategory?>(null) + PrayerCategory.entries, selected, { it?.label ?: "Todas" }, onSelect,
+        modifier.testTag("category-choices"), tag = { "category-${it?.name ?: "ALL"}" })
 }
 
 @Composable

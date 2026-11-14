@@ -51,9 +51,8 @@ fun GardenScreen(model: GardenViewModel? = null, state: GardenState = GardenStat
     BackHandler(editor || noteEditor || sessionId != null) { editor = false; noteEditor = false; sessionId = null }
     SanctuaryPage("Meu Jardim", "garden") {
         PageWelcome("O que cria raízes em você.", "Suas intenções, orações e descobertas. Um retorno de cada vez.", Modifier.padding(top = 16.dp))
-        Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 14.dp)) {
-            listOf("Intenções", "Coroas", "Diário", "Guardados", "Caminho").forEach { name -> Box(Modifier.widthIn(min = 100.dp)) { QuietAction(name, { section = name; editor = false; noteEditor = false }, "garden-$name", section == name) } }
-        }
+        SacredTabs(listOf("Intenções", "Coroas", "Diário", "Guardados", "Caminho"), section, { it }, { section = it; editor = false; noteEditor = false },
+            Modifier.padding(top = 14.dp, bottom = 16.dp), tag = { "garden-$it" })
         Column(Modifier.padding(horizontal = SertumTheme.spacing.page).padding(bottom = 44.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             when (section) {
                 "Intenções" -> {
@@ -61,9 +60,8 @@ fun GardenScreen(model: GardenViewModel? = null, state: GardenState = GardenStat
                     else {
                         SacredPrimaryButton("Nova intenção", { editId = null; editor = true }, tag = "new-intention")
                         QuietAction(if (archived) "Ver intenções atuais" else "Ver arquivadas", { archived = !archived }, "intention-archive-filter")
-                        Row(Modifier.horizontalScroll(rememberScrollState())) {
-                            (listOf<String?>(null) + intentionCategories).forEach { cat -> Box(Modifier.widthIn(min = 110.dp)) { QuietAction(cat ?: "Todas", { category = cat }, "filter-${cat ?: "all"}", category == cat) } }
-                        }
+                        SacredChips(listOf<String?>(null) + intentionCategories, category, { it ?: "Todas" }, { category = it },
+                            tag = { "filter-${it ?: "all"}" }, bleed = SertumTheme.spacing.page)
                         val filtered = state.intentions.filter { it.archived == archived && (category == null || it.category == category) }
                         if (filtered.isEmpty()) PersonalCard("Um espaço para confiar.", if (archived) "Nenhuma intenção arquivada neste filtro." else "Escreva por quem ou pelo que deseja rezar. Você também pode começar a oração sem escolher uma intenção.")
                         filtered.forEach { intention ->
@@ -171,7 +169,7 @@ fun IntentionEditor(existing: IntentionEntity?, onSave: (String, String, String,
         GardenField("Por quem ou pelo que você reza?", title, { title = it }, "intention-title", limit = 120)
         if (attempted && title.isBlank()) SacredText("Escreva um título para guardar a intenção.", style = SertumTheme.typography.body)
         GardenField("O que deseja guardar (opcional)", detail, { detail = it }, "intention-description", multiline = true)
-        Row(Modifier.horizontalScroll(rememberScrollState())) { intentionCategories.forEach { cat -> Box(Modifier.widthIn(min = 115.dp)) { QuietAction(cat, { category = cat }, "edit-category-$cat", cat == category) } } }
+        SacredChips(intentionCategories, category, { it }, { category = it }, tag = { "edit-category-$it" }, bleed = SertumTheme.spacing.page)
         QuietAction(if (thanks) "✓ Em ação de graças" else "Marcar em ação de graças", { thanks = !thanks }, "intention-thanksgiving", thanks)
         if (thanks) GardenField("Uma graça ou agradecimento (opcional)", answer, { answer = it }, "intention-answer", multiline = true)
         SacredPrimaryButton("Guardar intenção", { attempted = true; if (title.isNotBlank()) onSave(title, detail, category, thanks, answer) }, tag = "save-intention")

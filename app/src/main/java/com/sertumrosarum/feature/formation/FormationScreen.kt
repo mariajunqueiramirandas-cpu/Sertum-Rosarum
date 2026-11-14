@@ -1,9 +1,7 @@
 package com.sertumrosarum.feature.formation
 
 import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
@@ -15,7 +13,7 @@ import com.sertumrosarum.ui.components.*
 import com.sertumrosarum.ui.theme.SertumTheme
 
 @Composable
-fun FormationScreen(model: GardenViewModel?, state: GardenState, initialLesson: String?, onBack: () -> Unit, onPray: () -> Unit) {
+fun FormationScreen(model: GardenViewModel?, state: GardenState, initialLesson: String?, onPray: () -> Unit) {
     var place by rememberSaveable { mutableStateOf("Aprender") }
     var lessonId by rememberSaveable(initialLesson) { mutableStateOf(initialLesson) }
     var query by rememberSaveable { mutableStateOf("") }
@@ -23,10 +21,12 @@ fun FormationScreen(model: GardenViewModel?, state: GardenState, initialLesson: 
     var journeyId by rememberSaveable { mutableStateOf<String?>(null) }
     val lesson = FormationCatalog.lesson(lessonId)
     val journey = FormationCatalog.journeys.find { it.id == journeyId }
-    val back = { if (lessonId != null) lessonId = null else if (journeyId != null) journeyId = null else onBack() }
-    BackHandler { back() }
+    // Catequese is a tab of its own: only a lesson or a journey opened within it has a way back.
+    val inside = lessonId != null || journeyId != null
+    val back = { if (lessonId != null) lessonId = null else journeyId = null }
+    BackHandler(inside) { back() }
     LaunchedEffect(lessonId) { lessonId?.let { model?.lesson(it) } }
-    SanctuaryPage("Catequese", "formation", onBack = back) {
+    SanctuaryPage("Catequese", "formation", onBack = if (inside) back else null) {
         Column(Modifier.padding(horizontal = SertumTheme.spacing.page).padding(top = 18.dp, bottom = 48.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             if (lesson != null) {
                 val progress = state.learning.find { it.lessonId == lesson.id }
@@ -69,7 +69,7 @@ fun FormationScreen(model: GardenViewModel?, state: GardenState, initialLesson: 
             } else {
                 SacredText("Aprender, rezar e viver.", style = SertumTheme.typography.display)
                 SacredText("Um caminho inicial pelos quatro pilares da fé. Leituras de cerca de cinco minutos, no seu ritmo.", style = SertumTheme.typography.body, color = SertumTheme.colors.secondary)
-                Row(Modifier.horizontalScroll(rememberScrollState())) { listOf("Aprender", "Perguntas", "Na vida").forEach { tab -> Box(Modifier.widthIn(min = 115.dp)) { QuietAction(tab, { place = tab }, "formation-$tab", tab == place) } } }
+                SacredTabs(listOf("Aprender", "Perguntas", "Na vida"), place, { it }, { place = it }, tag = { "formation-$it" }, bleed = SertumTheme.spacing.page)
                 GardenField(if (place == "Perguntas") "Que pergunta você traz?" else "Buscar um tema", query, { query = it }, "formation-search", limit = 300)
                 when (place) {
                     "Aprender" -> {
@@ -78,12 +78,9 @@ fun FormationScreen(model: GardenViewModel?, state: GardenState, initialLesson: 
                                 ?: FormationCatalog.lessons.firstOrNull { item -> state.learning.none { it.lessonId == item.id && it.completedAt != null } }
                             if (next != null) PersonalCard("Seu próximo passo", next.title, { lessonId = next.id }, "continue-learning")
                         }
-                        Row(Modifier.horizontalScroll(rememberScrollState())) {
-                            Box(Modifier.widthIn(min = 90.dp)) { QuietAction("Todos", { pillar = null }, "all-pillars", pillar == null) }
-                            FormationCatalog.pillars.forEachIndexed { index, name -> Box(Modifier.widthIn(min = 98.dp)) {
-                                QuietAction(listOf("Crer", "Celebrar", "Viver", "Rezar")[index], { pillar = name }, "pillar-$name", pillar == name)
-                            } }
-                        }
+                        val short = FormationCatalog.pillars.zip(listOf("Crer", "Celebrar", "Viver", "Rezar")).toMap()
+                        SacredChips(listOf<String?>(null) + FormationCatalog.pillars, pillar, { it?.let(short::getValue) ?: "Todos" }, { pillar = it },
+                            tag = { it?.let { name -> "pillar-$name" } ?: "all-pillars" }, bleed = SertumTheme.spacing.page)
                         pillar?.let { SacredText(it, style = SertumTheme.typography.whisper, color = SertumTheme.colors.secondary) }
                         val lessons = FormationCatalog.lessons.filter { (pillar == null || it.pillar == pillar) && FormationCatalog.matches(query, "${it.title} ${it.teaching} ${it.keywords}") > 0 }
                         if (lessons.isEmpty()) PersonalCard("Ainda não encontramos esse tema.", "Tente uma palavra como graça, oração, Missa ou perdão. As perguntas também podem ajudar.")
