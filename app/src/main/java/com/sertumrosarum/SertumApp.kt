@@ -127,8 +127,7 @@ fun SertumApp(model: PrayerSessionViewModel = viewModel(), repository: GardenRep
                                         onPray = { rosarySetup = true; model.selectTab(SanctuaryTab.GUIDES) }, onResume = model::resume,
                                         onIntentions = { model.selectTab(SanctuaryTab.GARDEN) },
                                         onWelcome = { welcomed = true; repository?.enqueue { repository.welcome() } })
-                                    SanctuaryTab.CATECHISM -> FormationScreen(garden, personal, formationLesson,
-                                        { model.selectTab(SanctuaryTab.HOME) }, { rosarySetup = true; model.selectTab(SanctuaryTab.GUIDES) })
+                                    SanctuaryTab.CATECHISM -> FormationScreen(garden, personal, formationLesson) { rosarySetup = true; model.selectTab(SanctuaryTab.GUIDES) }
                                     SanctuaryTab.GUIDES -> if (rosarySetup) SanctuaryHome(state, model,
                                         onStart = { model.start(PrayerGuide.TRADITIONAL, garden?.selected().orEmpty()) },
                                         personal = { if (garden != null) QuietAction(if (selected.isEmpty()) "Oferecer por uma intenção (opcional)" else "${garden.selected().size} intenções para a próxima coroa", { picker = true }, "choose-intentions") },

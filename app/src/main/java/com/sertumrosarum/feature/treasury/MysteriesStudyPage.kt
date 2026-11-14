@@ -1,5 +1,13 @@
 package com.sertumrosarum.feature.treasury
 
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import com.sertumrosarum.ui.canvas.FineArt
+import com.sertumrosarum.ui.components.FineArtCredits
+import com.sertumrosarum.ui.components.SacredPaintingThumb
+import com.sertumrosarum.ui.components.SacredTextLink
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -11,7 +19,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -45,15 +52,13 @@ internal fun MysteriesStudyPage(set: MysterySet, actions: TreasuryActions) {
         SacredCard(Modifier.padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, top = 20.dp).fillMaxWidth()) {
             Column(Modifier.padding(vertical = 6.dp)) {
                 set.mysteries.forEachIndexed { index, mystery ->
-                    if (index > 0) Box(Modifier.padding(start = 62.dp, end = 20.dp).fillMaxWidth().height(1.dp).background(colors.border.copy(alpha = .8f)))
+                    if (index > 0) Box(Modifier.padding(start = 90.dp, end = 20.dp).fillMaxWidth().height(1.dp).background(colors.border.copy(alpha = .8f)))
                     Row(
                         Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = "Estudar este mistério") { actions.openStudyMystery(index) }.testTag("study-mystery-$index")
                             .heightIn(min = 76.dp).padding(start = 18.dp, end = 18.dp, top = 14.dp, bottom = 14.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
-                        Box(Modifier.size(28.dp).background(colors.marian.copy(alpha = .14f), CircleShape), contentAlignment = Alignment.Center) {
-                            SacredText("${index + 1}", style = type.label.copy(fontSize = 13.5.sp), color = colors.accentInk)
-                        }
+                        SacredPaintingThumb(FineArt.forMystery(set, index), size = 56.dp)
                         Column(Modifier.weight(1f)) {
                             SacredText(mystery.title, style = type.label.copy(fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold))
                             SacredText("Fruto: ${mystery.fruitInSentence}", Modifier.padding(top = 2.dp), type.body.copy(fontSize = 14.sp, lineHeight = 20.sp), colors.secondary)
@@ -64,6 +69,9 @@ internal fun MysteriesStudyPage(set: MysterySet, actions: TreasuryActions) {
                 }
             }
         }
-        SacredText(set.contemplation, Modifier.fillMaxWidth().padding(start = 32.dp, end = 32.dp, top = 30.dp, bottom = 44.dp), type.whisper, colors.secondary, TextAlign.Center)
+        SacredText(set.contemplation, Modifier.fillMaxWidth().padding(start = 32.dp, end = 32.dp, top = 30.dp), type.whisper, colors.secondary, TextAlign.Center)
+        var credits by rememberSaveable { mutableStateOf(false) }
+        SacredTextLink("Obras de arte e créditos", { credits = true }, "mysteries-art-credits", Modifier.align(Alignment.CenterHorizontally).padding(top = 14.dp, bottom = 36.dp))
+        if (credits) FineArtCredits { credits = false }
     }
 }

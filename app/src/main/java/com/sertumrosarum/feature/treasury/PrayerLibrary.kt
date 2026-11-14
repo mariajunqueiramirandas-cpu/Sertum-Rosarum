@@ -54,6 +54,8 @@ import com.sertumrosarum.ui.canvas.LocalBotanicalArtwork
 import com.sertumrosarum.ui.canvas.paintBotanical
 import com.sertumrosarum.ui.components.PageWelcome
 import com.sertumrosarum.ui.components.SacredCard
+import com.sertumrosarum.ui.components.SacredChips
+import com.sertumrosarum.ui.components.SacredSearchField
 import com.sertumrosarum.ui.components.SacredIcon
 import com.sertumrosarum.ui.components.SacredText
 import com.sertumrosarum.ui.components.SteadySlot
@@ -85,8 +87,8 @@ internal fun PrayerLibrary(state: TreasuryUiState, actions: TreasuryActions, scr
                 }
             }
             item("formation-entry") { formation() }
-            item("search") { PrayerSearchField(state.query, actions::search, Modifier.padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, top = 22.dp)) }
-            item("categories") { CategoryChoices(state.category, actions::selectCategory, Modifier.padding(top = 4.dp)) }
+            item("search") { SacredSearchField(state.query, actions::search, "Buscar uma oração", "treasury-search", Modifier.padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, top = 22.dp)) }
+            item("categories") { CategoryChoices(state.category, actions::selectCategory, Modifier.padding(top = 10.dp)) }
             if (state.query.isBlank() && state.category == null) {
                 item("formation") {
                     SacredCard(Modifier.padding(horizontal = SertumTheme.spacing.page, vertical = 14.dp).fillMaxWidth()) {
@@ -135,64 +137,11 @@ internal fun PrayerLibrary(state: TreasuryUiState, actions: TreasuryActions, scr
     }
 }
 
-/** A quiet field on the page's surface colour; the cross appears only when there is something to clear. */
-@Composable
-private fun PrayerSearchField(query: String, onQuery: (String) -> Unit, modifier: Modifier = Modifier) {
-    val colors = SertumTheme.colors
-    val type = SertumTheme.typography
-    val focus = LocalFocusManager.current
-    val shape = RoundedCornerShape(26.dp)
-    val text = type.body.copy(fontSize = 16.sp, lineHeight = 22.sp, color = colors.ink)
-    BasicTextField(
-        query, onQuery, modifier.fillMaxWidth().testTag("treasury-search"),
-        textStyle = text, singleLine = true, cursorBrush = SolidColor(colors.marian),
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
-        decorationBox = { field ->
-            Row(
-                Modifier.fillMaxWidth().clip(shape).background(colors.surface).border(1.dp, colors.border.copy(alpha = .7f), shape).heightIn(min = 52.dp).padding(start = 18.dp, end = 4.dp),
-                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
-            ) {
-                SacredIcon(SacredIcon.SEARCH, Modifier.size(18.dp), colors.secondary)
-                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                    if (query.isEmpty()) SacredText("Buscar uma oração", style = text, color = colors.muted, maxLines = 1)
-                    field()
-                }
-                if (query.isNotEmpty()) {
-                    Box(
-                        Modifier.size(48.dp).clip(CircleShape).semantics { contentDescription = "Limpar a busca" }
-                            .clickable(role = Role.Button) { onQuery("") }.testTag("treasury-search-clear"),
-                        contentAlignment = Alignment.Center,
-                    ) { SacredIcon(SacredIcon.CLOSE, Modifier.size(14.dp), colors.secondary) }
-                } else Box(Modifier.size(width = 14.dp, height = 48.dp))
-            }
-        },
-    )
-}
-
-/** The moments of life as plain words in a row that runs past the edge; a small sage bead rests under the chosen one. */
+/** The moments of life as filter chips in a row that runs past the edge. */
 @Composable
 private fun CategoryChoices(selected: PrayerCategory?, onSelect: (PrayerCategory?) -> Unit, modifier: Modifier = Modifier) {
-    val colors = SertumTheme.colors
-    val type = SertumTheme.typography
-    Row(modifier.horizontalScroll(rememberScrollState()).selectableGroup().testTag("category-choices").padding(horizontal = 14.dp)) {
-        (listOf<PrayerCategory?>(null) + PrayerCategory.entries).forEach { category ->
-            val active = category == selected
-            Column(
-                Modifier.clip(RoundedCornerShape(14.dp)).selectable(active, role = Role.RadioButton, onClick = { onSelect(category) })
-                    .testTag("category-${category?.name ?: "ALL"}").heightIn(min = 48.dp).padding(horizontal = 10.dp),
-                horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center,
-            ) {
-                val label = category?.label ?: "Todas"
-                val style = type.label.copy(fontSize = 14.sp)
-                // The word keeps the width of its bold form, so choosing it never nudges its neighbours.
-                Box(contentAlignment = Alignment.Center) {
-                    SacredText(label, Modifier.alpha(0f).clearAndSetSemantics {}, style.copy(fontWeight = FontWeight.Bold), maxLines = 1)
-                    SacredText(label, style = style.copy(fontWeight = if (active) FontWeight.Bold else FontWeight.Medium), color = if (active) colors.ink else colors.secondary, maxLines = 1)
-                }
-                Box(Modifier.padding(top = 4.dp).size(5.dp).background(colors.marian.copy(alpha = if (active) 1f else 0f), CircleShape))
-            }
-        }
-    }
+    SacredChips(listOf<PrayerCategory?>(null) + PrayerCategory.entries, selected, { it?.label ?: "Todas" }, onSelect,
+        modifier.testTag("category-choices"), tag = { "category-${it?.name ?: "ALL"}" })
 }
 
 @Composable

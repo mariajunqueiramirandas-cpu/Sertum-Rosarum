@@ -31,7 +31,7 @@ class FormationArtworkFlowTest {
         compose.onNodeWithTag("formation-hero").assertIsDisplayed()
         shot("catechesis-day")
         FormationCatalog.pillars.forEachIndexed { index, pillar ->
-            tap("pillar-$pillar", true)
+            // Every pillar is a chapter on the course page; its first lesson opens straight from there.
             val lesson = FormationCatalog.lessons.first { it.pillar == pillar }
             tap("lesson-${lesson.id}", true)
             compose.onNodeWithTag("lesson-artwork").assertIsDisplayed()
@@ -52,10 +52,10 @@ class FormationArtworkFlowTest {
         for (mode in listOf("DAY", "VIGIL")) {
             tap("tab-HOME"); tap("theme-menu"); tap("theme-$mode")
             tap("tab-GARDEN")
-            for (section in listOf("Intenções", "Coroas", "Diário", "Guardados", "Caminho")) {
+            for (section in listOf("Intenções", "Coroas", "Diário", "Guardados")) {
                 tap("garden-$section", true)
                 compose.onNodeWithTag("garden-hero").performScrollTo().assertIsDisplayed()
-                shot("garden-$mode-${listOf("Intenções", "Coroas", "Diário", "Guardados", "Caminho").indexOf(section)}")
+                shot("garden-$mode-${listOf("Intenções", "Coroas", "Diário", "Guardados").indexOf(section)}")
             }
         }
     }

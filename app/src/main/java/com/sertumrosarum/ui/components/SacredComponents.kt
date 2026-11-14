@@ -12,6 +12,7 @@ import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -70,7 +71,7 @@ fun SacredText(
     maxLines: Int = Int.MAX_VALUE,
 ) = BasicText(text, modifier, style.copy(color = color, textAlign = align ?: style.textAlign), overflow = TextOverflow.Ellipsis, maxLines = maxLines)
 
-enum class SacredIcon { SUN, MOON, SYSTEM, BACK, CLOSE, EYE, HAPTIC, CHEVRON, CROSS, CHECK, ROSE, ARCH, BEADS, BOOK, SPROUT, SEARCH }
+enum class SacredIcon { SUN, MOON, SYSTEM, BACK, CLOSE, EYE, HAPTIC, CHEVRON, CROSS, CHECK, ROSE, ARCH, BEADS, BOOK, SPROUT, SEARCH, BOOKMARK, PEN, CHEVRON_BACK }
 
 @Composable
 fun SacredIcon(icon: SacredIcon, modifier: Modifier = Modifier, color: Color = SertumTheme.colors.ink) {
@@ -109,6 +110,7 @@ fun SacredIcon(icon: SacredIcon, modifier: Modifier = Modifier, color: Color = S
             SacredIcon.CLOSE -> { line(6f, 6f, 18f, 18f); line(6f, 18f, 18f, 6f) }
             SacredIcon.CROSS -> { line(12f, 3f, 12f, 21f); line(6f, 9f, 18f, 9f) }
             SacredIcon.CHEVRON -> { line(9f, 5f, 16f, 12f); line(9f, 19f, 16f, 12f) }
+            SacredIcon.CHEVRON_BACK -> { line(15f, 5f, 8f, 12f); line(15f, 19f, 8f, 12f) }
             SacredIcon.CHECK -> { line(5f, 12f, 10f, 17f); line(10f, 17f, 19f, 7f) }
             SacredIcon.EYE -> {
                 val eye = Path().apply {
@@ -168,6 +170,21 @@ fun SacredIcon(icon: SacredIcon, modifier: Modifier = Modifier, color: Color = S
             SacredIcon.SEARCH -> {
                 drawCircle(color, 6.5f * unit, point(10.5f, 10.5f), style = Stroke(stroke))
                 line(15.4f, 15.4f, 20.5f, 20.5f)
+            }
+            SacredIcon.BOOKMARK -> {
+                val ribbon = Path().apply {
+                    moveTo(6.5f * unit, 4f * unit); lineTo(17.5f * unit, 4f * unit); lineTo(17.5f * unit, 20.5f * unit)
+                    lineTo(12f * unit, 16.2f * unit); lineTo(6.5f * unit, 20.5f * unit); close()
+                }
+                drawPath(ribbon, color, style = Stroke(stroke, join = androidx.compose.ui.graphics.StrokeJoin.Round))
+            }
+            SacredIcon.PEN -> {
+                val pen = Path().apply {
+                    moveTo(4.5f * unit, 19.5f * unit); lineTo(5.5f * unit, 15f * unit); lineTo(15.5f * unit, 5f * unit)
+                    lineTo(19f * unit, 8.5f * unit); lineTo(9f * unit, 18.5f * unit); close()
+                }
+                drawPath(pen, color, style = Stroke(stroke, join = androidx.compose.ui.graphics.StrokeJoin.Round))
+                line(13.5f, 7f, 17f, 10.5f)
             }
             SacredIcon.ROSE -> Unit // The painted rose is rendered above.
         }
@@ -306,4 +323,43 @@ fun <T> SacredSegmented(options: List<T>, selected: T, label: (T) -> String, onS
             }
         }
     }
+}
+
+/** A second, quieter action: an outlined pill with a sage label. */
+@Composable
+fun SacredSecondaryButton(text: String, onClick: () -> Unit, modifier: Modifier = Modifier, tag: String = text, enabled: Boolean = true, icon: SacredIcon? = null) {
+    val colors = SertumTheme.colors
+    val shape = RoundedCornerShape(50)
+    val interaction = remember { MutableInteractionSource() }
+    val pressed by interaction.collectIsPressedAsState()
+    val scale by animateFloatAsState(if (pressed) .975f else 1f, label = "sacred-secondary-press")
+    val ink = if (enabled) colors.accentInk else colors.muted.copy(alpha = .6f)
+    Row(
+        modifier.scale(scale).clip(shape).border(1.dp, if (enabled) colors.marian.copy(alpha = .5f) else colors.border, shape)
+            .clickable(interaction, LocalIndication.current, enabled = enabled, role = Role.Button, onClick = onClick).testTag(tag)
+            .heightIn(min = 48.dp).padding(horizontal = 20.dp, vertical = 10.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.CenterHorizontally),
+    ) {
+        if (icon != null) SacredIcon(icon, Modifier.size(17.dp), ink)
+        SacredText(text, style = SertumTheme.typography.label, color = ink, align = TextAlign.Center)
+    }
+}
+
+/** A hairline between rows of one card. */
+@Composable
+fun SacredDivider(modifier: Modifier = Modifier) {
+    Box(modifier.fillMaxWidth().height(1.dp).background(SertumTheme.colors.border.copy(alpha = .8f)))
+}
+
+/** A short line of small capitals-like text that names what follows. */
+@Composable
+fun SacredEyebrow(text: String, modifier: Modifier = Modifier, color: Color = SertumTheme.colors.accentInk) {
+    SacredText(text, modifier, SertumTheme.typography.micro.copy(letterSpacing = .4.sp), color)
+}
+
+/** A small sage word that acts, for the least of a page's actions. */
+@Composable
+fun SacredTextLink(text: String, onClick: () -> Unit, tag: String, modifier: Modifier = Modifier) {
+    SacredText(text, modifier.clip(RoundedCornerShape(14.dp)).clickable(role = Role.Button, onClick = onClick).testTag(tag).heightIn(min = 48.dp).padding(horizontal = 12.dp, vertical = 14.dp),
+        SertumTheme.typography.label.copy(fontWeight = FontWeight.SemiBold), SertumTheme.colors.accentInk, TextAlign.Center)
 }
