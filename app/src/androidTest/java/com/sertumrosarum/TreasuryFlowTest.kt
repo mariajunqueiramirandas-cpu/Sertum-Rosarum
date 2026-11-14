@@ -25,6 +25,36 @@ class TreasuryFlowTest {
         compose.onNodeWithTag(tag, useUnmergedTree = true).performClick()
         compose.waitForIdle()
     }
+    /**
+     * The field hides the IME on submit, but a loaded emulator can take several seconds to
+     * animate it away. Read insets on the UI thread, re-request the hide if it lingers, and
+     * only then let the lazy results settle before scrolling to one of them.
+     */
+    private fun awaitKeyboardHidden() {
+        fun imeVisible(): Boolean {
+            var visible = false
+            compose.activityRule.scenario.onActivity {
+                visible = androidx.core.view.ViewCompat.getRootWindowInsets(it.window.decorView)
+                    ?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) == true
+            }
+            return visible
+        }
+        val deadline = android.os.SystemClock.uptimeMillis() + 20_000
+        var lastHideRequest = 0L
+        while (imeVisible()) {
+            val now = android.os.SystemClock.uptimeMillis()
+            check(now < deadline) { "Soft keyboard still visible 20 s after submitting the search" }
+            if (now - lastHideRequest > 3_000) {
+                lastHideRequest = now
+                compose.activityRule.scenario.onActivity {
+                    androidx.core.view.WindowCompat.getInsetsController(it.window, it.window.decorView)
+                        .hide(androidx.core.view.WindowInsetsCompat.Type.ime())
+                }
+            }
+            Thread.sleep(50)
+        }
+        compose.waitForIdle()
+    }
     private fun back() {
         compose.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
         compose.waitForIdle()
@@ -57,10 +87,7 @@ class TreasuryFlowTest {
         // lazy result out of composition between performScrollToNode and click.
         search.performImeAction()
         search.assertIsNotFocused()
-        compose.waitUntil(5_000) {
-            androidx.core.view.ViewCompat.getRootWindowInsets(compose.activity.window.decorView)
-                ?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) != true
-        }
+        awaitKeyboardHidden()
         tap("prayer-credo-niceno")
         tap("language-BILINGUAL"); tap("verse-0")
         compose.onNodeWithTag("word-by-word").assertExists()

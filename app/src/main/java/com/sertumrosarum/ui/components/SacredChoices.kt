@@ -13,6 +13,7 @@ import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
@@ -172,12 +173,13 @@ fun SacredSearchField(query: String, onQuery: (String) -> Unit, placeholder: Str
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     val focus = LocalFocusManager.current
+    val keyboard = LocalSoftwareKeyboardController.current
     val shape = RoundedCornerShape(26.dp)
     val text = type.body.copy(fontSize = 16.sp, lineHeight = 22.sp, color = colors.ink)
     BasicTextField(
         query, { onQuery(it.take(300)) }, modifier.fillMaxWidth().semantics { contentDescription = placeholder }.testTag(tag),
         textStyle = text, singleLine = true, cursorBrush = SolidColor(colors.marian),
-        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { keyboard?.hide(); focus.clearFocus() }),
         decorationBox = { field ->
             Row(
                 Modifier.fillMaxWidth().clip(shape).background(colors.surface).border(1.dp, colors.border.copy(alpha = .7f), shape).heightIn(min = 52.dp).padding(start = 18.dp, end = 4.dp),
