@@ -49,7 +49,18 @@ class TreasuryFlowTest {
 
     @Test fun fullTextSearchBilingualGlossesAndRecreationWorkOffline() {
         tap("tab-TREASURY")
-        compose.onNodeWithTag("treasury-search").performTextInput("consubstancial")
+        val search = compose.onNodeWithTag("treasury-search")
+        search.performTextInput("consubstancial")
+        search.assertTextEquals("consubstancial")
+        // Submit through the field's real Search action before scrolling results.
+        // Otherwise Android's asynchronous IME/focus relocation can scroll the
+        // lazy result out of composition between performScrollToNode and click.
+        search.performImeAction()
+        search.assertIsNotFocused()
+        compose.waitUntil(5_000) {
+            androidx.core.view.ViewCompat.getRootWindowInsets(compose.activity.window.decorView)
+                ?.isVisible(androidx.core.view.WindowInsetsCompat.Type.ime()) != true
+        }
         tap("prayer-credo-niceno")
         tap("language-BILINGUAL"); tap("verse-0")
         compose.onNodeWithTag("word-by-word").assertExists()
