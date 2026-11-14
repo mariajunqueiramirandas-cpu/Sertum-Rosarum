@@ -168,7 +168,14 @@ fun ImmersivePrayerScreen(
                                 else -> TextAlign.Start
                             }
                             if (latinText != null) PrayerLanguageToggle(language, onLanguage, Modifier.padding(bottom = 4.dp))
-                            SacredText(if (inLatin) latinText.orEmpty() else state.prayerText, Modifier.widthIn(max = 480.dp).fillMaxWidth().testTag("prayer-text"), if (inLatin) type.prayer.inLatin else type.prayer, colors.ink, alignment)
+                            if (language == PrayerLanguage.BILINGUAL && latinText != null) {
+                                Column(Modifier.widthIn(max = 480.dp).fillMaxWidth().testTag("prayer-bilingual"), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                                    SacredText("Português", style = type.micro, color = colors.accentInk)
+                                    SacredText(state.prayerText, Modifier.testTag("prayer-text"), type.prayer, colors.ink, alignment)
+                                    SacredText("Latim", style = type.micro, color = colors.accentInk)
+                                    SacredText(latinText, Modifier.testTag("prayer-latin-text"), type.prayer.inLatin, colors.secondary, alignment)
+                                }
+                            } else SacredText(if (inLatin) latinText.orEmpty() else state.prayerText, Modifier.widthIn(max = 480.dp).fillMaxWidth().testTag("prayer-text"), if (inLatin) type.prayer.inLatin else type.prayer, colors.ink, alignment)
                         }
                         if (step.intention != null) {
                             SacredText(step.intention, Modifier.padding(top = 16.dp), type.whisper, colors.gold, TextAlign.Center)

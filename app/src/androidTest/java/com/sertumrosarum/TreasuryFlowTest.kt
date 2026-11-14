@@ -12,8 +12,13 @@ import org.junit.Test
 
 /** Real-device coverage of the completed offline Treasury and its in-session Latin integration. */
 class TreasuryFlowTest {
-    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    @get:Rule(order = 0) val freshGarden = FreshGardenRule()
+    @get:Rule(order = 1) val compose = createAndroidComposeRule<MainActivity>()
+    @org.junit.Before fun awaitLocalRecords() {
+        compose.waitUntil(15_000) { compose.onAllNodes(androidx.compose.ui.test.hasTestTag("bottom-bar") or androidx.compose.ui.test.hasTestTag("prayer-screen"), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
+    }
     private fun tap(tag: String) {
+        compose.ensurePrayerTarget(tag)
         if (tag.startsWith("prayer-") && tag != "prayer-text") {
             compose.onNodeWithTag("treasury-scroll").performScrollToNode(hasTestTag(tag))
         }
@@ -48,7 +53,7 @@ class TreasuryFlowTest {
         tap("prayer-credo-niceno")
         tap("language-BILINGUAL"); tap("verse-0")
         compose.onNodeWithTag("word-by-word").assertExists()
-        compose.activityRule.scenario.recreate(); compose.waitForIdle()
+        compose.activityRule.scenario.recreate(); compose.awaitSertumReady(); compose.waitForIdle()
         compose.onNodeWithTag("language-BILINGUAL").assertIsSelected()
         compose.onNodeWithTag("word-by-word").assertExists()
         back()
@@ -89,7 +94,7 @@ class TreasuryFlowTest {
         tap("next-prayer")
         compose.onNodeWithTag("prayer-text").assertTextEquals(TreasuryCatalog.latinFor(FixedPrayer.THANKSGIVING)!!.latinSolo!!)
         tap("next-prayer"); assertLatin(FixedPrayer.HAIL_HOLY_QUEEN)
-        compose.activityRule.scenario.recreate(); compose.waitForIdle()
+        compose.activityRule.scenario.recreate(); compose.awaitSertumReady(); compose.waitForIdle()
         compose.onNodeWithTag("rosary-language-LATIN").assertIsSelected()
         assertLatin(FixedPrayer.HAIL_HOLY_QUEEN)
         tap("rosary-language-PORTUGUESE")

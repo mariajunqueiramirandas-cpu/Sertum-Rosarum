@@ -23,7 +23,8 @@ class TreasurySearch(catalog: List<TreasuryPrayer>) {
             append(prayer.title); append(' '); append(prayer.latinTitle.orEmpty()); append(' ')
             append(prayer.summary); append(' '); append(prayer.portuguese); append(' '); append(prayer.latin.orEmpty())
             append(' '); append(prayer.category.label); append(' '); append(prayer.keywords.joinToString(" "))
-            prayer.annotations.forEach { append(' '); append(it.term) }
+            append(' '); append(prayer.context)
+            prayer.annotations.forEach { append(' '); append(it.term); append(' '); append(it.origin); append(' '); append(it.today); append(' '); append(it.scriptureReference.orEmpty()); append(' '); append(it.catechism.orEmpty()) }
         }))
     }
     fun find(query: String, category: PrayerCategory? = null): List<TreasuryPrayer> {

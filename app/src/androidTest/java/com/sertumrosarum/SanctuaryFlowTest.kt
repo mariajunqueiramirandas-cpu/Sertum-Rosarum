@@ -3,17 +3,17 @@ package com.sertumrosarum
 import android.graphics.Bitmap
 import android.content.pm.ActivityInfo
 import androidx.compose.ui.graphics.asAndroidBitmap
+import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsSelected
 import androidx.compose.ui.test.assertTextEquals
-import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
-import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.captureToImage
 import androidx.compose.ui.test.performTouchInput
 import androidx.compose.ui.test.click
@@ -30,10 +30,16 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 /** End-to-end Compose interactions and real-device screenshots; no Material test components. */
 @RunWith(AndroidJUnit4::class)
 class SanctuaryFlowTest {
-    @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    @get:Rule(order = 0) val freshGarden = FreshGardenRule()
+    @get:Rule(order = 1) val compose = createAndroidComposeRule<MainActivity>()
+    @org.junit.Before fun awaitLocalRecords() {
+        compose.waitUntil(15_000) { compose.onAllNodes(androidx.compose.ui.test.hasTestTag("bottom-bar") or androidx.compose.ui.test.hasTestTag("prayer-screen"), useUnmergedTree = true).fetchSemanticsNodes().isNotEmpty() }
+        compose.onNodeWithTag("tab-GUIDES").performSemanticsAction(SemanticsActions.OnClick)
+        compose.onNodeWithTag("rosary-setup-open").performSemanticsAction(SemanticsActions.OnClick)
+    }
 
-    @Test fun `sanctuary has original day and vigil layouts and every mystery can be selected`() {
-        compose.onNodeWithTag("sanctuary").assertIsDisplayed()
+    @Test fun sanctuaryHasOriginalDayAndVigilLayoutsAndEveryMysteryCanBeSelected() {
+        compose.onNodeWithTag("rosary-setup").assertIsDisplayed()
         compose.onNodeWithTag("theme-menu").performClick()
         compose.onNodeWithTag("theme-DAY").performClick()
         listOf("JOYFUL", "LUMINOUS", "SORROWFUL", "GLORIOUS").forEach { set ->
@@ -43,11 +49,11 @@ class SanctuaryFlowTest {
         screenshot("sanctuary-day")
         compose.onNodeWithTag("theme-menu").performClick()
         compose.onNodeWithTag("theme-VIGIL").performClick()
-        compose.onNodeWithTag("sanctuary").assertIsDisplayed()
+        compose.onNodeWithTag("rosary-setup").assertIsDisplayed()
         screenshot("sanctuary-vigil")
     }
 
-    @Test fun `complete rosary flows from the sign of the cross through all prayers to delivery`() {
+    @Test fun completeRosaryFlowsFromTheSignOfTheCrossThroughAllPrayersToDelivery() {
         compose.onNodeWithTag("prayer-mode-SOLO").assertIsSelected()
         compose.onNodeWithTag("start-rosary").performClick()
         compose.onNodeWithTag("session-mode").assertTextEquals("Oração a sós")
@@ -62,14 +68,15 @@ class SanctuaryFlowTest {
         compose.onNodeWithTag("crown-delivered").assertIsDisplayed()
         screenshot("crown-delivered")
         compose.onNodeWithTag("return-sanctuary").performClick()
-        compose.onNodeWithTag("sanctuary").assertIsDisplayed()
+        compose.onNodeWithTag("rosary-setup").assertIsDisplayed()
     }
 
-    @Test fun `group mode survives recreation and resumes independently of the next crown mode`() {
+    @Test fun groupModeSurvivesRecreationAndResumesIndependentlyOfTheNextCrownMode() {
         compose.onNodeWithTag("prayer-mode-GROUP").performScrollTo().performClick().assertIsSelected()
         compose.onNodeWithTag("start-rosary").performClick()
         compose.onNodeWithTag("next-prayer").performClick()
         compose.activityRule.scenario.recreate()
+        compose.awaitSertumReady()
         compose.onNodeWithTag("session-mode").assertTextEquals("Oração em grupo")
         compose.onNodeWithTag("prayer-text").assertTextEquals(FixedPrayer.OFFERING.text)
         compose.onNodeWithTag("pause-prayer").performClick()
@@ -85,7 +92,7 @@ class SanctuaryFlowTest {
         screenshot("prayer-solo")
     }
 
-    @Test fun `overflowing creed shows its reading position and scrolls without advancing the rosary`() {
+    @Test fun overflowingCreedShowsItsReadingPositionAndScrollsWithoutAdvancingTheRosary() {
         compose.onNodeWithTag("start-rosary").performClick()
         compose.onNodeWithTag("prayer-scroll-cue").assertDoesNotExist()
         repeat(2) { compose.onNodeWithTag("next-prayer").performClick() }
@@ -108,7 +115,7 @@ class SanctuaryFlowTest {
         compose.waitUntil { scroll.fetchSemanticsNode().config[SemanticsProperties.VerticalScrollAxisRange].value() == 0f }
     }
 
-    @Test fun `beads decades backward stepping and pause resume preserve the prayer position`() {
+    @Test fun beadsDecadesBackwardSteppingAndPauseResumePreserveThePrayerPosition() {
         compose.onNodeWithTag("mystery-LUMINOUS").performScrollTo().performClick()
         compose.onNodeWithTag("start-rosary").performClick()
         compose.onNodeWithTag("decade-1").performClick()
@@ -123,7 +130,7 @@ class SanctuaryFlowTest {
         compose.onNodeWithTag("bead-counter", useUnmergedTree = true).assertTextEquals("Ave-Maria 3 de 10")
     }
 
-    @Test fun `eyes closed area responds to tapping and directional swipes`() {
+    @Test fun eyesClosedAreaRespondsToTappingAndDirectionalSwipes() {
         compose.onNodeWithTag("start-rosary").performClick()
         compose.onNodeWithTag("decade-0").performClick()
         compose.onNodeWithTag("bead-0").performClick()
@@ -139,7 +146,7 @@ class SanctuaryFlowTest {
         compose.onNodeWithTag("bead-counter", useUnmergedTree = true).assertTextEquals("Ave-Maria 2 de 10")
     }
 
-    @Test fun `landscape recreation preserves the bead and keeps the prayer controls visible`() {
+    @Test fun landscapeRecreationPreservesTheBeadAndKeepsThePrayerControlsVisible() {
         compose.onNodeWithTag("start-rosary").performClick()
         compose.onNodeWithTag("decade-2").performClick()
         compose.onNodeWithTag("bead-5").performClick()

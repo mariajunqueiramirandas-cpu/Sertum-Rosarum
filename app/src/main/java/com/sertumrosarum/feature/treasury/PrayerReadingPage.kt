@@ -65,7 +65,7 @@ internal val TextStyle.inLatin get() = copy(localeList = LocaleList("la"))
  * and the words set as they are in the rosary.
  */
 @Composable
-internal fun PrayerReadingPage(prayer: TreasuryPrayer, language: PrayerLanguage, openVerse: Int?, actions: TreasuryActions) {
+internal fun PrayerReadingPage(prayer: TreasuryPrayer, language: PrayerLanguage, openVerse: Int?, actions: TreasuryActions, bookmark: @Composable () -> Unit = {}) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     val uri = LocalUriHandler.current
@@ -91,6 +91,7 @@ internal fun PrayerReadingPage(prayer: TreasuryPrayer, language: PrayerLanguage,
                     }
                 }
             }
+            bookmark()
             SacredFlourish(Modifier.padding(top = 10.dp, bottom = 16.dp))
             if (latin != null) {
                 SacredSegmented(PrayerLanguage.entries, shown, { it.label }, actions::selectLanguage, Modifier.testTag("reading-language"), tag = { "language-${it.name}" })

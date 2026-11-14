@@ -1,12 +1,14 @@
 package com.sertumrosarum.core.haptics
 
 import android.content.Context
+import android.os.Build
+import android.os.Vibrator
 import android.os.VibrationEffect
 import android.os.VibratorManager
 import com.sertumrosarum.feature.prayer.PrayerPulse
 
 class HapticFeedbackController(context: Context) {
-    private val vibrator = context.getSystemService(VibratorManager::class.java)?.defaultVibrator
+    private val vibrator: Vibrator? = if (Build.VERSION.SDK_INT >= 31) context.getSystemService(VibratorManager::class.java)?.defaultVibrator else context.getSystemService(Vibrator::class.java)
 
     fun play(pulse: PrayerPulse) {
         if (vibrator?.hasVibrator() != true) return

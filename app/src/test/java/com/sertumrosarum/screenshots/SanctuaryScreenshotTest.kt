@@ -1,5 +1,8 @@
 package com.sertumrosarum.screenshots
 
+import com.sertumrosarum.ensurePrayerTarget
+import com.sertumrosarum.openRosarySetup
+import com.sertumrosarum.awaitSertumReady
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.performSemanticsAction
@@ -25,6 +28,7 @@ import org.robolectric.annotation.GraphicsMode
 @Config(sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
 class SanctuaryScreenshotTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    @org.junit.Before fun awaitLocalRecords() { compose.awaitSertumReady(); compose.openRosarySetup() }
 
     private fun shot(name: String) = compose.onRoot().captureRoboImage("build/outputs/roborazzi/$name.png")
 
@@ -52,6 +56,7 @@ class SanctuaryScreenshotTest {
     }
 
     private fun tap(tag: String) {
+        compose.ensurePrayerTarget(tag)
         compose.onNodeWithTag(tag).performSemanticsAction(SemanticsActions.OnClick)
         compose.waitForIdle()
     }

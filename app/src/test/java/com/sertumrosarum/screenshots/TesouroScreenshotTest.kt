@@ -1,5 +1,8 @@
 package com.sertumrosarum.screenshots
 
+import com.sertumrosarum.ensurePrayerTarget
+import com.sertumrosarum.openRosarySetup
+import com.sertumrosarum.awaitSertumReady
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -29,6 +32,7 @@ import org.robolectric.annotation.GraphicsMode
 @Config(sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
 class TesouroScreenshotTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    @org.junit.Before fun awaitLocalRecords() { compose.awaitSertumReady() }
 
     private fun shot(name: String) {
         compose.waitForIdle()
@@ -36,6 +40,7 @@ class TesouroScreenshotTest {
     }
 
     private fun tap(tag: String) {
+        compose.ensurePrayerTarget(tag)
         if (tag.startsWith("prayer-")) compose.onNodeWithTag("treasury-scroll").performScrollToNode(hasTestTag(tag))
         compose.onNodeWithTag(tag).performSemanticsAction(SemanticsActions.OnClick)
     }

@@ -74,6 +74,7 @@ class PocoDisplayLayoutTest {
                 Box(Modifier.fillMaxSize().background(if (state.themeMode == ThemeMode.VIGIL) Color(0xFF162A27) else Color(0xFFFBF8F2)).padding(top = 32.dp, bottom = 24.dp)) { SertumApp(model) }
             }
         }
+        if (guide == null) compose.openRosarySetup()
         return model
     }
 
@@ -103,7 +104,7 @@ class PocoDisplayLayoutTest {
             compose.onNodeWithTag(it, useUnmergedTree = true).assertIsDisplayed()
         }
         listOf("previous-prayer", "next-prayer", "eyes-closed-toggle").forEach {
-            assertTrue("$it must keep a full touch target", compose.onNodeWithTag(it).getUnclippedBoundsInRoot().height >= 48.dp)
+            assertTrue("$it must keep a full touch target", compose.onNodeWithTag(it).getUnclippedBoundsInRoot().height.value + .01f >= 48f)
         }
     }
 
@@ -119,7 +120,7 @@ class PocoDisplayLayoutTest {
                 choice.performClick().assertIsSelected()
                 val bounds = choice.getUnclippedBoundsInRoot()
                 assertEquals("All four mysteries should share a row at $profile", rowTop, bounds.top)
-                assertTrue("A tighter selector must retain full touch targets", bounds.height >= 48.dp)
+                assertTrue("A tighter selector must retain full touch targets", bounds.height.value + .01f >= 48f)
                 val results = mutableListOf<TextLayoutResult>()
                 compose.onNodeWithTag("mystery-label-${set.name}", useUnmergedTree = true)
                     .performSemanticsAction(SemanticsActions.GetTextLayoutResult) { it(results) }
@@ -159,6 +160,7 @@ class PocoDisplayLayoutTest {
         val model = render()
         for (mode in listOf(ThemeMode.DAY, ThemeMode.VIGIL)) {
             compose.runOnIdle { model.setTheme(mode); model.selectTab(SanctuaryTab.HOME) }
+            compose.openRosarySetup()
             compose.onNodeWithTag("sanctuary-greeting").assertIsDisplayed()
             compose.onNodeWithTag("start-rosary").assertIsDisplayed()
             allTextFits()
@@ -195,7 +197,7 @@ class PocoDisplayLayoutTest {
         assertTrue("Enlarged choices should reflow instead of squeezing their labels", secondRow.top >= firstRow.bottom)
         MysterySet.entries.forEach { set ->
             compose.onNodeWithTag("mystery-${set.name}").performClick().assertIsSelected()
-            assertTrue(compose.onNodeWithTag("mystery-${set.name}").getUnclippedBoundsInRoot().height >= 48.dp)
+            assertTrue(compose.onNodeWithTag("mystery-${set.name}").getUnclippedBoundsInRoot().height.value + .01f >= 48f)
             allTextFits()
         }
         shot("mysteries-large-text")

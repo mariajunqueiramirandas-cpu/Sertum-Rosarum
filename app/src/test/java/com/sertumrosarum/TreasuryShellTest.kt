@@ -1,5 +1,8 @@
 package com.sertumrosarum
 
+import com.sertumrosarum.ensurePrayerTarget
+import com.sertumrosarum.openRosarySetup
+import com.sertumrosarum.awaitSertumReady
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.text.TextLayoutResult
 import androidx.compose.ui.test.performTouchInput
@@ -32,9 +35,11 @@ import org.robolectric.annotation.GraphicsMode
 @Config(sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
 class TreasuryShellTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    @org.junit.Before fun awaitLocalRecords() { compose.awaitSertumReady() }
     private val ave = requireNotNull(TreasuryCatalog.find("ave-maria"))
 
     private fun tap(tag: String) {
+        compose.ensurePrayerTarget(tag)
         if (tag.startsWith("prayer-") && !tag.startsWith("prayer-language")) {
             compose.onNodeWithTag("treasury-scroll").performScrollToNode(hasTestTag(tag))
         }
@@ -151,6 +156,7 @@ class TreasuryShellTest {
         tap("language-BILINGUAL")
         tap("term-0")
         compose.activityRule.scenario.recreate()
+        compose.awaitSertumReady()
         compose.waitForIdle()
         compose.onNodeWithTag("term-title").assertTextEquals("“cheia de graça”")
         back()
