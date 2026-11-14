@@ -1,5 +1,7 @@
 package com.sertumrosarum.feature.treasury
 
+import com.sertumrosarum.ui.canvas.FineArt
+import com.sertumrosarum.ui.components.SacredPainting
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
@@ -77,6 +79,7 @@ fun TreasurySheets(state: TreasuryUiState, actions: TreasuryActions, visible: Bo
             val contemplation = MysteryContent.contemplationFor(set, index)
             SacredText("${ordinal(index)} mistério ${set.singular.lowercase()}", Modifier.fillMaxWidth(), type.micro, colors.accentInk, TextAlign.Center)
             SacredText(mystery.title, Modifier.fillMaxWidth().padding(top = 6.dp).testTag("study-sheet-title").semantics { heading() }, type.heading, align = TextAlign.Center)
+            SacredPainting(FineArt.forMystery(set, index), Modifier.padding(top = 18.dp), "study-painting")
             SacredFlourish(Modifier.align(Alignment.CenterHorizontally).padding(top = 14.dp, bottom = 18.dp))
             MysteryDimensions(mystery, contemplation, meditated = false, onToggleMeditated = {}, unfolded = true, showMeditatedToggle = false)
             SacredText("Conta a conta", Modifier.padding(start = 6.dp, top = 24.dp, bottom = 8.dp).semantics { heading() }, type.section)

@@ -50,7 +50,9 @@ import com.sertumrosarum.ui.canvas.lessonIllustration
 import com.sertumrosarum.ui.canvas.pillarIllustration
 import com.sertumrosarum.ui.canvas.questionIllustration
 import com.sertumrosarum.ui.canvas.paintBotanical
+import com.sertumrosarum.ui.components.FineArtCredits
 import com.sertumrosarum.ui.components.PageWelcome
+import com.sertumrosarum.ui.components.SacredTextLink
 import com.sertumrosarum.ui.components.SacredCard
 import com.sertumrosarum.ui.components.SacredDivider
 import com.sertumrosarum.ui.components.SacredEyebrow
@@ -83,6 +85,9 @@ internal fun ColumnScope.CoursePage(
             FormationPlace.LIFE -> LifePlace(openJourney, openLesson)
         }
         EditorialNote("formation", "Revisão 1 · 13/11/2026", model, Modifier.padding(top = 36.dp))
+        var credits by rememberSaveable { mutableStateOf(false) }
+        SacredTextLink("Obras de arte e créditos", { credits = true }, "formation-art-credits", Modifier.align(Alignment.CenterHorizontally))
+        if (credits) FineArtCredits { credits = false }
     }
 }
 

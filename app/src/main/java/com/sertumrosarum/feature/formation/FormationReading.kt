@@ -52,7 +52,9 @@ import com.sertumrosarum.ui.canvas.DevotionalIllustration
 import com.sertumrosarum.ui.canvas.FormationPainting
 import com.sertumrosarum.ui.canvas.journeyIllustration
 import com.sertumrosarum.ui.canvas.lessonIllustration
+import com.sertumrosarum.ui.canvas.FineArt
 import com.sertumrosarum.ui.components.SacredCard
+import com.sertumrosarum.ui.components.SacredPainting
 import com.sertumrosarum.ui.components.SacredEyebrow
 import com.sertumrosarum.ui.components.SacredFlourish
 import com.sertumrosarum.ui.components.SacredIcon
@@ -86,6 +88,7 @@ internal fun ColumnScope.LessonPage(lesson: FormationLesson, state: GardenState,
         lesson.teaching.split("\n\n").forEach { paragraph ->
             SacredText(paragraph.trim(), Modifier.padding(top = 12.dp), type.body.copy(fontSize = 16.sp, lineHeight = 27.sp))
         }
+        FineArt.forLesson(lesson.id)?.let { SacredPainting(it, Modifier.padding(top = 26.dp), "lesson-painting") }
         Sources(lesson, Modifier.padding(top = 24.dp))
 
         var answer by rememberSaveable(lesson.id) { mutableStateOf<Int?>(null) }
