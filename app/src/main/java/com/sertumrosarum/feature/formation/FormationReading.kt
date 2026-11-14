@@ -47,6 +47,11 @@ import com.sertumrosarum.domain.formation.PracticeJourney
 import com.sertumrosarum.feature.garden.GardenField
 import com.sertumrosarum.feature.garden.GardenState
 import com.sertumrosarum.feature.garden.GardenViewModel
+import com.sertumrosarum.ui.canvas.DevotionalArtwork
+import com.sertumrosarum.ui.canvas.DevotionalIllustration
+import com.sertumrosarum.ui.canvas.FormationPainting
+import com.sertumrosarum.ui.canvas.journeyIllustration
+import com.sertumrosarum.ui.canvas.lessonIllustration
 import com.sertumrosarum.ui.components.SacredCard
 import com.sertumrosarum.ui.components.SacredEyebrow
 import com.sertumrosarum.ui.components.SacredFlourish
@@ -66,7 +71,8 @@ internal fun ColumnScope.LessonPage(lesson: FormationLesson, state: GardenState,
     val done = progress?.completedAt != null
     val chapter = chapterOf(lesson)
     val kept = state.bookmarks.any { it.kind == "lesson" && it.itemId == lesson.id }
-    Column(Modifier.fillMaxWidth().padding(horizontal = SertumTheme.spacing.page).padding(top = 16.dp, bottom = 44.dp)) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = SertumTheme.spacing.page).padding(top = 8.dp, bottom = 44.dp)) {
+        FormationPainting(lessonIllustration(lesson.id), "lesson-artwork", compact = true)
         SacredEyebrow("${chapter.numeral} · ${chapter.verb}  ·  Lição ${numberOf(lesson)} de ${FormationCatalog.lessons.size}")
         SacredText(lesson.title, Modifier.padding(top = 10.dp).semantics { heading() }, type.display)
         SacredText(lesson.objective, Modifier.padding(top = 10.dp), type.whisper, colors.secondary)
@@ -87,8 +93,13 @@ internal fun ColumnScope.LessonPage(lesson: FormationLesson, state: GardenState,
 
         SacredCard(Modifier.padding(top = 16.dp).fillMaxWidth()) {
             Column(Modifier.padding(start = 20.dp, end = 14.dp, top = 20.dp, bottom = 8.dp)) {
-                SacredEyebrow("Levar à vida")
-                SacredText(lesson.practice, Modifier.padding(top = 8.dp, end = 6.dp), type.whisper)
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Column(Modifier.weight(1f)) {
+                        SacredEyebrow("Levar à vida")
+                        SacredText(lesson.practice, Modifier.padding(top = 8.dp), type.whisper)
+                    }
+                    DevotionalArtwork(DevotionalIllustration.CHARITY, Modifier.size(64.dp))
+                }
                 SacredToggleRow("Vivi este gesto", "Marque quando o tiver vivido, sem pressa.", progress?.practiceDone == true,
                     { model?.lesson(lesson.id, practice = progress?.practiceDone != true) }, Modifier.padding(top = 8.dp), "lesson-practice")
             }
@@ -204,7 +215,8 @@ private fun PauseCard(lesson: FormationLesson, answer: Int?, onAnswer: (Int) -> 
 internal fun ColumnScope.JourneyPage(journey: PracticeJourney, model: GardenViewModel?, onPray: () -> Unit) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
-    Column(Modifier.fillMaxWidth().padding(horizontal = SertumTheme.spacing.page).padding(top = 16.dp, bottom = 44.dp)) {
+    Column(Modifier.fillMaxWidth().padding(horizontal = SertumTheme.spacing.page).padding(top = 8.dp, bottom = 44.dp)) {
+        FormationPainting(journeyIllustration(journey.id), "journey-artwork", compact = true)
         SacredEyebrow("Na vida · ${journey.steps.size} passos")
         SacredText(journey.title, Modifier.padding(top = 10.dp).semantics { heading() }, type.display)
         SacredText(journey.introduction, Modifier.padding(top = 10.dp), type.whisper, colors.secondary)

@@ -4,7 +4,6 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -36,14 +35,20 @@ import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sertumrosarum.domain.formation.FormationCatalog
 import com.sertumrosarum.domain.formation.FormationLesson
 import com.sertumrosarum.feature.garden.GardenState
 import com.sertumrosarum.feature.garden.GardenViewModel
+import com.sertumrosarum.ui.canvas.DevotionalArtwork
+import com.sertumrosarum.ui.canvas.DevotionalIllustration
+import com.sertumrosarum.ui.canvas.FormationPainting
 import com.sertumrosarum.ui.canvas.LocalBotanicalArtwork
+import com.sertumrosarum.ui.canvas.journeyIllustration
+import com.sertumrosarum.ui.canvas.lessonIllustration
+import com.sertumrosarum.ui.canvas.pillarIllustration
+import com.sertumrosarum.ui.canvas.questionIllustration
 import com.sertumrosarum.ui.canvas.paintBotanical
 import com.sertumrosarum.ui.components.PageWelcome
 import com.sertumrosarum.ui.components.SacredCard
@@ -66,7 +71,9 @@ internal fun ColumnScope.CoursePage(
     openLesson: (String) -> Unit, openJourney: (String) -> Unit,
 ) {
     val page = SertumTheme.spacing.page
-    PageWelcome("Aprender, rezar e viver.", "Um caminho pelos quatro pilares da fé, em leituras de cerca de cinco minutos, no seu ritmo.", Modifier.padding(top = 14.dp))
+    // One frame for every painting, so changing place never moves the words beneath it.
+    FormationPainting(when (place) { FormationPlace.QUESTIONS -> DevotionalIllustration.QUESTIONS; FormationPlace.LIFE -> DevotionalIllustration.CHARITY; else -> DevotionalIllustration.CATECHESIS }, "formation-hero")
+    PageWelcome("Aprender, rezar e viver.", "Um caminho pelos quatro pilares da fé, em leituras de cerca de cinco minutos, no seu ritmo.", Modifier.padding(top = 6.dp))
     PathBeads(state, Modifier.padding(start = page, end = page, top = 22.dp))
     SacredTabs(FormationPlace.entries, place, { it.label }, onPlace, Modifier.padding(top = 18.dp), tag = { "formation-${it.label}" })
     Column(Modifier.fillMaxWidth().padding(horizontal = page).padding(top = 20.dp, bottom = 44.dp)) {
@@ -141,8 +148,13 @@ private fun ContinueCard(lesson: FormationLesson, state: GardenState, modifier: 
                 SacredEyebrow(if (started) "Continuar de onde parou" else if (state.learning.isEmpty()) "Comece por aqui" else "Seu próximo passo", Modifier.weight(1f))
                 SacredText("Lição ${numberOf(lesson)} de ${FormationCatalog.lessons.size}", style = type.micro, color = colors.secondary)
             }
-            SacredText(lesson.title, Modifier.padding(top = 10.dp), type.section.copy(fontSize = 23.sp, lineHeight = 30.sp))
-            SacredText(lesson.objective, Modifier.padding(top = 6.dp), type.body, colors.secondary)
+            Row(Modifier.fillMaxWidth().padding(top = 10.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+                Column(Modifier.weight(1f)) {
+                    SacredText(lesson.title, style = type.section.copy(fontSize = 23.sp, lineHeight = 30.sp))
+                    SacredText(lesson.objective, Modifier.padding(top = 6.dp), type.body, colors.secondary)
+                }
+                DevotionalArtwork(lessonIllustration(lesson.id), Modifier.size(84.dp))
+            }
             Row(Modifier.fillMaxWidth().padding(top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
                 SacredText("${chapter.numeral} · ${chapter.verb} · cerca de 5 min", Modifier.weight(1f), type.micro.copy(fontWeight = FontWeight.Medium), colors.muted)
                 Row(
@@ -163,12 +175,10 @@ private fun ChapterHeading(chapter: Chapter, done: Int, total: Int, modifier: Mo
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     Row(modifier.fillMaxWidth().semantics(mergeDescendants = true) { heading() }, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
-        Box(Modifier.padding(top = 2.dp).size(44.dp).border(1.dp, colors.gold.copy(alpha = .55f), CircleShape), contentAlignment = Alignment.Center) {
-            SacredText(chapter.numeral, style = type.section.copy(fontSize = 17.sp, lineHeight = 20.sp), color = colors.gold, align = TextAlign.Center)
-        }
+        DevotionalArtwork(pillarIllustration(chapters.indexOf(chapter)), Modifier.size(68.dp))
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
-                SacredEyebrow(chapter.verb, Modifier.weight(1f))
+                SacredEyebrow("${chapter.numeral} · ${chapter.verb}", Modifier.weight(1f))
                 SacredText(if (done == total) "Percorrido" else "$done de $total", style = type.micro, color = if (done == total) colors.accentInk else colors.secondary)
             }
             SacredText(chapter.pillar, Modifier.padding(top = 2.dp), type.section)
@@ -238,6 +248,7 @@ private fun QuestionsPlace(model: GardenViewModel?, query: String, onQuery: (Str
                             .testTag("question-${question.id}").heightIn(min = 64.dp).padding(horizontal = 18.dp, vertical = 16.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp),
                     ) {
+                        DevotionalArtwork(questionIllustration(question.id), Modifier.size(44.dp))
                         SacredText(question.question, Modifier.weight(1f), type.label.copy(fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold))
                         SacredIcon(SacredIcon.CHEVRON, Modifier.size(13.dp).rotate(turn), colors.muted)
                     }
@@ -261,20 +272,21 @@ private fun LifePlace(openJourney: (String) -> Unit, openLesson: (String) -> Uni
     val type = SertumTheme.typography
     SacredText("Caminhos curtos para levar a fé à Missa, à confissão e ao dia a dia.", Modifier.padding(bottom = 6.dp), type.body, colors.secondary)
     FormationCatalog.journeys.forEach { journey ->
-        PathCard("${journey.steps.size} passos", journey.title, journey.introduction, "journey-${journey.id}", Modifier.padding(top = 12.dp)) { openJourney(journey.id) }
+        PathCard("${journey.steps.size} passos", journey.title, journey.introduction, journeyIllustration(journey.id), "journey-${journey.id}", Modifier.padding(top = 12.dp)) { openJourney(journey.id) }
     }
-    PathCard("Uma lição", "O tempo da Igreja", "Advento e Natal, Quaresma e Páscoa, Pentecostes e Tempo Comum: a Igreja nos conduz pelo mistério de Cristo.", "liturgical-year", Modifier.padding(top = 12.dp)) { openLesson("year") }
+    PathCard("Uma lição", "O tempo da Igreja", "Advento e Natal, Quaresma e Páscoa, Pentecostes e Tempo Comum: a Igreja nos conduz pelo mistério de Cristo.", DevotionalIllustration.LITURGICAL_YEAR, "liturgical-year", Modifier.padding(top = 12.dp)) { openLesson("year") }
 }
 
 @Composable
-private fun PathCard(eyebrow: String, title: String, detail: String, tag: String, modifier: Modifier = Modifier, onOpen: () -> Unit) {
+private fun PathCard(eyebrow: String, title: String, detail: String, illustration: DevotionalIllustration, tag: String, modifier: Modifier = Modifier, onOpen: () -> Unit) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     SacredCard(modifier.fillMaxWidth()) {
         Row(
-            Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onOpen).testTag(tag).padding(20.dp),
+            Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onOpen).testTag(tag).padding(start = 14.dp, end = 20.dp, top = 18.dp, bottom = 18.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp),
         ) {
+            DevotionalArtwork(illustration, Modifier.size(72.dp))
             Column(Modifier.weight(1f)) {
                 SacredEyebrow(eyebrow)
                 SacredText(title, Modifier.padding(top = 6.dp), type.section)

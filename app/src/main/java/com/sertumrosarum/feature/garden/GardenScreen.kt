@@ -26,7 +26,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
@@ -49,9 +48,12 @@ import com.sertumrosarum.domain.treasury.TreasuryCatalog
 import com.sertumrosarum.feature.formation.chapterOf
 import com.sertumrosarum.feature.formation.numberOf
 import com.sertumrosarum.feature.guides.PrayerGuide
+import com.sertumrosarum.ui.canvas.DevotionalArtwork
+import com.sertumrosarum.ui.canvas.DevotionalIllustration
+import com.sertumrosarum.ui.canvas.FormationPainting
 import com.sertumrosarum.ui.canvas.LocalBotanicalArtwork
+import com.sertumrosarum.ui.canvas.lessonIllustration
 import com.sertumrosarum.ui.canvas.paintBotanical
-import com.sertumrosarum.ui.canvas.paintLeaf
 import com.sertumrosarum.ui.components.PageWelcome
 import com.sertumrosarum.ui.components.SacredBottomSheet
 import com.sertumrosarum.ui.components.SacredCard
@@ -96,7 +98,8 @@ fun GardenScreen(model: GardenViewModel? = null, state: GardenState = GardenStat
     var sessionId by rememberSaveable { mutableStateOf<String?>(null) }
     Box(Modifier.fillMaxSize()) {
         SanctuaryPage("Meu Jardim", "garden") {
-            PageWelcome("O que cria raízes em você.", "Suas intenções, suas coroas e o que você descobre pelo caminho.", Modifier.padding(top = 14.dp))
+            FormationPainting(DevotionalIllustration.PERSONAL_GARDEN, "garden-hero", compact = true)
+            PageWelcome("O que cria raízes em você.", "Suas intenções, suas coroas e o que você descobre pelo caminho.", Modifier.padding(top = 6.dp))
             SacredTabs(GardenPlace.entries, place, { it.label }, { place = it }, Modifier.padding(top = 22.dp), tag = { "garden-${it.label}" })
             Column(Modifier.fillMaxWidth().padding(horizontal = SertumTheme.spacing.page).padding(top = 22.dp, bottom = 44.dp)) {
                 when (place) {
@@ -152,7 +155,7 @@ private fun IntentionsPlace(state: GardenState, open: (String) -> Unit) {
         Modifier.padding(top = 14.dp), tag = { "filter-$it" }, bleed = SertumTheme.spacing.page)
     val shown = when (chosen) { "all" -> current; "archived" -> archived; else -> current.filter { it.category == chosen } }
     if (state.intentions.isEmpty()) {
-        GardenEmpty("Um espaço para confiar.", "Escreva por quem ou pelo que deseja rezar. Você também pode começar a oração sem escolher uma intenção.")
+        GardenEmpty(DevotionalIllustration.INTENTIONS, "Um espaço para confiar.", "Escreva por quem ou pelo que deseja rezar. Você também pode começar a oração sem escolher uma intenção.")
         return
     }
     SacredText(
@@ -197,6 +200,7 @@ fun IntentionEditor(existing: IntentionEntity?, onSave: (String, String, String,
     var attempted by rememberSaveable { mutableStateOf(false) }
     val colors = SertumTheme.colors
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        FormationPainting(if (thanks) DevotionalIllustration.TREASURY_THANKSGIVING else DevotionalIllustration.INTENTIONS, "intention-editor-artwork", compact = true)
         SacredText(if (existing == null) "Uma intenção para confiar" else "Cuidar desta intenção", Modifier.semantics { heading() }, SertumTheme.typography.section)
         GardenField("Por quem ou pelo que você reza?", title, { title = it }, "intention-title", limit = 120)
         if (attempted && title.isBlank()) SacredText("Escreva um título para guardar a intenção.", style = SertumTheme.typography.micro, color = colors.ruby)
@@ -342,6 +346,7 @@ private fun ColumnScope.CrownDetail(session: PrayerSessionEntity, state: GardenS
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     val guide = PrayerGuide.entries.find { it.name == session.guide }
+    FormationPainting(DevotionalIllustration.CONTEMPLATIVE_PRAYER, "crown-detail-artwork", compact = true)
     SacredEyebrow(stamp(session.finishedAt ?: session.startedAt))
     SacredText(session.title(), Modifier.padding(top = 6.dp), type.heading)
     val structure = if (guide?.script?.isRosary == true) MysterySet.entries.find { it.name == session.mysterySet }?.label.orEmpty() else guide?.shape?.badge.orEmpty()
@@ -370,7 +375,7 @@ private fun JournalPlace(state: GardenState, onLesson: (String?) -> Unit, write:
     val entries = state.journal.map { JournalItem.Note(it) } +
         state.learning.filter { it.reflection.isNotBlank() }.mapNotNull { progress -> FormationCatalog.lesson(progress.lessonId)?.let { JournalItem.Discovery(it, progress.reflection, progress.openedAt) } }
     if (entries.isEmpty()) {
-        GardenEmpty("Uma palavra pode ficar.", "Registre uma descoberta, um agradecimento ou algo que deseja levar à oração.")
+        GardenEmpty(DevotionalIllustration.JOURNAL, "Uma palavra pode ficar.", "Registre uma descoberta, um agradecimento ou algo que deseja levar à oração.")
         return
     }
     entries.sortedByDescending { it.time }.forEach { entry ->
@@ -407,6 +412,7 @@ private fun ColumnScope.JournalEditor(existing: JournalEntry?, session: PrayerSe
     var attempted by rememberSaveable { mutableStateOf(false) }
     var confirm by rememberSaveable(existing?.id) { mutableStateOf(false) }
     val colors = SertumTheme.colors
+    FormationPainting(DevotionalIllustration.JOURNAL, "journal-editor-artwork", compact = true)
     SacredText(if (existing == null) "O que deseja levar consigo?" else "Sua reflexão", Modifier.semantics { heading() }, SertumTheme.typography.section)
     if (session != null) SacredText("Sobre a coroa de ${session.day().format(DateTimeFormatter.ofPattern("d 'de' MMMM", pt))}", Modifier.padding(top = 4.dp), SertumTheme.typography.micro, colors.accentInk)
     GardenField(if (existing == null) "Uma descoberta, um agradecimento, um pedido" else stamp(existing.createdAt), text, { text = it }, "journal-text", multiline = true, limit = 8000)
@@ -428,17 +434,17 @@ private fun KeptPlace(state: GardenState, model: GardenViewModel?, onPrayer: (St
     val prayers = state.bookmarks.filter { it.kind == "prayer" }.mapNotNull { item -> TreasuryCatalog.find(item.itemId)?.let { item.itemId to it.title } }
     val lessons = state.bookmarks.filter { it.kind == "lesson" }.mapNotNull { item -> FormationCatalog.lesson(item.itemId) }
     if (prayers.isEmpty() && lessons.isEmpty()) {
-        GardenEmpty("Volte ao que tocou seu coração.", "Guarde uma oração no Tesouro ou uma lição da Catequese, e ela esperará por você aqui.")
+        GardenEmpty(DevotionalIllustration.BOOKMARKS, "Volte ao que tocou seu coração.", "Guarde uma oração no Tesouro ou uma lição da Catequese, e ela esperará por você aqui.")
         return
     }
-    if (prayers.isNotEmpty()) KeptShelf("Orações", prayers.map { (id, title) -> Kept(id, title, "Do Tesouro", SacredIcon.BOOK) { onPrayer(id) } }) { model?.bookmark("prayer", it) }
+    if (prayers.isNotEmpty()) KeptShelf("Orações", prayers.map { (id, title) -> Kept(id, title, "Do Tesouro", DevotionalIllustration.BOOKMARKS) { onPrayer(id) } }) { model?.bookmark("prayer", it) }
     if (lessons.isNotEmpty()) KeptShelf("Lições", lessons.map { lesson ->
         val chapter = chapterOf(lesson)
-        Kept(lesson.id, lesson.title, "Lição ${numberOf(lesson)} · ${chapter.verb}", SacredIcon.CROSS) { onLesson(lesson.id) }
+        Kept(lesson.id, lesson.title, "Lição ${numberOf(lesson)} · ${chapter.verb}", lessonIllustration(lesson.id)) { onLesson(lesson.id) }
     }, Modifier.padding(top = if (prayers.isEmpty()) 0.dp else 26.dp)) { model?.bookmark("lesson", it) }
 }
 
-private class Kept(val id: String, val title: String, val detail: String, val icon: SacredIcon, val open: () -> Unit)
+private class Kept(val id: String, val title: String, val detail: String, val illustration: DevotionalIllustration, val open: () -> Unit)
 
 @Composable
 private fun KeptShelf(name: String, items: List<Kept>, modifier: Modifier = Modifier, remove: (String) -> Unit) {
@@ -448,15 +454,13 @@ private fun KeptShelf(name: String, items: List<Kept>, modifier: Modifier = Modi
     SacredCard(Modifier.fillMaxWidth()) {
         Column(Modifier.padding(vertical = 4.dp)) {
             items.forEachIndexed { index, item ->
-                if (index > 0) SacredDivider(Modifier.padding(start = 70.dp, end = 18.dp))
+                if (index > 0) SacredDivider(Modifier.padding(start = 80.dp, end = 18.dp))
                 Row(Modifier.fillMaxWidth().padding(end = 6.dp), verticalAlignment = Alignment.CenterVertically) {
                     Row(
                         Modifier.weight(1f).clickable(role = Role.Button, onClick = item.open).testTag("kept-${item.id}").heightIn(min = 72.dp).padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 8.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp),
                     ) {
-                        Box(Modifier.size(38.dp).background(colors.marian.copy(alpha = .14f), CircleShape), contentAlignment = Alignment.Center) {
-                            SacredIcon(item.icon, Modifier.size(19.dp), colors.accentInk)
-                        }
+                        DevotionalArtwork(item.illustration, Modifier.size(48.dp))
                         Column(Modifier.weight(1f)) {
                             SacredText(item.title, style = type.label.copy(fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold))
                             SacredText(item.detail, Modifier.padding(top = 2.dp), type.body.copy(fontSize = 14.sp, lineHeight = 20.sp), colors.secondary)
@@ -475,20 +479,13 @@ private fun KeptShelf(name: String, items: List<Kept>, modifier: Modifier = Modi
 
 /* ---------- Shared ---------- */
 
-/** An empty bed: a single bud between two leaves, a title and one line about what will grow here. */
+/** An empty bed: its painting, a title and one line about what will grow here. */
 @Composable
-private fun GardenEmpty(title: String, detail: String) {
+private fun GardenEmpty(illustration: DevotionalIllustration, title: String, detail: String) {
     val colors = SertumTheme.colors
-    val art = LocalBotanicalArtwork.current
-    Column(Modifier.fillMaxWidth().padding(top = 26.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-        Canvas(Modifier.size(96.dp)) {
-            drawCircle(colors.marian.copy(alpha = .1f), size.minDimension * .48f)
-            val foot = center + Offset(0f, 22.dp.toPx())
-            paintLeaf(art.leaf, foot, foot + Offset(-24.dp.toPx(), -14.dp.toPx()), .9f)
-            paintLeaf(art.leaf, foot - Offset(0f, 4.dp.toPx()), foot + Offset(24.dp.toPx(), -20.dp.toPx()), .9f)
-            paintBotanical(art.bud, center - Offset(0f, 6.dp.toPx()), 44.dp.toPx())
-        }
-        SacredText(title, Modifier.padding(top = 14.dp), SertumTheme.typography.section, align = TextAlign.Center)
+    Column(Modifier.fillMaxWidth().padding(top = 22.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        DevotionalArtwork(illustration, Modifier.size(132.dp))
+        SacredText(title, Modifier.padding(top = 10.dp), SertumTheme.typography.section, align = TextAlign.Center)
         SacredText(detail, Modifier.padding(top = 6.dp, start = 12.dp, end = 12.dp), SertumTheme.typography.body, colors.secondary, TextAlign.Center)
     }
 }
@@ -498,6 +495,7 @@ fun IntentionPicker(model: GardenViewModel, state: GardenState, selected: Set<St
     var create by rememberSaveable { mutableStateOf(false) }
     if (create) IntentionEditor(null, { title, detail, category, thanks, answer -> model.saveIntention(title, detail, category, thanksgiving = thanks, answer = answer, select = true); create = false }, { create = false })
     else {
+        FormationPainting(DevotionalIllustration.INTENTIONS, "intention-picker-artwork", compact = true)
         SacredText("Escolha intenções ou comece no silêncio do coração. A escolha vale para a próxima coroa.", style = SertumTheme.typography.body)
         state.intentions.filter { !it.archived }.forEach { intention -> QuietAction((if (intention.id in selected) "✓ " else "") + intention.title + if (intention.thanksgiving) " · Ação de graças" else "", { model.toggleIntention(intention.id) }, "pick-${intention.id}", intention.id in selected) }
         QuietAction("Escrever uma nova intenção", { create = true }, "picker-new")
