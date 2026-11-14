@@ -1,0 +1,86 @@
+{
+  "format": 1,
+  "export": "ImageMagick, proportional resize to 960x640, WebP method 6 quality 88, no crop",
+  "images": [
+    {
+      "subject": "emmaus",
+      "generator": "image_gen.imagegen",
+      "generated_date": "2026-11-14",
+      "original_path": "/workspace/generated_images/exec-8575fd63-055d-4291-a432-c22680227c8d.png",
+      "prompt": "Create one original illustration for Sertum Rosarum, a Portuguese Catholic catechism Android app. Landscape 3:2 composition, refined hand painted watercolor and gouache on warm ivory paper, muted sage green, dusty terracotta, Marian blue and restrained gold, calm adult educational illustration, visually lucid, not a museum painting imitation. Subject: the risen Jesus accompanies two disciples on the road to Emmaus, teaching them from the Scriptures. Three clearly distinct adult figures walking beside each other, Jesus at center gesturing gently toward a small unlettered open scroll carried by a disciple, the other listening. Late afternoon, path and olive trees, small village in distance. Historically plausible first-century clothing. A quiet realistic human encounter, not a diagram. No text, letters, numbers, labels, borders, watermark, glowing book, or floating religious symbols. Keep heads, hands and feet complete within generous margins. This will teach revelation as personal encounter, the unity of Scripture, and meditative reading. Save the resulting image as an accessible file for use in the app.",
+      "master": "masters/emmaus.png",
+      "runtime": "app/src/main/res/drawable-nodpi/catechism_emmaus.webp",
+      "master_size": [
+        1536,
+        1024
+      ],
+      "runtime_size": [
+        960,
+        640
+      ],
+      "master_sha256": "6558d22d4f24a715b2df187d8c49284e33bfcfe9b6c8887d517df8b36e832b17",
+      "runtime_sha256": "8d9f029c2232f550f3b50befc65ea98531bd1aa4befdeb054a2887012c250ba3",
+      "runtime_bytes": 217376
+    },
+    {
+      "subject": "baptism",
+      "generator": "image_gen.imagegen",
+      "generated_date": "2026-11-14",
+      "original_path": "/workspace/generated_images/exec-19a3fa01-3e52-4ddc-8492-6e0e3c7e11f5.png",
+      "prompt": "Create one landscape 3:2 illustration for Sertum Rosarum, a Portuguese Catholic catechism Android app. Refined hand painted watercolor and gouache on warm ivory paper, muted sage green, dusty terracotta, Marian blue and restrained gold, calm adult educational illustration, visually lucid, not a museum painting imitation. An original educational Catholic illustration showing an infant Baptism in a modest parish church. A priest in a simple white alb and stole gently pours a small amount of water from a shell over the baby's head held safely by a parent above the stone font; another parent and a godparent stand nearby holding a lit white candle safely away from the baby. Lifelike small hands, attentive expressions, clear visible water and font, baby modestly wrapped in white cloth. Simple quiet background with a window and olive branches. Focus on water, human welcome, white garment and light as visible baptismal signs. No Eucharistic objects. No text, letters, numbers, labels, borders or watermark. Keep all heads, hands and feet complete with generous margins. Save an accessible image file for app use.",
+      "master": "masters/baptism.png",
+      "runtime": "app/src/main/res/drawable-nodpi/catechism_baptism.webp",
+      "master_size": [
+        1536,
+        1024
+      ],
+      "runtime_size": [
+        960,
+        640
+      ],
+      "master_sha256": "f0a1531a852598b952965d57d9a2d79b297961f2f1736bb5b7aaaa254d305009",
+      "runtime_sha256": "7d38f765e753169bad0705749f6d5f155c7b4cfb24b61daf53783f1a6d93784c",
+      "runtime_bytes": 163782
+    },
+    {
+      "subject": "mercy",
+      "generator": "image_gen.imagegen",
+      "generated_date": "2026-11-14",
+      "original_path": "/workspace/generated_images/exec-a7447be5-e680-415e-8625-09fa98816c65.png",
+      "prompt": "Create one landscape 3:2 illustration for Sertum Rosarum, a Portuguese Catholic catechism Android app. Refined hand painted watercolor and gouache on warm ivory paper, muted sage green, dusty terracotta, Marian blue and restrained gold, calm adult educational illustration, visually lucid, not a museum painting imitation. An original educational Catholic illustration of a contemporary adult woman visiting an elderly man at home. She sits at his eye level, listening attentively; a covered bowl of soup, a glass of water and a small grocery bag sit on a nearby table. He is a whole person with dignity and agency, not a caricature of poverty. Warm modest room, window looking into a small garden, walking stick resting by chair. No Jesus, halos or angels: show ordinary concrete corporal and spiritual works of mercy together, food and companionship. Human anatomy correct, complete figures, dignified adult learning illustration. No text, letters, numbers, labels, borders or watermark. Keep all heads, hands and feet complete with generous margins. Save an accessible image file for app use.",
+      "master": "masters/mercy.png",
+      "runtime": "app/src/main/res/drawable-nodpi/catechism_mercy.webp",
+      "master_size": [
+        1536,
+        1024
+      ],
+      "runtime_size": [
+        960,
+        640
+      ],
+      "master_sha256": "73888b5b1f805ec3c6238166884cf691f36fa7bd9d56052c792f444c53ebb9a8",
+      "runtime_sha256": "57cf72768c6c752bc66921f02cc27f23455f066eceed3d5a606c2783341a55db",
+      "runtime_bytes": 187338
+    },
+    {
+      "subject": "daily",
+      "generator": "image_gen.imagegen",
+      "generated_date": "2026-11-14",
+      "original_path": "/workspace/generated_images/exec-887d7025-2717-424b-91fe-734564aa09d9.png",
+      "prompt": "Create one landscape 3:2 illustration for Sertum Rosarum, a Portuguese Catholic catechism Android app. Refined hand painted watercolor and gouache on warm ivory paper, muted sage green, dusty terracotta, Marian blue and restrained gold, calm adult educational illustration, visually lucid, not a museum painting imitation. An original educational Catholic illustration showing a coherent three-part panorama of one ordinary woman's day. Three softly separated vignettes left to right: morning at a window she pauses with an open unlettered Bible; midday in a small community kitchen she listens to another woman and shares a loaf of bread; evening seated at a table she quietly reflects with a blank journal and a small lamp. Adult women in modest contemporary everyday clothes. One ordinary life woven through prayer and service, not three levels of spiritual success. No written text, clocks, labels, numbers or arrows. Use softly connected architectural arch shapes and garden leaves to tie the three vignettes together. No text, letters, numbers, labels, borders or watermark. Keep all heads, hands and feet complete with generous margins. Save an accessible image file for app use.",
+      "master": "masters/daily.png",
+      "runtime": "app/src/main/res/drawable-nodpi/catechism_daily.webp",
+      "master_size": [
+        1536,
+        1024
+      ],
+      "runtime_size": [
+        960,
+        640
+      ],
+      "master_sha256": "d106e6b833778c6217844a6aef6fa9af9785375f8fdea0b21e2f50bb130b90b5",
+      "runtime_sha256": "23327926016b4ef46df4990c3176cfdbfaf3e84e3797830628fcadd8f329535f",
+      "runtime_bytes": 222174
+    }
+  ]
+}

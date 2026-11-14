@@ -1,13 +1,13 @@
 # Fine art for the mysteries and lessons
 
-Thirty-six works of sacred art accompany the twenty mysteries of the rosary and the sixteen catechesis lessons. Every work is in the public domain (all artists died well over 70 years ago), and every image comes from a museum that releases it under **CC0** in its own open-access programme: The Metropolitan Museum of Art, the National Gallery of Art (Washington), the Art Institute of Chicago and the Cleveland Museum of Art. No image comes from a collection with reproduction restrictions (for example Italian state museums).
+The art registry preserves thirty-six works of sacred art originally selected for the twenty mysteries of the rosary and the sixteen catechesis lessons. The expanded curriculum now selects six of these paintings for guided observation alongside its generated illustrations and concept maps; the complete collection remains in the credits. Every work is in the public domain (all artists died well over 70 years ago), and every image comes from a museum that releases it under **CC0** in its own open-access programme: The Metropolitan Museum of Art, the National Gallery of Art (Washington), the Art Institute of Chicago and the Cleveland Museum of Art. No image comes from a collection with reproduction restrictions (for example Italian state museums).
 
 The app credits each work under the painting, in its full-screen view (with a link to the museum page) and on the *Obras de arte e créditos* screen reachable from Catequese and from *Os vinte mistérios*. The registry lives in `app/src/main/java/com/sertumrosarum/ui/canvas/FineArt.kt`.
 
 ## Placement
 
 - **Mysteries:** a framed painting under the title of each mystery's study sheet, and a thumbnail beside each mystery in *Os vinte mistérios*.
-- **Lessons:** a framed painting after the teaching, just before its Scripture and Catechism sources.
+- **Lessons, revision 2:** six selected paintings appear with specific observation prompts inside the biblical studies for Jesus, the Church, reconciliation, forgiveness, prayer and the rosary. Other lessons use original teaching illustrations and native-text concept maps. All thirty-six works remain available in the credits. See the [expanded curriculum](../../catechism-curriculum.md).
 - Paintings are shown whole (`ContentScale.Fit`) in a thin gold frame; thumbnails are centre crops. Touching a painting opens it large with its full credit.
 
 ## Processing

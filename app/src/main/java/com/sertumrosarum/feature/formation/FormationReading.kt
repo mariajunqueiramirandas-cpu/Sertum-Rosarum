@@ -52,9 +52,7 @@ import com.sertumrosarum.ui.canvas.DevotionalIllustration
 import com.sertumrosarum.ui.canvas.FormationPainting
 import com.sertumrosarum.ui.canvas.journeyIllustration
 import com.sertumrosarum.ui.canvas.lessonIllustration
-import com.sertumrosarum.ui.canvas.FineArt
 import com.sertumrosarum.ui.components.SacredCard
-import com.sertumrosarum.ui.components.SacredPainting
 import com.sertumrosarum.ui.components.SacredEyebrow
 import com.sertumrosarum.ui.components.SacredFlourish
 import com.sertumrosarum.ui.components.SacredIcon
@@ -64,7 +62,7 @@ import com.sertumrosarum.ui.components.SacredText
 import com.sertumrosarum.ui.components.SacredToggleRow
 import com.sertumrosarum.ui.theme.SertumTheme
 
-/** One lesson, read like a short chapter: the teaching, its sources, a pause, a gesture and a prayer. */
+/** A full study chapter followed by its practice, reflection and completion. */
 @Composable
 internal fun ColumnScope.LessonPage(lesson: FormationLesson, state: GardenState, model: GardenViewModel?, onPray: () -> Unit, openLesson: (String?) -> Unit) {
     val colors = SertumTheme.colors
@@ -79,16 +77,12 @@ internal fun ColumnScope.LessonPage(lesson: FormationLesson, state: GardenState,
         SacredText(lesson.title, Modifier.padding(top = 10.dp).semantics { heading() }, type.display)
         SacredText(lesson.objective, Modifier.padding(top = 10.dp), type.whisper, colors.secondary)
         Row(Modifier.fillMaxWidth().padding(top = 14.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-            SacredText(if (done) "✓ Lição percorrida" else "Cerca de 5 min de leitura", Modifier.weight(1f), type.micro.copy(fontWeight = FontWeight.Medium), if (done) colors.accentInk else colors.muted)
+            SacredText(if (done) "✓ Lição percorrida" else "${lesson.study.sections.size} seções · Bíblia · atividades", Modifier.weight(1f), type.micro.copy(fontWeight = FontWeight.Medium), if (done) colors.accentInk else colors.muted)
             KeepToggle(kept) { model?.bookmark("lesson", lesson.id) }
         }
         SacredFlourish(Modifier.align(Alignment.CenterHorizontally).padding(vertical = 22.dp))
 
-        SacredText("Para compreender", Modifier.semantics { heading() }, type.section)
-        lesson.teaching.split("\n\n").forEach { paragraph ->
-            SacredText(paragraph.trim(), Modifier.padding(top = 12.dp), type.body.copy(fontSize = 16.sp, lineHeight = 27.sp))
-        }
-        FineArt.forLesson(lesson.id)?.let { SacredPainting(it, Modifier.padding(top = 26.dp), "lesson-painting") }
+        StudyReader(lesson)
         Sources(lesson, Modifier.padding(top = 24.dp))
 
         var answer by rememberSaveable(lesson.id) { mutableStateOf<Int?>(null) }
@@ -170,7 +164,7 @@ private fun Sources(lesson: FormationLesson, modifier: Modifier = Modifier) {
     }
 }
 
-/** A pause to remember: one question, two answers to choose between, and a gentle word after. */
+/** An applied comprehension check with three choices and explanatory feedback. */
 @Composable
 private fun PauseCard(lesson: FormationLesson, answer: Int?, onAnswer: (Int) -> Unit, modifier: Modifier = Modifier) {
     val colors = SertumTheme.colors
@@ -206,7 +200,7 @@ private fun PauseCard(lesson: FormationLesson, answer: Int?, onAnswer: (Int) -> 
                 Column(Modifier.padding(top = 16.dp).testTag("lesson-answer-explanation")) {
                     SacredText(if (right) "Isso mesmo." else "Vamos olhar de novo, com calma.", style = type.label, color = if (right) colors.accentInk else colors.ruby)
                     SacredText(lesson.explanation, Modifier.padding(top = 4.dp), type.body, colors.secondary)
-                    if (!right) SacredText("Escolha a outra resposta quando quiser. Sem pontuação.", Modifier.padding(top = 6.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.muted)
+                    if (!right) SacredText("Escolha outra resposta quando quiser. Sem pontuação.", Modifier.padding(top = 6.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.muted)
                 }
             }
         }
@@ -245,6 +239,9 @@ internal fun ColumnScope.JourneyPage(journey: PracticeJourney, model: GardenView
             }
         }
         SacredText(journey.references, Modifier.padding(top = 16.dp), type.micro.copy(fontWeight = FontWeight.Medium), colors.marian)
+        val visualLesson = when (journey.id) { "confession" -> "reconciliation"; "evening" -> "daily"; else -> journey.id }
+        ConceptMap(visualLesson)
+        if (journey.id == "mercy" || journey.id == "evening") TeachingIllustration(visualLesson)
         SacredPrimaryButton("Ir à oração", onPray, Modifier.padding(top = 28.dp), tag = "journey-pray")
         EditorialNote("journey-${journey.id}", "Revisão 1 · 13/11/2026", model, Modifier.padding(top = 32.dp))
     }

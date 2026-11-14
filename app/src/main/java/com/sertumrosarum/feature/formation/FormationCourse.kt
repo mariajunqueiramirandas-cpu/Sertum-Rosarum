@@ -75,7 +75,7 @@ internal fun ColumnScope.CoursePage(
     val page = SertumTheme.spacing.page
     // One frame for every painting, so changing place never moves the words beneath it.
     FormationPainting(when (place) { FormationPlace.QUESTIONS -> DevotionalIllustration.QUESTIONS; FormationPlace.LIFE -> DevotionalIllustration.CHARITY; else -> DevotionalIllustration.CATECHESIS }, "formation-hero")
-    PageWelcome("Aprender, rezar e viver.", "Um caminho pelos quatro pilares da fé, em leituras de cerca de cinco minutos, no seu ritmo.", Modifier.padding(top = 6.dp))
+    PageWelcome("Aprender, rezar e viver.", "Dezesseis capítulos pelos quatro pilares da fé: Bíblia, mapas visuais e situações da vida, para estudar no seu ritmo.", Modifier.padding(top = 6.dp))
     PathBeads(state, Modifier.padding(start = page, end = page, top = 22.dp))
     SacredTabs(FormationPlace.entries, place, { it.label }, onPlace, Modifier.padding(top = 18.dp), tag = { "formation-${it.label}" })
     Column(Modifier.fillMaxWidth().padding(horizontal = page).padding(top = 20.dp, bottom = 44.dp)) {
@@ -84,7 +84,7 @@ internal fun ColumnScope.CoursePage(
             FormationPlace.QUESTIONS -> QuestionsPlace(model, query, onQuery)
             FormationPlace.LIFE -> LifePlace(openJourney, openLesson)
         }
-        EditorialNote("formation", "Revisão 1 · 13/11/2026", model, Modifier.padding(top = 36.dp))
+        EditorialNote("formation", "Revisão 2 · 14/11/2026", model, Modifier.padding(top = 36.dp))
         var credits by rememberSaveable { mutableStateOf(false) }
         SacredTextLink("Obras de arte e créditos", { credits = true }, "formation-art-credits", Modifier.align(Alignment.CenterHorizontally))
         if (credits) FineArtCredits { credits = false }
@@ -123,7 +123,7 @@ private fun PathBeads(state: GardenState, modifier: Modifier = Modifier) {
 private fun LearnPlace(state: GardenState, query: String, onQuery: (String) -> Unit, openLesson: (String) -> Unit) {
     SacredSearchField(query, onQuery, "Buscar um tema", "formation-search")
     if (query.isNotBlank()) {
-        val found = FormationCatalog.lessons.filter { FormationCatalog.matches(query, "${it.title} ${it.teaching} ${it.keywords}") > 0 }
+        val found = FormationCatalog.lessons.filter { FormationCatalog.matches(query, it.searchableText) > 0 }
         SacredText("${found.size} ${if (found.size == 1) "lição encontrada" else "lições encontradas"}", Modifier.padding(top = 18.dp, bottom = 10.dp), SertumTheme.typography.micro, SertumTheme.colors.secondary)
         if (found.isEmpty()) QuietNote("Ainda não encontramos esse tema.", "Tente uma palavra como graça, oração, Missa ou perdão. As perguntas também podem ajudar.")
         else LessonList(found, state, null, openLesson)
@@ -161,7 +161,7 @@ private fun ContinueCard(lesson: FormationLesson, state: GardenState, modifier: 
                 DevotionalArtwork(lessonIllustration(lesson.id), Modifier.size(84.dp))
             }
             Row(Modifier.fillMaxWidth().padding(top = 18.dp), verticalAlignment = Alignment.CenterVertically) {
-                SacredText("${chapter.numeral} · ${chapter.verb} · cerca de 5 min", Modifier.weight(1f), type.micro.copy(fontWeight = FontWeight.Medium), colors.muted)
+                SacredText("${chapter.numeral} · ${chapter.verb} · cerca de ${lesson.readingMinutes} min", Modifier.weight(1f), type.micro.copy(fontWeight = FontWeight.Medium), colors.muted)
                 Row(
                     Modifier.clip(RoundedCornerShape(50)).background(colors.petal).padding(start = 18.dp, end = 14.dp, top = 9.dp, bottom = 9.dp),
                     verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
