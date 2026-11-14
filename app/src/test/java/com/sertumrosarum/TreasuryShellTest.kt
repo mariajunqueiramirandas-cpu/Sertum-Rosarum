@@ -19,6 +19,10 @@ import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.test.performImeAction
+import androidx.compose.ui.test.assertIsNotFocused
+import androidx.compose.ui.test.assertTextContains
+import androidx.compose.ui.test.performClick
 import com.sertumrosarum.domain.prayer.FixedPrayer
 import com.sertumrosarum.domain.treasury.TreasuryCatalog
 import org.junit.Assert.assertEquals
@@ -161,6 +165,26 @@ class TreasuryShellTest {
         compose.onNodeWithTag("term-title").assertTextEquals("“cheia de graça”")
         back()
         compose.onNodeWithTag("language-BILINGUAL").assertIsSelected()
+    }
+
+    @Test fun `submitted full text search opens the result and restores bilingual study and query`() {
+        tap("tab-TREASURY")
+        val search = compose.onNodeWithTag("treasury-search")
+        search.performTextInput("consubstancial")
+        search.assertTextEquals("consubstancial")
+        search.performImeAction()
+        search.assertIsNotFocused()
+        compose.onNodeWithTag("treasury-scroll").performScrollToNode(hasTestTag("prayer-credo-niceno"))
+        compose.onNodeWithTag("prayer-credo-niceno").assertIsDisplayed().performClick()
+        compose.onNodeWithTag("reading-title").assertTextEquals("Credo Niceno-Constantinopolitano")
+        tap("language-BILINGUAL"); tap("verse-0")
+        compose.onNodeWithTag("word-by-word").assertExists()
+        compose.activityRule.scenario.recreate()
+        compose.awaitSertumReady()
+        compose.onNodeWithTag("language-BILINGUAL").assertIsSelected()
+        compose.onNodeWithTag("word-by-word").assertExists()
+        back()
+        compose.onNodeWithTag("treasury-search").assertTextContains("consubstancial")
     }
 
     @Test fun `the twenty mysteries can be studied outside prayer`() {
