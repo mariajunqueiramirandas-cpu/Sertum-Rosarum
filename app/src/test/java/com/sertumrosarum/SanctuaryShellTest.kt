@@ -1,5 +1,8 @@
 package com.sertumrosarum
 
+import com.sertumrosarum.ensurePrayerTarget
+import com.sertumrosarum.openRosarySetup
+import com.sertumrosarum.awaitSertumReady
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.assertIsOff
@@ -23,8 +26,10 @@ import org.robolectric.annotation.GraphicsMode
 @Config(sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
 class SanctuaryShellTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    @org.junit.Before fun awaitLocalRecords() { compose.awaitSertumReady() }
 
     private fun tap(tag: String) {
+        compose.ensurePrayerTarget(tag)
         compose.onNodeWithTag(tag, useUnmergedTree = true).performSemanticsAction(SemanticsActions.OnClick)
         compose.waitForIdle()
     }

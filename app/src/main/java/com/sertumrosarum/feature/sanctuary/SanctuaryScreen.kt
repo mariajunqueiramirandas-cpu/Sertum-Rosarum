@@ -82,14 +82,14 @@ import java.util.Locale
 import kotlinx.coroutines.launch
 
 @Composable
-fun SanctuaryScreen(state: PrayerUiState, model: PrayerSessionViewModel) {
+fun SanctuaryScreen(state: PrayerUiState, model: PrayerSessionViewModel, onStart: () -> Unit = { model.start() }, personal: @Composable () -> Unit = {}, onOtherGuides: () -> Unit = { model.selectTab(SanctuaryTab.GUIDES) }) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     val scroll = rememberScrollState()
     val scope = rememberCoroutineScope()
     val startLabel = if (state.hasSession) "Tecer uma nova coroa" else "Tecer a coroa de hoje"
     val page = SertumTheme.spacing.page
-    BoxWithConstraints(Modifier.fillMaxSize().testTag("sanctuary")) {
+    BoxWithConstraints(Modifier.fillMaxSize().testTag("rosary-setup")) {
         // Let the greeting and mystery choices share the first view on denser displays.
         val gardenHeight = (maxHeight * .28f).coerceIn(164.dp, 280.dp)
         Column(Modifier.fillMaxSize()) {
@@ -125,8 +125,9 @@ fun SanctuaryScreen(state: PrayerUiState, model: PrayerSessionViewModel) {
                     Spacer(Modifier.height(16.dp))
                     MysteryCard(state.selectedSet)
                     PrayerModeSelector(state.selectedMode, model::selectPrayerMode, Modifier.padding(top = 24.dp))
+                    personal()
                     Row(
-                        Modifier.align(Alignment.CenterHorizontally).padding(top = 10.dp).clip(CircleShape).clickable(role = Role.Button) { model.selectTab(SanctuaryTab.GUIDES) }
+                        Modifier.align(Alignment.CenterHorizontally).padding(top = 10.dp).clip(CircleShape).clickable(role = Role.Button) { onOtherGuides() }
                             .testTag("other-guides").heightIn(min = 48.dp).padding(horizontal = 18.dp),
                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(7.dp),
                     ) {
@@ -167,20 +168,20 @@ fun SanctuaryScreen(state: PrayerUiState, model: PrayerSessionViewModel) {
                         RoseMark(Modifier.size(28.dp))
                         Column(Modifier.weight(1f)) {
                             SacredText("Sua oração espera por você", style = type.label)
-                            SacredText("${state.sessionGuide.title} · ${state.sessionMode.label} · ${state.stepIndex + 1}/${state.sequence.size}", style = type.micro.copy(fontWeight = FontWeight.Normal), color = colors.secondary)
+                            SacredText("${state.resumeDescription} · ${state.sessionMode.label}", style = type.micro.copy(fontWeight = FontWeight.Normal), color = colors.secondary)
                         }
                         SacredIcon(SacredIcon.CHEVRON, Modifier.size(15.dp), colors.marian)
                     }
                     Spacer(Modifier.height(12.dp))
                 }
-                SacredPrimaryButton(startLabel, model::start, tag = "start-rosary")
+                SacredPrimaryButton(startLabel, onStart, tag = "start-rosary")
             }
         }
     }
 }
 
 @Composable
-private fun SanctuaryHeader(mode: ThemeMode, onTheme: (ThemeMode) -> Unit) {
+internal fun SanctuaryHeader(mode: ThemeMode, onTheme: (ThemeMode) -> Unit) {
     val type = SertumTheme.typography
     val colors = SertumTheme.colors
     val density = LocalDensity.current

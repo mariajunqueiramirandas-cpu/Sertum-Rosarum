@@ -28,7 +28,7 @@ class PrayerSessionViewModelTest {
         restored.returnHome(); restored.start()
         assertEquals(com.sertumrosarum.domain.treasury.PrayerLanguage.LATIN, restored.state.value.language)
         restored.selectLanguage(com.sertumrosarum.domain.treasury.PrayerLanguage.BILINGUAL)
-        assertEquals(com.sertumrosarum.domain.treasury.PrayerLanguage.LATIN, restored.state.value.language)
+        assertEquals(com.sertumrosarum.domain.treasury.PrayerLanguage.BILINGUAL, restored.state.value.language)
     }
 
     @Test fun `today selects luminous mysteries on Thursday`() {

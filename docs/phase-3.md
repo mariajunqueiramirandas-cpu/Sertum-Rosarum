@@ -26,7 +26,7 @@ All ten `FixedPrayer` values have Latin text: the Sign of the Cross, offering, A
 
 The PT/LAT choice belongs to `PrayerSessionViewModel`, survives navigation and Android saved-state restoration, and remains selected through the session. The Latin text resets the reading scroll on a language switch so the new version starts visibly. Mystery announcements, meditations, catechesis and the additional prayers in extended guides remain in Portuguese; this control selects the language of the available prayer formula, rather than translating the entire interface or the chaplet catalog.
 
-`TreasuryViewModel` saves the query, category, open prayer identifier, language, glossary verse, explanation identifier, study set and mystery index through `SavedStateHandle`. It rejects obsolete identifiers and out-of-range indexes. It does not serialize the large content catalog into the saved-state bundle. Library scroll position is saveable and is preserved when returning from a prayer. Long-term preferences across a fresh app launch, history and the intention notebook remain Phase 4 work.
+`TreasuryViewModel` saves the query, category, open prayer identifier, language, glossary verse, explanation identifier, study set and mystery index through `SavedStateHandle`. It rejects obsolete identifiers and out-of-range indexes. It does not serialize the large content catalog into the saved-state bundle. Library scroll position is saveable and is preserved when returning from a prayer. Long-term preferences, history and the intention notebook are now delivered by [Phase 4](phase-4.md).
 
 ## Content and provenance
 

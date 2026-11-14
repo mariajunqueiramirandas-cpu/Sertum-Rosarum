@@ -10,6 +10,10 @@ import com.sertumrosarum.domain.prayer.PrayerMode
 import com.sertumrosarum.domain.prayer.PrayerPhase
 import com.sertumrosarum.domain.prayer.ThemedMeditations
 import com.sertumrosarum.feature.guides.PrayerGuide
+import com.sertumrosarum.data.garden.GardenRepository
+import java.util.UUID
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.time.Clock
 import java.time.LocalDate
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -19,8 +23,9 @@ enum class ThemeMode(val label: String) { SYSTEM("Sistema"), DAY("Dia"), VIGIL("
 /** [HOME] is the tabbed sanctuary; the other two are full-screen and hide the tabs. */
 enum class SanctuaryScreen { HOME, PRAYER, DELIVERED }
 enum class SanctuaryTab(val label: String, val caption: String) {
-    HOME("Início", "O santuário do dia"),
+    CATECHISM("Catequese", "Aprender, perguntar e viver a fé"),
     GUIDES("Roteiros", "Trilhas e terços"),
+    HOME("Início", "O centro do seu jardim"),
     TREASURY("Tesouro", "Orações e formação"),
     GARDEN("Meu Jardim", "Diário e intenções"),
 }
@@ -43,6 +48,9 @@ data class PrayerUiState(
     val eyesClosed: Boolean = false,
     val hapticsEnabled: Boolean = true,
     val language: PrayerLanguage = PrayerLanguage.PORTUGUESE,
+    val sessionId: String? = null,
+    val revision: Long = 0,
+    val offeredIntentions: List<OfferedIntention> = emptyList(),
 ) {
     val script get() = sessionGuide.script
     val sequence = script.build(sessionSet)
@@ -71,6 +79,11 @@ data class PrayerUiState(
     /** One line for the current Ave-Maria, shown only while the bead-by-bead rosary is on. */
     val beadMeditation get() = if (meditated && step.prayer == FixedPrayer.HAIL_MARY) contemplation?.beads?.getOrNull(step.beadIndex ?: -1) else null
     val catecheticalNote get() = if (sessionGuide.catechetical) MysteryContent.catecheticalNote(step) else null
+    val resumeDescription get() = buildString {
+        append(sessionGuide.title); append(" · ")
+        if (step.decadeIndex != null) append("${(step.decadeIndex ?: 0) + 1}º $groupLabel · ")
+        if (step.isSmallBead) append("$beadLabel ${(step.beadIndex ?: 0) + 1}/${groupBeads.size}") else append(step.title)
+    }
     val durationSeconds get() = ((finishedAt ?: startedAt ?: 0L) - (startedAt ?: 0L)).coerceAtLeast(0L) / 1000L
 }
 
@@ -108,13 +121,38 @@ class PrayerSessionViewModel(
             finishedAt = savedState["finishedAt"],
             eyesClosed = savedState["eyesClosed"] ?: false,
             hapticsEnabled = savedState["hapticsEnabled"] ?: true,
-            language = savedEnum<PrayerLanguage>("language")?.takeUnless { it == PrayerLanguage.BILINGUAL } ?: PrayerLanguage.PORTUGUESE,
+            sessionId = savedState["sessionId"], revision = savedState["revision"] ?: 0,
+            language = savedEnum<PrayerLanguage>("language") ?: PrayerLanguage.PORTUGUESE,
         ),
     )
     val state = mutableState.asStateFlow()
+    private var repository: GardenRepository? = null
+    suspend fun connect(repository: GardenRepository) {
+        if (this.repository != null) return
+        val (prefs, active) = withContext(Dispatchers.IO) { repository.preferences() to repository.dao.activeSession() }
+        var restored = mutableState.value.copy(themeMode = if (savedState.contains("themeMode")) mutableState.value.themeMode else enumOr(prefs.theme, ThemeMode.SYSTEM),
+            language = if (savedState.contains("language")) mutableState.value.language else enumOr(prefs.prayerLanguage, PrayerLanguage.PORTUGUESE),
+            selectedMode = if (savedState.contains("selectedMode")) mutableState.value.selectedMode else enumOr(prefs.mode, PrayerMode.SOLO), hapticsEnabled = if (savedState.contains("hapticsEnabled")) mutableState.value.hapticsEnabled else prefs.haptics, meditated = if (savedState.contains("meditated")) mutableState.value.meditated else prefs.meditated)
+        // The durable snapshot is authoritative on a cold launch; Android state keeps an open screen on rotation.
+        val androidSaved = savedState.get<String>("durableSnapshot")?.let { restorePrayer(it, restored) }
+        val diskSaved = active?.snapshot?.let { restorePrayer(it, restored) }
+        val latest = when {
+            androidSaved == null -> diskSaved
+            diskSaved == null -> androidSaved
+            androidSaved.sessionId == diskSaved.sessionId -> if (androidSaved.revision >= diskSaved.revision) androidSaved else diskSaved
+            (androidSaved.startedAt ?: 0L) > (diskSaved.startedAt ?: 0L) -> androidSaved
+            else -> diskSaved
+        }
+        if (latest != null) restored = latest.copy(screen = if (latest.sessionId == androidSaved?.sessionId) restored.screen else SanctuaryScreen.HOME)
+        if (restored.startedAt != null && restored.sessionId == null) restored = restored.copy(sessionId = UUID.randomUUID().toString())
+        mutableState.value = restored
+        this.repository = repository
+        if (restored.sessionId != null) repository.enqueue { repository.persistPrayer(restored) }
+    }
+
 
     private fun update(transform: (PrayerUiState) -> PrayerUiState) {
-        val next = transform(mutableState.value)
+        val next = transform(mutableState.value).copy(revision = mutableState.value.revision + 1)
         mutableState.value = next
         savedState["selectedSet"] = next.selectedSet.name
         savedState["selectionDate"] = next.today.toString()
@@ -132,9 +170,12 @@ class PrayerSessionViewModel(
         savedState["eyesClosed"] = next.eyesClosed
         savedState["hapticsEnabled"] = next.hapticsEnabled
         savedState["language"] = next.language.name
+        savedState["sessionId"] = next.sessionId; savedState["revision"] = next.revision
+        if (next.sessionId != null) savedState["durableSnapshot"] = next.snapshot()
+        repository?.let { repo -> repo.enqueue { repo.persistPrayer(next) } }
     }
 
-    fun selectLanguage(language: PrayerLanguage) = update { if (language != PrayerLanguage.BILINGUAL) it.copy(language = language) else it }
+    fun selectLanguage(language: PrayerLanguage) = update { it.copy(language = language) }
     fun selectMystery(set: MysterySet) = update { it.copy(selectedSet = set) }
     fun selectPrayerMode(mode: PrayerMode) = update { it.copy(selectedMode = mode) }
     fun refreshDay() {
@@ -149,9 +190,11 @@ class PrayerSessionViewModel(
     fun start() = start(PrayerGuide.TRADITIONAL)
 
     /** Begins a crown with its own sequence and keeps the previous tab for the return. */
-    fun start(guide: PrayerGuide) {
+    fun start(guide: PrayerGuide) = start(guide, emptyList())
+
+    fun start(guide: PrayerGuide, intentions: List<OfferedIntention>) {
         update {
-            it.copy(screen = SanctuaryScreen.PRAYER, sessionSet = it.selectedSet, sessionMode = it.selectedMode, sessionGuide = guide, stepIndex = 0, startedAt = clock.millis(), finishedAt = null)
+            it.copy(sessionId = UUID.randomUUID().toString(), offeredIntentions = intentions.distinctBy { item -> item.id }, screen = SanctuaryScreen.PRAYER, sessionSet = it.selectedSet, sessionMode = it.selectedMode, sessionGuide = guide, stepIndex = 0, startedAt = clock.millis(), finishedAt = null)
         }
     }
     fun resume() = update { if (it.hasSession) it.copy(screen = SanctuaryScreen.PRAYER) else it }

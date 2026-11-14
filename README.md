@@ -10,7 +10,7 @@ A quiet Marian garden for the Holy Rosary.<br />
 Native Android, original botanical artwork, and a complete prayer experience that works offline.
 
 [![Android CI](https://github.com/mariajunqueiramirandas-cpu/Sertum-Rosarum/actions/workflows/android-ci.yml/badge.svg)](https://github.com/mariajunqueiramirandas-cpu/Sertum-Rosarum/actions/workflows/android-ci.yml)
-![Android 13+](https://img.shields.io/badge/Android-13%2B-789A81?labelColor=172C29)
+![Android 8+](https://img.shields.io/badge/Android-8%2B-789A81?labelColor=172C29)
 ![Kotlin 2.1.20](https://img.shields.io/badge/Kotlin-2.1.20-AB625C?labelColor=172C29)
 ![Compose Foundation](https://img.shields.io/badge/Compose-Foundation-BA9655?labelColor=172C29)
 
@@ -22,7 +22,7 @@ Native Android, original botanical artwork, and a complete prayer experience tha
 
 ## The experience
 
-Open Sertum and arrive in a small garden: warm cream, sage leaves, clay-colored roses, and Mary holding the Child. Choose the mysteries, settle into prayer, and watch each bead blossom. After dusk, the same garden becomes a forest sanctuary lit by a crescent moon.
+Open Sertum and arrive in a small garden: warm cream, sage leaves, clay-colored roses, and Mary holding the Child. Início connects the whole app: Catequese, prayer guides, the Treasury and your personal garden. Prepare the rosary in Roteiros, settle into prayer, and watch each bead blossom. After dusk, the same garden becomes a forest sanctuary lit by a crescent moon.
 
 *Sertum Rosarum* means “crown of roses.” That image shapes the whole app: each prayer becomes a rose, five mysteries form a crown, and the completed rosary is gently offered at the end.
 
@@ -139,7 +139,7 @@ All ten Roteiros guides can be prayed offline. Each of the twenty rosary mysteri
 
 | Phase 2 capability | Delivered behavior |
 | --- | --- |
-| Four-place navigation | Início, Roteiros, Tesouro, and Meu Jardim; navigation hides during prayer. Meu Jardim remains the planned Phase 4 placeholder. |
+| Five-place navigation | Catequese, Roteiros, a central Início rose, Tesouro, and Meu Jardim; navigation hides during prayer. Meu Jardim saves intentions, offered crowns, journal, bookmarks and formation progress. |
 | Mysteries in four dimensions | Twenty complete contemplations and 200 bead meditations, accessible before and during each rosary decade. |
 | Rosary scripts | Traditional, catechetical, complete with all 67 responsive litany invocations, and themed rosaries for family, the sick, and peace. |
 | Divine Mercy | Five groups of Eterno Pai and ten Passion invocations, followed by three Deus Santo prayers. |
@@ -154,8 +154,8 @@ See [Phase 2 implementation and content notes](docs/phase-2.md) for the exact st
 
 ### Arrive, contemplate, pray, and offer
 
-1. **Find a little quiet.** The sanctuary shows today's date and automatically selects the traditional mystery set. Day, Vigil, and System appearance are available from the custom light control.
-2. **Choose how to pray.** Start **A sós** (solo, the default) or **Em grupo**, from the sanctuary or any guide sheet. On the sanctuary, the small text choices sit below the mysteries and scroll with the page; a subtle downward chevron reveals more content when touched and disappears at the end. The prayer action stays within reach. Solo prayer uses a personal offering and thanksgiving, including themed intentions. The Our Father, Hail Mary, and other shared traditional prayers keep their familiar wording. Switch between Gozosos, Luminosos, Dolorosos, and Gloriosos; each set includes its five mysteries, Scripture references, and spiritual fruits.
+1. **Find a little quiet.** Início shows today's date and opens every part of the app. Roteiros offers rosary preparation with the traditional mystery set selected automatically. Day, Vigil, and System appearance are available from the custom light control.
+2. **Choose how to pray.** Start **A sós** (solo, the default) or **Em grupo**, from rosary preparation in Roteiros or any guide sheet. In rosary preparation, the small text choices sit below the mysteries and scroll with the page; a subtle downward chevron reveals more content when touched and disappears at the end. The prayer action stays within reach. Solo prayer uses a personal offering and thanksgiving, including themed intentions. The Our Father, Hail Mary, and other shared traditional prayers keep their familiar wording. Switch between Gozosos, Luminosos, Dolorosos, and Gloriosos; each set includes its five mysteries, Scripture references, and spiritual fruits.
 3. **Pray the whole rosary.** Follow every opening prayer, all five decades, and the closing thanksgiving and Salve Rainha. The sequence contains **59 physical beads across 80 prayer and announcement steps**.
 4. **Follow the roses.** Beads bloom with a gentle spring animation. Move forward or backward, tap a particular bead, or select a mystery directly from the botanical arc.
 5. **Offer the crown.** Fifty flowers surround a central rose. The closing screen shows elapsed prayer time and a peaceful return to the sanctuary.
@@ -202,7 +202,7 @@ Haptics distinguish a small bead, a prayer or decade boundary, and the completed
 
 Returning to the sanctuary keeps the active crown available to continue. `SavedStateHandle` preserves the prayer position, mystery set, prayer mode, appearance selection, and tactile preferences through Android activity and saved-state recreation. Choosing a mode for a new crown keeps the paused crown's original mode; sessions saved before this choice existed retain their group wording. In solo mode, the complete guide invites you to pray both the litany's invocation and response.
 
-Durable history, a persistent preference store, and the intention notebook belong to Phase 4. They are separate from the current session recovery.
+Room and DataStore now preserve prayer sessions, preferences, intentions and crown history across fresh launches. Meu Jardim also holds personal reflections, bookmarks and learning progress. See [Phase 4](docs/phase-4.md).
 
 ## Designed as a quiet garden
 
@@ -239,7 +239,7 @@ See [build performance and releases](docs/build-and-releases.md) for memory budg
 
 - **JDK 17**.
 - **Android SDK 35**, including Build Tools and Platform Tools.
-- An **Android 13 / API 33 or newer** device or emulator to run the app and instrumented tests.
+- An **Android 8 / API 26 or newer** device or emulator to run the app and instrumented tests.
 - `ANDROID_HOME` pointing to your SDK, or an untracked `local.properties` containing `sdk.dir=/path/to/Android/Sdk`.
 
 ### Build and install
@@ -261,13 +261,13 @@ The debug APK is written to `app/build/outputs/apk/debug/app-debug.apk`. Build t
 
 ## Validation
 
-The JVM suite covers the prayer engine, all ten scripts, complete mystery content, saved-state restoration, solo/group prayer modes, and real Compose activity interactions through Robolectric. Lint reports dependency-version and catalog notices only. The device UI suite covers the rosary, mode selection and restoration, and reading accessibility; run it separately on an Android 13+ device or emulator.
+The JVM suite covers the prayer engine, all ten scripts, complete mystery content, saved-state restoration, solo/group prayer modes, and real Compose activity interactions through Robolectric. Lint reports dependency-version and catalog notices only. The device UI suite covers the rosary, mode selection and restoration, and reading accessibility; run it separately on an Android 8+ device or emulator.
 
 ```bash
 # Build, verify the prayer engine and session state, and run lint.
 ./gradlew assembleDebug testDebugUnitTest lintDebug
 
-# Run the complete device UI suite with a connected Android 13+ device.
+# Run the complete device UI suite with a connected Android 8+ device.
 ./gradlew connectedDebugAndroidTest
 ```
 
@@ -309,7 +309,7 @@ flowchart LR
 | Sanctuary | [`feature/sanctuary`](app/src/main/java/com/sertumrosarum/feature/sanctuary) | Greeting, garden, mystery controls, appearance, and session continuation |
 | Roteiros | [`feature/guides`](app/src/main/java/com/sertumrosarum/feature/guides) | The guide catalogue's interface copy and crown shapes, the three shelves, and each guide's sheet |
 | Tesouro | [`feature/treasury`](app/src/main/java/com/sertumrosarum/feature/treasury), [`domain/treasury`](app/src/main/java/com/sertumrosarum/domain/treasury) | Offline library, full-text search, saved reading state, Portuguese/Latin prayer readings, 78 explanations and the twenty mysteries. [Implementation and sources](docs/phase-3.md) |
-| Place in bud | [`feature/garden`](app/src/main/java/com/sertumrosarum/feature/garden) | The Meu Jardim tab, ready for Phase 4 |
+| Place in bud | [`feature/garden`](app/src/main/java/com/sertumrosarum/feature/garden) | Local intentions, crowns, journal, bookmarks and learning history |
 | Design system | [`ui/theme`](app/src/main/java/com/sertumrosarum/ui/theme), [`ui/components`](app/src/main/java/com/sertumrosarum/ui/components) | Custom tokens, fonts, controls, and press feedback |
 | Original artwork | [`ui/canvas`](app/src/main/java/com/sertumrosarum/ui/canvas) | Marian garden, roses, living bead arcs, and the completed crown |
 | Tactile feedback | [`core/haptics`](app/src/main/java/com/sertumrosarum/core/haptics) | Android `VibratorManager` and differentiated `VibrationEffect` patterns |
@@ -329,14 +329,14 @@ Versions live in [`gradle/libs.versions.toml`](gradle/libs.versions.toml). The a
 
 ## Roadmap
 
-The current app completes **Phases 1–3**. Phases 4 and 5 remain planned.
+The current app completes **Phases 1–4**. Phase 5 (Lumen AI) remains planned.
 
 | Phase | Milestone | Status |
 | --- | --- | --- |
 | **1** | Garden sanctuary, custom design system, complete rosary counter, living roses, tactile navigation, and crown delivery | **Implemented** |
 | **2** | Four-dimensional mysteries, bead-by-bead meditations, prayer scripts, and devotional chaplets | **Implemented** |
 | **3** | Prayer treasury, Portuguese / Latin mode, prayer annotations, and a mystery study guide | **Implemented** |
-| **4** | Persistent intentions, prayer history, preference storage, and the personal garden | Planned |
+| **4** | Persistent intentions, crown history, journal, preferences, bookmarks and introductory formation | **Implemented** |
 | **5** | Lumen catechist and custom rosary supplements with doctrinal guardrails | Planned |
 
 See [`phases.md`](phases.md) for the milestone definitions and acceptance criteria.
@@ -366,3 +366,13 @@ The home garden uses original model-generated sacred paintings, inspired by the 
 *Uma oração de cada vez. Sem pressa.*
 
 </div>
+
+## Phase 4: a garden that remembers
+
+The app-wide Início dashboard connects learning, prayer, the Treasury and the personal garden. Five fixed destinations place Catequese on the far left and the prominent Início rose in the center. Full rosary preparation now lives in Roteiros.
+
+Meu Jardim now stores intentions, thanksgiving notes, offered crowns, personal reflections and bookmarks. Choose optional intentions before prayer and revisit each offered crown in an adaptive month/week garden. Prayer position and preferences survive fresh launches.
+
+Caminho da fé adds sixteen lessons across the four pillars of the Catechism, twelve searchable questions, and four practical journeys for Mass, confession, reviewing the day and works of mercy. Learning reflections and practical actions remain private on the device. Editorial content carries references, revision dates and an honest pending theological-review status.
+
+See [Phase 4 implementation and verification](docs/phase-4.md). Connected source reading and guided audio are outside this phase.

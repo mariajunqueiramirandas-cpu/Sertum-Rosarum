@@ -174,6 +174,8 @@ Complete the **Tesouro (Orações e Formação)** tab, turning the app into a ri
 
 ## Phase 4: My Garden — Spiritual Journal, Intentions & Crown History (`Meu Jardim`)
 
+**Implemented.** The app-wide Início hub and central rose anchor five destinations, with Catequese on the far left. Room and DataStore provide durable prayer recovery, preferences, intention offerings, crown history, journal and bookmarks. The extension adds sixteen introductory lessons, twelve curated answers and four practical journeys, with saved learning and editorial feedback. See [implementation and verification](docs/phase-4.md). Connected source reading and guided audio are excluded.
+
 ### Goal & Milestone Vision
 Introduce local persistence (`Room` + `DataStore`) and build the **Meu Jardim (Diário e Intenções)** tab. In keeping with the "Silent Sanctuary" philosophy, `Meu Jardim` rejects anxious streak-based gamification (no punitive red alerts or broken streak counters) and instead nurtures **peaceful spiritual constancy** by cultivating a visual garden of completed Crowns of Roses and a sacred notebook of personal and family intentions.
 

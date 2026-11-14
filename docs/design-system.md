@@ -134,3 +134,10 @@ A crown of roses woven with leaves surrounds a large central blossom or the chos
 The [POCO X8 Pro display notes](poco-x8-pro.md) record the device specifications, adaptive margins, and portrait, enlarged-text, and landscape validation profiles.
 
 Implementation lives in `ui/theme`, `ui/components`, `ui/canvas`, `feature/sanctuary`, `feature/guides`, `feature/treasury`, `feature/garden`, and `feature/prayer`.
+
+
+## Five destinations and the central home
+
+The current app uses Catequese, Roteiros, Início, Tesouro and Meu Jardim, in that order. Início is a distinct rose in a petal-colored circle at the physical center. The four surrounding destinations retain the garden's quiet icon treatment. At larger text scales, show the selected destination label at full width beneath the five accessible icon targets rather than breaking words or moving the center button. Navigation disappears during prayer.
+
+Início is the whole app's dashboard: a compact garden and greeting, responsive destination cards, prayer recovery, continued formation and personal intentions. Rosary preparation and its mystery selector are within Roteiros. The first-visit invitation follows the destination cards so it does not displace the app's primary routes.

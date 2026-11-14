@@ -35,7 +35,7 @@ import com.sertumrosarum.ui.theme.SertumTheme
  * Its sheets are raised by [TreasurySheets], which the app places over the tabs.
  */
 @Composable
-fun TreasuryScreen(state: TreasuryUiState, actions: TreasuryActions) {
+fun TreasuryScreen(state: TreasuryUiState, actions: TreasuryActions, formation: @Composable () -> Unit = {}, bookmark: @Composable () -> Unit = {}) {
     // The library keeps its place while a prayer is read.
     val libraryScroll = rememberLazyListState()
     var listedQuery by rememberSaveable { mutableStateOf(state.query) }
@@ -52,8 +52,8 @@ fun TreasuryScreen(state: TreasuryUiState, actions: TreasuryActions) {
     BackHandler(state.place != TreasuryPlace.LIBRARY && state.term == null && state.studyMystery == null) { actions.backToLibrary() }
     Crossfade(state.place, animationSpec = tween(if (SertumTheme.reducedMotion) 0 else 320), label = "treasury-place") { place ->
         when (place) {
-            TreasuryPlace.LIBRARY -> PrayerLibrary(state, actions, libraryScroll)
-            TreasuryPlace.READING -> if (reading != null) key(reading.id) { PrayerReadingPage(reading, state.language, state.openVerse, actions) }
+            TreasuryPlace.LIBRARY -> PrayerLibrary(state, actions, libraryScroll, formation)
+            TreasuryPlace.READING -> if (reading != null) key(reading.id) { PrayerReadingPage(reading, state.language, state.openVerse, actions, bookmark) }
             TreasuryPlace.MYSTERIES -> MysteriesStudyPage(state.studySet, actions)
         }
     }

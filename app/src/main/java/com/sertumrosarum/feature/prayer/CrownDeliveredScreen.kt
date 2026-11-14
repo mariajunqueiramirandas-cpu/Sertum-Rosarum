@@ -11,7 +11,10 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
+import com.sertumrosarum.feature.garden.GardenField
+import com.sertumrosarum.feature.garden.QuietAction
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -30,7 +33,7 @@ import com.sertumrosarum.ui.theme.SertumTheme
 import java.util.Locale
 
 @Composable
-fun CrownDeliveredScreen(state: PrayerUiState, onReturn: () -> Unit) {
+fun CrownDeliveredScreen(state: PrayerUiState, onReturn: () -> Unit, onReflect: ((String) -> Unit)? = null) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     Column(Modifier.fillMaxSize().testTag("crown-delivered").padding(horizontal = SertumTheme.spacing.page), horizontalAlignment = Alignment.CenterHorizontally) {
@@ -43,6 +46,15 @@ fun CrownDeliveredScreen(state: PrayerUiState, onReturn: () -> Unit) {
             SacredText(state.sessionGuide.title, Modifier.padding(top = 10.dp).testTag("delivered-guide"), type.micro, colors.accentInk, TextAlign.Center)
             SacredText(if (state.sessionMode == PrayerMode.SOLO) "Sua Coroa de Rosas\nfoi entregue" else "Nossa Coroa de Rosas\nfoi entregue", Modifier.padding(top = 12.dp), type.display, align = TextAlign.Center)
             SacredText("Que a paz desta oração\nacompanhe o seu dia.", Modifier.padding(top = 14.dp), type.whisper, colors.secondary, TextAlign.Center)
+            state.offeredIntentions.forEach { intention ->
+                SacredText((if (intention.thanksgiving) "Em ação de graças: " else "Por ") + intention.title, Modifier.padding(top = 12.dp), type.body, colors.accentInk, TextAlign.Center)
+            }
+            if (onReflect != null) {
+                var reflection by rememberSaveable(state.sessionId) { mutableStateOf("") }
+                var saved by rememberSaveable(state.sessionId) { mutableStateOf(false) }
+                GardenField("Uma palavra para guardar (opcional)", reflection, { reflection = it; saved = false }, "delivered-reflection", multiline = true)
+                if (reflection.isNotBlank()) QuietAction(if (saved) "Reflexão guardada no Jardim" else "Guardar no Jardim", { if (!saved) { onReflect(reflection); saved = true } }, "save-delivered-reflection")
+            }
             SacredFlourish(Modifier.padding(top = 24.dp, bottom = 20.dp))
             // A quiet record of the time given, with no score to keep.
             Column(

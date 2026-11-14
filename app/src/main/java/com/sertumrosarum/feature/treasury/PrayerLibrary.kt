@@ -61,7 +61,7 @@ import com.sertumrosarum.ui.theme.SertumTheme
 
 /** The library: a search, the moments of life, and one shelf for each moment that has prayers. */
 @Composable
-internal fun PrayerLibrary(state: TreasuryUiState, actions: TreasuryActions, scroll: LazyListState) {
+internal fun PrayerLibrary(state: TreasuryUiState, actions: TreasuryActions, scroll: LazyListState, formation: @Composable () -> Unit = {}) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     Column(Modifier.fillMaxSize().testTag("treasury")) {
@@ -84,6 +84,7 @@ internal fun PrayerLibrary(state: TreasuryUiState, actions: TreasuryActions, scr
                     }
                 }
             }
+            item("formation-entry") { formation() }
             item("search") { PrayerSearchField(state.query, actions::search, Modifier.padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, top = 22.dp)) }
             item("categories") { CategoryChoices(state.category, actions::selectCategory, Modifier.padding(top = 4.dp)) }
             if (state.query.isBlank() && state.category == null) {

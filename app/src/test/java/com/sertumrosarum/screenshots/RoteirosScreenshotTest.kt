@@ -1,5 +1,8 @@
 package com.sertumrosarum.screenshots
 
+import com.sertumrosarum.ensurePrayerTarget
+import com.sertumrosarum.openRosarySetup
+import com.sertumrosarum.awaitSertumReady
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
@@ -26,13 +29,14 @@ import org.robolectric.annotation.GraphicsMode
 @Config(sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
 class RoteirosScreenshotTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    @org.junit.Before fun awaitLocalRecords() { compose.awaitSertumReady() }
 
     private fun shot(name: String) {
         compose.waitForIdle()
         compose.onRoot().captureRoboImage("build/outputs/roborazzi/$name.png")
     }
 
-    private fun tap(tag: String) = compose.onNodeWithTag(tag).performSemanticsAction(SemanticsActions.OnClick)
+    private fun tap(tag: String) { compose.ensurePrayerTarget(tag); compose.onNodeWithTag(tag).performSemanticsAction(SemanticsActions.OnClick) }
 
     private fun appearance(mode: String) {
         compose.onNodeWithTag("theme-menu").performClick()
@@ -162,13 +166,13 @@ class RoteirosScreenshotTest {
 
     @Test fun scrolledHeaderDay() {
         appearance("DAY")
-        compose.onNodeWithTag("sanctuary-scroll").performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, 192f) }
+        compose.onNodeWithTag("home-scroll").performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, 192f) }
         shot("sanctuary-scrolled-day")
     }
 
     @Test fun scrolledHeaderVigil() {
         appearance("VIGIL")
-        compose.onNodeWithTag("sanctuary-scroll").performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, 192f) }
+        compose.onNodeWithTag("home-scroll").performSemanticsAction(SemanticsActions.ScrollBy) { it(0f, 192f) }
         shot("sanctuary-scrolled-vigil")
     }
 }

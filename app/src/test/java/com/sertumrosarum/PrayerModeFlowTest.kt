@@ -1,5 +1,8 @@
 package com.sertumrosarum
 
+import com.sertumrosarum.ensurePrayerTarget
+import com.sertumrosarum.openRosarySetup
+import com.sertumrosarum.awaitSertumReady
 import androidx.compose.ui.semantics.SemanticsActions
 import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertIsDisplayed
@@ -27,8 +30,10 @@ import org.robolectric.annotation.GraphicsMode
 @Config(sdk = [35], qualifiers = "w411dp-h891dp-xxhdpi")
 class PrayerModeFlowTest {
     @get:Rule val compose = createAndroidComposeRule<MainActivity>()
+    @org.junit.Before fun awaitLocalRecords() { compose.awaitSertumReady(); compose.openRosarySetup() }
 
     private fun tap(tag: String) {
+        compose.ensurePrayerTarget(tag)
         val node = compose.onNodeWithTag(tag)
         if (tag.startsWith("prayer-mode-")) node.performScrollTo()
         node.performClick()
@@ -61,6 +66,7 @@ class PrayerModeFlowTest {
         tap("start-rosary")
         tap("next-prayer")
         compose.activityRule.scenario.recreate()
+        compose.awaitSertumReady()
         compose.onNodeWithTag("session-mode").assertTextEquals("Oração em grupo")
         compose.onNodeWithTag("prayer-text").assertTextEquals(FixedPrayer.OFFERING.text)
         tap("pause-prayer")

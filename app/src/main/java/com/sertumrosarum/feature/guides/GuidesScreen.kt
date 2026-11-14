@@ -47,13 +47,14 @@ import com.sertumrosarum.ui.theme.SertumTheme
 
 /** Roteiros: every way of praying the app knows, on three shelves. Touching one opens its sheet. */
 @Composable
-fun GuidesScreen(onOpen: (PrayerGuide) -> Unit) {
+fun GuidesScreen(onSetup: () -> Unit = {}, onOpen: (PrayerGuide) -> Unit) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     SanctuaryPage(SanctuaryTab.GUIDES.label, "guides") {
         DevotionalArtwork(DevotionalIllustration.PRAYER_BOOK, Modifier.align(Alignment.CenterHorizontally).padding(top = 12.dp).size(width = 144.dp, height = 88.dp))
         PageWelcome("Um caminho para cada oração.", "Escolha o jeito de rezar que cabe no seu dia.", Modifier.padding(top = 14.dp))
 
+        com.sertumrosarum.ui.components.SacredPrimaryButton("Preparar o terço de hoje", onSetup, Modifier.padding(horizontal = SertumTheme.spacing.page, vertical = 18.dp), tag = "rosary-setup-open")
         ShelfHeading(GuideShelf.ROSARY, Modifier.padding(top = 30.dp))
         GuideList(GuideShelf.ROSARY, onOpen)
 

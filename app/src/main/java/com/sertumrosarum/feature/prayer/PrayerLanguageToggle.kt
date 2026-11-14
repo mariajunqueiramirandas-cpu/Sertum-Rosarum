@@ -1,5 +1,7 @@
 package com.sertumrosarum.feature.prayer
 
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Row
@@ -30,8 +32,8 @@ import com.sertumrosarum.ui.theme.SertumTheme
 internal fun PrayerLanguageToggle(selected: PrayerLanguage, onSelect: (PrayerLanguage) -> Unit, modifier: Modifier = Modifier) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
-    Row(modifier.selectableGroup().testTag("rosary-language"), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-        listOf(PrayerLanguage.PORTUGUESE, PrayerLanguage.LATIN).forEach { language ->
+    Row(modifier.horizontalScroll(rememberScrollState()).selectableGroup().testTag("rosary-language"), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+        PrayerLanguage.entries.forEach { language ->
             val active = selected == language
             Row(
                 Modifier.clip(RoundedCornerShape(12.dp)).selectable(active, role = Role.RadioButton, onClick = { onSelect(language) })
@@ -39,7 +41,7 @@ internal fun PrayerLanguageToggle(selected: PrayerLanguage, onSelect: (PrayerLan
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(6.dp),
             ) {
                 Box(Modifier.size(12.dp)) { if (active) SacredIcon(SacredIcon.CHECK, Modifier.size(12.dp), colors.secondary) }
-                SacredText(language.label, style = type.micro.copy(fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal), color = if (active) colors.ink else colors.secondary)
+                SacredText(if (language == PrayerLanguage.BILINGUAL) "PT / LAT" else language.label, style = type.micro.copy(fontWeight = if (active) FontWeight.SemiBold else FontWeight.Normal), color = if (active) colors.ink else colors.secondary)
             }
         }
     }

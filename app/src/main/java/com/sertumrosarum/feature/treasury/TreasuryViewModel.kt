@@ -24,6 +24,14 @@ class TreasuryViewModel(private val saved: SavedStateHandle) : ViewModel(), Trea
         studySet = set, studyMystery = saved.get<Int>("studyMystery")?.takeIf { it in set.mysteries.indices },
     ))
     val state = mutableState.asStateFlow()
+    private var repository: com.sertumrosarum.data.garden.GardenRepository? = null
+    suspend fun connect(repo: com.sertumrosarum.data.garden.GardenRepository) {
+        if (repository != null) return
+        val prefs = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) { repo.preferences() }
+        if (!saved.contains("language")) mutableState.value = mutableState.value.copy(language = enumValues<PrayerLanguage>().firstOrNull { it.name == prefs.readingLanguage } ?: PrayerLanguage.PORTUGUESE)
+        repository = repo
+    }
+
 
     private fun update(transform: (TreasuryUiState) -> TreasuryUiState) {
         val state = transform(mutableState.value)
@@ -38,7 +46,10 @@ class TreasuryViewModel(private val saved: SavedStateHandle) : ViewModel(), Trea
         val canonical = TreasuryCatalog.find(prayer.id) ?: return
         update { it.copy(place = TreasuryPlace.READING, reading = canonical, openVerse = null, term = null, studyMystery = null) }
     }
-    override fun selectLanguage(language: PrayerLanguage) = update { it.copy(language = language, openVerse = null, term = null) }
+    override fun selectLanguage(language: PrayerLanguage) {
+        update { it.copy(language = language, openVerse = null, term = null) }
+        repository?.let { repo -> repo.enqueue { repo.storeReadingLanguage(language.name) } }
+    }
     override fun toggleVerse(index: Int) = update {
         if (it.reading?.verses?.getOrNull(index)?.glosses?.isNotEmpty() == true) it.copy(openVerse = index.takeUnless { n -> n == it.openVerse }) else it
     }

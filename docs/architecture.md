@@ -2,10 +2,12 @@
 
 > **Namespace:** `com.sertumrosarum`  
 > **Target / Compile SDK:** `35` (Android 15)  
-> **Minimum SDK:** `33` (Android 13+)  
+> **Minimum SDK:** `26` (Android 8+)
 > **Language & UI:** Kotlin 2.1 + Jetpack Compose (`ui` + `foundation` only, no Material)
 
 ---
+
+> **Current navigation:** Catequese · Roteiros · Início (central rose) · Tesouro · Meu Jardim. Início is the whole-app dashboard; full rosary preparation is under Roteiros. See [Phase 4](phase-4.md).
 
 ## 1. Architectural Principles
 
@@ -57,7 +59,7 @@ com.sertumrosarum/
 ├── MainActivity.kt                  # Edge-to-edge host activity
 ├── SertumApp.kt                     # Root composable, SertumTheme & Navigation host
 ├── core/
-│   ├── haptics/                     # HapticFeedbackController (Android 13+ VibrationEffect)
+│   ├── haptics/                     # HapticFeedbackController (API 26+ VibrationEffect, with API 31 service selection)
 │   └── time/                        # Clock & Day-of-week liturgical utilities
 ├── ui/
 │   ├── theme/                       # SertumTheme, SertumColors, SertumTypography, MysteryAtmosphere
@@ -161,3 +163,6 @@ GitHub Actions (`.github/workflows/android-ci.yml`) runs `./gradlew testDebugUni
   * **ViewModel State Tests**: Test `SanctuaryViewModel`, `PrayerViewModel`, `TreasuryViewModel`, and `GardenViewModel` using `kotlinx-coroutines-test`.
 * **Compose UI & Instrumentation Tests (`app/src/androidTest`)**:
   * Verify rendering of the Sanctuary screen, starting a Rosary, counting through beads via button and Eyes-Closed touch area, toggling Latin mode, and reaching the `"Sua Coroa de Rosas foi entregue"` completion screen.
+
+
+The implemented Phase 4 persistence and formation packages are documented in [Phase 4](phase-4.md). The Lumen repository and service diagrams above describe the planned Phase 5.
