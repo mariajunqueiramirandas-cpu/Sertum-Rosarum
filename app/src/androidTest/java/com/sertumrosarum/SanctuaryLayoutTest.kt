@@ -42,6 +42,8 @@ class SanctuaryLayoutTest {
                 Box(Modifier.width(width.value).fillMaxHeight()) { SertumApp(model) }
             }
         }
+        // The app now opens on the home hub; the mystery selector lives in the rosary setup.
+        compose.openRosarySetup()
         for (phoneWidth in listOf(320.dp, 412.dp)) {
             for (scale in listOf(1f, 1.35f)) {
                 compose.runOnIdle {
