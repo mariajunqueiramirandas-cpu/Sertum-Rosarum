@@ -7,6 +7,8 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import com.sertumrosarum.ui.canvas.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
 import com.sertumrosarum.domain.formation.*
@@ -21,15 +23,18 @@ fun FormationScreen(model: GardenViewModel?, state: GardenState, initialLesson: 
     var query by rememberSaveable { mutableStateOf("") }
     var pillar by rememberSaveable { mutableStateOf<String?>(null) }
     var journeyId by rememberSaveable { mutableStateOf<String?>(null) }
+    val contentScroll = rememberScrollState()
+    LaunchedEffect(lessonId, journeyId) { contentScroll.scrollTo(0) }
     val lesson = FormationCatalog.lesson(lessonId)
     val journey = FormationCatalog.journeys.find { it.id == journeyId }
     val back = { if (lessonId != null) lessonId = null else if (journeyId != null) journeyId = null else onBack() }
     BackHandler { back() }
     LaunchedEffect(lessonId) { lessonId?.let { model?.lesson(it) } }
-    SanctuaryPage("Catequese", "formation", onBack = back) {
+    SanctuaryPage("Catequese", "formation", scroll = contentScroll, onBack = back) {
         Column(Modifier.padding(horizontal = SertumTheme.spacing.page).padding(top = 18.dp, bottom = 48.dp), verticalArrangement = Arrangement.spacedBy(14.dp)) {
             if (lesson != null) {
                 val progress = state.learning.find { it.lessonId == lesson.id }
+                FormationPainting(lessonIllustration(lesson.id), "lesson-artwork", compact = true)
                 SacredText(lesson.pillar, style = SertumTheme.typography.micro, color = SertumTheme.colors.accentInk)
                 SacredText(lesson.title, style = SertumTheme.typography.display)
                 SacredText(lesson.objective, style = SertumTheme.typography.whisper, color = SertumTheme.colors.secondary)
@@ -43,7 +48,7 @@ fun FormationScreen(model: GardenViewModel?, state: GardenState, initialLesson: 
                 val order = if (lesson.id.hashCode() % 2 == 0) lesson.choices.indices.toList() else lesson.choices.indices.reversed().toList()
                 order.forEach { index -> QuietAction(lesson.choices[index], { answer = index }, "lesson-answer-$index", answer == index) }
                 if (answer != null) PersonalCard(if (answer == lesson.correct) "Isso mesmo." else "Vamos olhar de novo, com calma.", lesson.explanation, tag = "lesson-answer-explanation")
-                PersonalCard("Levar à vida", lesson.practice) {
+                PersonalCard("Levar à vida", lesson.practice, illustration = DevotionalIllustration.CHARITY) {
                     QuietAction(if (progress?.practiceDone == true) "✓ Gesto vivido" else "Marcar quando tiver vivido este gesto", { model?.lesson(lesson.id, practice = progress?.practiceDone != true) }, "lesson-practice", progress?.practiceDone == true)
                 }
                 SacredText(lesson.prayer, style = SertumTheme.typography.whisper, color = SertumTheme.colors.accentInk)
@@ -60,6 +65,7 @@ fun FormationScreen(model: GardenViewModel?, state: GardenState, initialLesson: 
                 QuietAction("Levar esta intenção à oração", onPray, "lesson-pray")
                 EditorialNote(lesson.id, "Revisão ${lesson.revision} · ${lesson.editorialDate}", model)
             } else if (journey != null) {
+                FormationPainting(journeyIllustration(journey.id), "journey-artwork", compact = true)
                 SacredText(journey.title, style = SertumTheme.typography.display)
                 SacredText(journey.introduction, style = SertumTheme.typography.whisper)
                 journey.steps.forEachIndexed { index, step -> PersonalCard("${index + 1}. Um passo possível", step) }
@@ -67,6 +73,11 @@ fun FormationScreen(model: GardenViewModel?, state: GardenState, initialLesson: 
                 QuietAction("Ir à oração", onPray, "journey-pray")
                 EditorialNote("journey-${journey.id}", "Revisão 1 · 13/11/2026", model)
             } else {
+                if (query.isBlank()) FormationPainting(when (place) {
+                    "Perguntas" -> DevotionalIllustration.QUESTIONS
+                    "Na vida" -> DevotionalIllustration.CHARITY
+                    else -> pillar?.let { pillarIllustration(FormationCatalog.pillars.indexOf(it)) } ?: DevotionalIllustration.CATECHESIS
+                }, "formation-hero")
                 SacredText("Aprender, rezar e viver.", style = SertumTheme.typography.display)
                 SacredText("Um caminho inicial pelos quatro pilares da fé. Leituras de cerca de cinco minutos, no seu ritmo.", style = SertumTheme.typography.body, color = SertumTheme.colors.secondary)
                 Row(Modifier.horizontalScroll(rememberScrollState())) { listOf("Aprender", "Perguntas", "Na vida").forEach { tab -> Box(Modifier.widthIn(min = 115.dp)) { QuietAction(tab, { place = tab }, "formation-$tab", tab == place) } } }
@@ -76,11 +87,12 @@ fun FormationScreen(model: GardenViewModel?, state: GardenState, initialLesson: 
                         if (query.isBlank() && pillar == null) {
                             val next = state.learning.firstOrNull { it.completedAt == null }?.lessonId?.let(FormationCatalog::lesson)
                                 ?: FormationCatalog.lessons.firstOrNull { item -> state.learning.none { it.lessonId == item.id && it.completedAt != null } }
-                            if (next != null) PersonalCard("Seu próximo passo", next.title, { lessonId = next.id }, "continue-learning")
+                            if (next != null) PersonalCard("Seu próximo passo", next.title, { lessonId = next.id }, "continue-learning", illustration = lessonIllustration(next.id))
                         }
                         Row(Modifier.horizontalScroll(rememberScrollState())) {
                             Box(Modifier.widthIn(min = 90.dp)) { QuietAction("Todos", { pillar = null }, "all-pillars", pillar == null) }
-                            FormationCatalog.pillars.forEachIndexed { index, name -> Box(Modifier.widthIn(min = 98.dp)) {
+                            FormationCatalog.pillars.forEachIndexed { index, name -> Column(Modifier.widthIn(min = 98.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+                                DevotionalArtwork(pillarIllustration(index), Modifier.size(44.dp))
                                 QuietAction(listOf("Crer", "Celebrar", "Viver", "Rezar")[index], { pillar = name }, "pillar-$name", pillar == name)
                             } }
                         }
@@ -89,7 +101,7 @@ fun FormationScreen(model: GardenViewModel?, state: GardenState, initialLesson: 
                         if (lessons.isEmpty()) PersonalCard("Ainda não encontramos esse tema.", "Tente uma palavra como graça, oração, Missa ou perdão. As perguntas também podem ajudar.")
                         lessons.forEach { item ->
                             val complete = state.learning.any { it.lessonId == item.id && it.completedAt != null }
-                            PersonalCard((if (complete) "✓ " else "") + item.title, "${item.pillar}\n${item.objective}", { lessonId = item.id }, "lesson-${item.id}")
+                            PersonalCard((if (complete) "✓ " else "") + item.title, "${item.pillar}\n${item.objective}", { lessonId = item.id }, "lesson-${item.id}", illustration = lessonIllustration(item.id))
                         }
                     }
                     "Perguntas" -> {
@@ -98,7 +110,7 @@ fun FormationScreen(model: GardenViewModel?, state: GardenState, initialLesson: 
                         if (answers.isEmpty()) PersonalCard("Sua pergunta merece atenção.", "Tente outro termo ou converse com um catequista da sua comunidade. Esta biblioteca não responde a todas as situações pessoais.")
                         answers.forEach { question ->
                             var open by rememberSaveable(question.id) { mutableStateOf(false) }
-                            PersonalCard(question.question, if (open) question.answer else "Toque para compreender", { open = !open }, "question-${question.id}") {
+                            PersonalCard(question.question, if (open) question.answer else "Toque para compreender", { open = !open }, "question-${question.id}", illustration = questionIllustration(question.id)) {
                                 if (open) {
                                     SacredText(question.references, Modifier.padding(top = 12.dp), SertumTheme.typography.micro, SertumTheme.colors.secondary)
                                     EditorialNote("question-${question.id}", "Revisão 1 · 13/11/2026", model)
@@ -107,8 +119,8 @@ fun FormationScreen(model: GardenViewModel?, state: GardenState, initialLesson: 
                         }
                     }
                     "Na vida" -> {
-                        FormationCatalog.journeys.filter { FormationCatalog.matches(query, "${it.title} ${it.steps.joinToString(" ")}") > 0 }.forEach { item -> PersonalCard(item.title, item.introduction, { journeyId = item.id }, "journey-${item.id}") }
-                        PersonalCard("O tempo da Igreja", "Advento e Natal, Quaresma e Páscoa, Pentecostes e Tempo Comum: a Igreja nos conduz pelo mistério de Cristo. Para festas e horários locais, consulte sua paróquia.", { lessonId = "year" }, "liturgical-year")
+                        FormationCatalog.journeys.filter { FormationCatalog.matches(query, "${it.title} ${it.steps.joinToString(" ")}") > 0 }.forEach { item -> PersonalCard(item.title, item.introduction, { journeyId = item.id }, "journey-${item.id}", illustration = journeyIllustration(item.id)) }
+                        PersonalCard("O tempo da Igreja", "Advento e Natal, Quaresma e Páscoa, Pentecostes e Tempo Comum: a Igreja nos conduz pelo mistério de Cristo. Para festas e horários locais, consulte sua paróquia.", { lessonId = "year" }, "liturgical-year", illustration = DevotionalIllustration.LITURGICAL_YEAR)
                     }
                 }
                 EditorialNote("formation", "Revisão 1 · 13/11/2026", model)

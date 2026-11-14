@@ -38,6 +38,12 @@ Twelve curated answers address common questions about Mary, repetition, sufferin
 
 Four practical journeys cover participation in Mass, preparation for confession, an evening review, and works of mercy. A lesson explains the liturgical year while directing readers to their parish for local dates and transferred celebrations. This implementation does not invent a universal local calendar.
 
+## Artwork throughout the new destinations
+
+[Twelve original model-generated paintings](artwork/formation-and-garden/README.md) now accompany the whole-app home, Catequese and Meu Jardim. Christ teaching and a fountain garden establish the two centers. Distinct paintings identify the four pillars, petitions, journal, saved readings, questions, reconciliation and the liturgical year. Every lesson and practical guide opens with contextual artwork; personal empty states and saved records have illustrations too. Search puts the large formation painting aside, and entering a lesson or guide starts at its heading.
+
+The complete transparent compositions fit their frames in Day and Vigil. Decorative images do not replace accessible labels, and the interactive crown garden retains its dynamic roses and counts. The twelve optimized WebPs total 1.06 MiB; full-resolution masters, generation prompts and edit references are preserved outside the APK.
+
 ## Editorial accountability
 
 The new content identifies itself as editorial teaching with a revision and date. It includes supporting references and explicitly states that independent theological review is pending. No reviewer, approval or ecclesial endorsement is fabricated. A reader can save a correction on the device or explicitly share the text through Android's chooser. Saving feedback alone does not transmit it to a maintainer. These references do not open a connected source reader.
@@ -54,7 +60,7 @@ New tests exercise real Room operations, transaction/idempotency behavior, disk/
 
 ```sh
 ./gradlew assembleDebug assembleDebugAndroidTest assembleRelease testDebugUnitTest lintDebug
-./gradlew recordRoborazziDebug --tests '*GardenFormationFlowTest'
+./gradlew recordRoborazziDebug --tests '*HomeHubTest' --tests '*GardenFormationFlowTest' --tests '*FormationArtworkFlowTest' --tests '*PocoDisplayLayoutTest'
 python3 tools/treasury/treasury.py generate --check
 python3 -m unittest discover -s tools/treasury/tests -v
 ```

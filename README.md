@@ -26,11 +26,11 @@ Open Sertum and arrive in a small garden: warm cream, sage leaves, clay-colored 
 
 *Sertum Rosarum* means “crown of roses.” That image shapes the whole app: each prayer becomes a rose, five mysteries form a crown, and the completed rosary is gently offered at the end.
 
-**Phases 1–3 are implemented.** Tesouro includes 61 offline prayers, 28 Portuguese/Latin readings, 78 explained expressions and all twenty mysteries to study. The interface and fixed prayers are in Brazilian Portuguese. Prayer content, fonts, and artwork are bundled; the prayer experience needs no network connection.
+**Phases 1–4 are implemented.** Tesouro includes 61 offline prayers, 28 Portuguese/Latin readings, 78 explained expressions and all twenty mysteries to study. Catequese adds sixteen lessons, twelve curated answers and four practical guides. Meu Jardim preserves intentions, offered crowns, reflections, bookmarks and learning progress. The interface and fixed prayers are in Brazilian Portuguese. Prayer content, fonts, and artwork are bundled; the prayer experience needs no network connection.
 
 ## A garden in every screen
 
-These previews are rendered from the Android Compose screens using Robolectric native graphics. The sacred garden, botanical paintings, and [eight devotional illustrations](docs/artwork/devotions/README.md) are bundled with the app; Canvas and Foundation compose the flowers, stems, crown, icons, and controls. Scrolling content dissolves gently beneath the fixed headers.
+These previews are rendered from the Android Compose screens using Robolectric native graphics. The sacred garden, botanical paintings, [eight devotional illustrations](docs/artwork/devotions/README.md), [seven Treasury paintings](docs/artwork/treasury/README.md) and [twelve formation and personal-garden paintings](docs/artwork/formation-and-garden/README.md) are bundled with the app; Canvas and Foundation compose the flowers, stems, crown, icons, and controls. Scrolling content dissolves gently beneath the fixed headers.
 
 <table>
   <tr>
@@ -39,8 +39,8 @@ These previews are rendered from the Android Compose screens using Robolectric n
     <th>Prayer · one rose at a time</th>
   </tr>
   <tr>
-    <td><img src="docs/screenshots/sanctuary-day.png" width="250" alt="Day sanctuary: a Marian garden in cream, sage, and rose, with the mystery selector and prayer action" /></td>
-    <td><img src="docs/screenshots/sanctuary-vigil.png" width="250" alt="Vigil sanctuary: the same garden in deep forest green, with a crescent moon and soft rose accents" /></td>
+    <td><img src="docs/screenshots/phase-4/home-day.png" width="250" alt="Day home: a Marian garden and four illustrated destination cards" /></td>
+    <td><img src="docs/screenshots/phase-4/home-vigil.png" width="250" alt="Vigil home: the illustrated app dashboard in deep forest green" /></td>
     <td><img src="docs/screenshots/prayer-day.png" width="250" alt="The Ave-Maria prayer, five-mystery botanical arc, ten interactive beads, and next and previous controls" /></td>
   </tr>
 </table>
@@ -356,7 +356,7 @@ See [`phases.md`](phases.md) for the milestone definitions and acceptance criter
 
 ### Artwork and font credits
 
-The home garden uses original model-generated sacred paintings, inspired by the grace and light of classical Marian art. The [seven Treasury paintings](docs/artwork/treasury/README.md) add a chapel entrance and individual artwork for its six moments of life. [Full-resolution garden masters, final prompts, and the seven-round exploration](docs/artwork/garden/README.md) are preserved with the project. The [coordinated botanical paintings and prompts](docs/artwork/botanical/README.md) extend its roses, buds, and leaves through the prayer beads, crown, ornaments, and launcher. Canvas handles composition and motion; interface symbols and the themed launcher use custom vector artwork. Fraunces and Nunito are bundled from Google Fonts under their [SIL Open Font Licenses](docs/fonts).
+The home garden uses original model-generated sacred paintings, inspired by the grace and light of classical Marian art. The [seven Treasury paintings](docs/artwork/treasury/README.md) add a chapel entrance and individual artwork for its six moments of life. [Twelve formation and personal-garden paintings](docs/artwork/formation-and-garden/README.md) illustrate the four pillars, lessons, practical guides and personal records. [Full-resolution garden masters, final prompts, and the seven-round exploration](docs/artwork/garden/README.md) are preserved with the project. The [coordinated botanical paintings and prompts](docs/artwork/botanical/README.md) extend its roses, buds, and leaves through the prayer beads, crown, ornaments, and launcher. Canvas handles composition and motion; interface symbols and the themed launcher use custom vector artwork. Fraunces and Nunito are bundled from Google Fonts under their [SIL Open Font Licenses](docs/fonts).
 
 ---
 

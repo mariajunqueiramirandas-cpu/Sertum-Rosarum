@@ -1,0 +1,154 @@
+{
+  "generator": "image_gen.imagegen",
+  "generatedDate": "2026-11-14",
+  "transparent_background": true,
+  "style": "Create ONE original sacred Catholic watercolor and gouache illustration for the Sertum Rosarum Android app, in a coordinated devotional botanical painting series. Painterly refined naturalistic faces and hands when present, delicate real paper-like pigment texture within the painted objects, gentle diffused warm light, restrained antique gold, muted sage leaves, blush pink roses, ivory linen and Marian dusty blue. Elegant traditional Catholic devotional art with quiet tenderness, no cartoon, no vector icon, no photorealistic render, no 3D. Isolated composition on a genuinely TRANSPARENT alpha background, no rectangular paper background, no colored backdrop, no lettering or readable writing, no UI, no frame or logo. Full complete silhouette, keep every leaf, halo and object comfortably inside the canvas with generous transparent margins. Crisp enough to read at 80dp; use a small cohesive cluster, not a busy scene. ",
+  "assets": [
+    {
+      "id": "catechesis",
+      "subject": "Wide landscape vignette: Jesus Christ as a compassionate teacher seated in a small rose garden, a plain open scripture book resting on his lap, one hand gently teaching, an ivory-and-sage stone niche arch suggested behind him and two small pink rose plants at the sides. Fine simple golden halo, ivory tunic and muted rose mantle. Jesus is clearly adult, reverent and welcoming. No disciples, no writing on book pages. Beautiful welcoming hero painting for a school of Catholic faith. Landscape composition around 3:2.",
+      "file": "catechesis.png",
+      "runtime": "formation_catechesis.webp",
+      "sha256": "f6f85466e1864aa8cd2684e65a99b8bc462e9e9c3d395bd533e4d3f23cfac284",
+      "generated_path": "/workspace/generated_images/exec-5e4b154a-5597-4204-ad67-9a8a64479cb6.png",
+      "runtime_bytes": 147672,
+      "runtime_sha256": "85a250f83799f24d1ddf0948a6071e77a3cc2c7e01cbc7c62335292e6acd81ef",
+      "runtime_dimensions": "768x512"
+    },
+    {
+      "id": "garden",
+      "subject": "Wide landscape vignette: an intimate flourishing Marian prayer garden, a low pale stone fountain at center with a single blush rose laid on its rim, lush rose bushes and sage leaves on each side, a rustic open wooden garden gate behind, a small terracotta watering jug and neatly folded ivory linen near the bottom. A delicate golden rosary is draped over the fountain ledge. No people, no large background landscape, just a self-contained painted garden island. A place for intentions, offered crowns and personal reflection. Landscape composition around 3:2.",
+      "file": "garden.png",
+      "runtime": "formation_garden.webp",
+      "sha256": "439bd53543c7e358604adcf9255bcf3ac646ae3db78525ac39e1b87944804eac",
+      "generated_path": "/workspace/generated_images/exec-06dde746-95e0-4cb8-aabf-a7d0674b3711.png",
+      "runtime_bytes": 191832,
+      "runtime_sha256": "2bf8ae0d80f9af03aaff78a1387a1b27433fcaa777fe028f4c51e009fbe3cf9d",
+      "runtime_dimensions": "768x512"
+    },
+    {
+      "id": "faith",
+      "subject": "Square compact devotional still life representing profession of faith: a beautiful small antique wooden standing crucifix with a simplified respectful sculpted figure of Christ, an open ivory scripture book with completely blank softly textured pages at its foot, two blush roses and sage leaves. Tiny antique gold details. The crucifix is central, proportions graceful and unmistakable. No lettering anywhere.",
+      "file": "faith.png",
+      "runtime": "formation_faith.webp",
+      "sha256": "7df1720e21be8833f8a128b280a19facbe4af3978e459116e80918bfe32e7391",
+      "generated_path": "/workspace/generated_images/exec-bfcd746c-9ed2-456d-adca-15462c470b14.png",
+      "runtime_bytes": 47596,
+      "runtime_sha256": "c5a760be90cad12a434c58b7c2e30b228d66165b3060e732ebe109755b7c1e23",
+      "runtime_dimensions": "512x512"
+    },
+    {
+      "id": "sacraments",
+      "subject": "Square compact devotional still life representing the sacraments: an antique golden chalice holding a single plain round white host, a small clear glass vessel of baptismal water with a droplet, one slender lit ivory candle, a little wheat and vine leaves with blush roses at their feet. The chalice and host are the clear central forms. The host has absolutely no letters, symbols or embossed design. Balanced and reverent, never cluttered.",
+      "file": "sacraments.png",
+      "runtime": "formation_sacraments.webp",
+      "sha256": "11655ec3167da50d78f6cf5247b2e634415572a23640c127dbdf2090aeec98c0",
+      "generated_path": "/workspace/generated_images/exec-7ad807fa-d51b-4e4f-9984-65d59d9e8055.png",
+      "runtime_bytes": 82248,
+      "runtime_sha256": "102b34e91dceea103af522830385d7baf98e71d3dfd46336fe448027b1e351da",
+      "runtime_dimensions": "512x512"
+    },
+    {
+      "id": "charity",
+      "subject": "Square devotional painting of two human hands sharing a small round rustic loaf of bread: one hand offering and the other receiving gently, accurate natural anatomy, simple ivory sleeves, an olive sprig and two blush roses beneath. A few golden wheat stalks support the composition. No faces, no background. A tender clear image of human dignity, charity and works of mercy, no extra fingers.",
+      "file": "charity.png",
+      "runtime": "formation_charity.webp",
+      "sha256": "9000474140bbad0895870044e7e9217babeaa5f47cf24292de388c545436bcf7",
+      "generated_path": "/workspace/generated_images/exec-5a793da4-46ad-4b68-8ddb-6253fa136482.png",
+      "runtime_bytes": 70264,
+      "runtime_sha256": "9d17b38a7fdf138532fa0b87484cd304287370bd48b5238094805c20ce694991",
+      "runtime_dimensions": "512x512"
+    },
+    {
+      "id": "prayer",
+      "subject": "Square devotional painting: Mary in a dusty Marian blue mantle and ivory veil, a modest half-length portrait, hands gently joined in prayer at her chest, eyes peacefully lowered, thin antique gold halo completely visible, with a small ivory candle and two pink rose blossoms below. Tender classical Catholic Madonna, anatomically correct hands, no baby, no writing. A graceful oval organic silhouette with transparent space around the halo.",
+      "file": "prayer.png",
+      "runtime": "formation_prayer.webp",
+      "sha256": "73be664d52167959cd5e76880a485a0a08c9c130896848271253c67c1aa6a525",
+      "generated_path": "/workspace/generated_images/exec-fdbe6f28-172c-43c4-b2c9-d19f781b30c1.png",
+      "runtime_bytes": 79848,
+      "runtime_sha256": "23a9769057ac6f48d8c521eb567003285883aad46bd77b1b1dbb1ebf5ecd82b1",
+      "runtime_dimensions": "512x512"
+    },
+    {
+      "id": "intentions",
+      "subject": "Square devotional still life for a personal prayer-intention notebook: two folded ivory parchment petition cards completely blank, tied together with a muted dusty-blue silk ribbon, a small golden rosary and one blush rose resting diagonally across them, sage leaves and a tiny unopened rosebud. Petitions are closed folded cards, no marks or writing, ribbon is soft and simple. Warm, intimate and uncluttered.",
+      "file": "intentions.png",
+      "runtime": "formation_intentions.webp",
+      "sha256": "bbca6c4cb49a2f69744636695dd3554f1596fed012ec8061880a7fea29959fd8",
+      "generated_path": "/workspace/generated_images/exec-ce5dd30a-9e26-43e3-85d6-ed72bfc35e79.png",
+      "runtime_bytes": 64052,
+      "runtime_sha256": "5a0438ad4b5e8b839da137b634943f00827e03646098abe26159d518ae956cdf",
+      "runtime_dimensions": "512x512"
+    },
+    {
+      "id": "journal",
+      "subject": "Square devotional still life for a spiritual journal: an open antique linen-bound ivory notebook on a small sloping wooden writing board, completely blank pages, a natural brown feather quill resting across one side, one pink rosebud, tiny white jasmine flowers and sage leaves, and a muted Marian-blue page ribbon. The notebook is central and inviting. No ink writing, no letters, no numbers.",
+      "file": "journal.png",
+      "runtime": "formation_journal.webp",
+      "sha256": "79985511d1e5f2c2cfde4c78bda1425725167cbcf5cabb51779bde1c6b5e0fb6",
+      "generated_path": "/workspace/generated_images/exec-62111b1d-edd9-4f6a-a45a-8b0a6c3f1d97.png",
+      "runtime_bytes": 63668,
+      "runtime_sha256": "86a278528d881efd6cc57edfdca9f0e57182cff052ae4c7c773abddf6b28063d",
+      "runtime_dimensions": "512x512"
+    },
+    {
+      "id": "bookmarks",
+      "subject": "Square devotional still life representing saved prayers and treasured lessons: a small stack of three beautiful old cloth-bound prayer books in muted Marian blue, sage and warm ivory, one closed top book with a simple small antique-gold cross embossed on its cover, a long blush ribbon bookmark falling gracefully, a rose blossom and olive leaves at the base. No readable titles, no lettering on spines. A compact friendly complete silhouette.",
+      "file": "bookmarks.png",
+      "runtime": "formation_bookmarks.webp",
+      "sha256": "e6742bf3a40f6a6ea496b8db1e8f773a2e77bb68cb6bca5de8a08a8616fc96bf",
+      "generated_path": "/workspace/generated_images/exec-8b3051c7-0a80-40c2-aacc-c1265e887c8f.png",
+      "runtime_bytes": 86270,
+      "runtime_sha256": "6732225943702094b11e1f3b903ac7859d3761a1e6fe29666fc2714479a8c2b7",
+      "runtime_dimensions": "512x512"
+    },
+    {
+      "id": "questions",
+      "subject": "Square compact still life for thoughtful questions and understanding the Catholic faith: a small antique brass oil lamp with a clear gentle flame beside an open ivory scripture book on a pale stone ledge, one blush rose, tiny jasmine and sage leaves. All pages completely blank. The flame illuminates the book softly without a rectangular glow or backdrop. No question marks, no letters, no people.",
+      "file": "questions.png",
+      "runtime": "formation_questions.webp",
+      "sha256": "0ecb5834b57fdf841fdd6b5ea2f80ac811d6a3314d9b9e994b7717325d529fd5",
+      "generated_path": "/workspace/generated_images/exec-db64cb19-6d69-4183-ab12-b51c94a77202.png",
+      "runtime_bytes": 68732,
+      "runtime_sha256": "a5adcecf9f7eecb88f0422585a3033ef4efe7cd13b5a80257ae946ad81b8a753",
+      "runtime_dimensions": "512x512"
+    },
+    {
+      "id": "reconciliation",
+      "subject": "Square self-contained vignette representing the sacrament of reconciliation: a small beautiful antique wooden arched confessional, its central door partly open, a modest simple cross carved on the arch, an ivory kneeling cushion at one side, a small warm lamp glow within, and blush roses with sage leaves growing at the base. No people, no faces, no lettering, no dramatic darkness. A reassuring warm place of mercy, fully visible from top of cross to bottom of kneeler.",
+      "file": "reconciliation.png",
+      "runtime": "formation_reconciliation.webp",
+      "sha256": "7b4bb0aa4983b4e5d9fd41129aed53ff4427b150cf2daf3a3a526809325cb022",
+      "generated_path": "/workspace/generated_images/exec-64dc0c5e-b596-4d8f-b89c-0bee0804cd0d.png",
+      "runtime_bytes": 81504,
+      "runtime_sha256": "718cc4d9234bf821a1ac15ce8929a485b34ec0442057349a24b8448c1c72ce8b",
+      "runtime_dimensions": "512x512"
+    },
+    {
+      "id": "liturgical_year",
+      "subject": "Square self-contained vignette for the liturgical year: a small ivory stone chapel with one warm antique bronze bell and a modest cross on its roof. Around its base is a circular garland of olive leaves, a palm frond, white Easter lilies, a few golden wheat stalks and pink roses; a simple muted purple cloth and ivory ribbon weave gently through the garland. All objects completely inside frame. Quiet passage of sacred time, no calendar, no dates, no letters or numbers.",
+      "file": "liturgical_year.png",
+      "runtime": "formation_liturgical_year.webp",
+      "sha256": "126086b30726d89cfaa495177ec099721ecf0cb24483a19527ef41024ca925cf",
+      "generated_path": "/workspace/generated_images/exec-2b000ac2-70d4-4b99-add1-e7bd899dedbe.png",
+      "runtime_bytes": 122812,
+      "runtime_sha256": "7727ebdf4dc714e22ab8a9cbf49d406f62d4cbd5fd31f958edfce32c0dcdeea6",
+      "runtime_dimensions": "512x512"
+    }
+  ],
+  "edits": [
+    {
+      "id": "faith",
+      "prompt": "Preserve this exact devotional watercolor crucifix, open blank book, roses and palette. Reframe the WHOLE composition smaller within a larger transparent square canvas so that every part of the cross ornament, leaves, roses and book is fully visible. Reconstruct the tiny clipped top ornament faithfully. Leave at least 8% completely transparent empty margin on ALL FOUR sides. Do not add a backdrop, new objects, words or a rectangular frame. Preserve true alpha transparency and the painterly style.",
+      "reference": "studies/faith-initial.png",
+      "reference_sha256": "9c4079eece34e3e7e54149126e40eb9631288d527650988dc50ff858177de7f8"
+    },
+    {
+      "id": "charity",
+      "prompt": "Preserve the tender watercolor hands sharing a loaf, ivory sleeves, pink roses and sage/wheat palette. Remove the large gold disc/circle behind the hands completely, leaving that area transparent. Reframe this whole illustration smaller on a square transparent canvas, with at least 8% completely transparent margin all around. Make both ivory sleeve ends conclude softly and naturally inside the canvas instead of being cut off by its left and right edges. Preserve anatomically correct hands and the bread. No lettering, new objects, frame or colored background. True alpha transparency.",
+      "reference": "studies/charity-initial.png",
+      "reference_sha256": "658c03c731baad04ee6c3ff358aeb35e798d919bfd2f58ccacb958856195048f"
+    }
+  ]
+}

@@ -22,6 +22,7 @@ import com.sertumrosarum.domain.formation.FormationCatalog
 import com.sertumrosarum.domain.treasury.TreasuryCatalog
 import com.sertumrosarum.feature.guides.PrayerGuide
 import com.sertumrosarum.domain.prayer.MysterySet
+import com.sertumrosarum.ui.canvas.*
 import com.sertumrosarum.ui.canvas.LocalBotanicalArtwork
 import com.sertumrosarum.ui.canvas.paintBotanical
 import com.sertumrosarum.ui.components.*
@@ -50,6 +51,7 @@ fun GardenScreen(model: GardenViewModel? = null, state: GardenState = GardenStat
     var noteSession by rememberSaveable { mutableStateOf<String?>(null) }
     BackHandler(editor || noteEditor || sessionId != null) { editor = false; noteEditor = false; sessionId = null }
     SanctuaryPage("Meu Jardim", "garden") {
+        FormationPainting(DevotionalIllustration.PERSONAL_GARDEN, "garden-hero", compact = true)
         PageWelcome("O que cria raízes em você.", "Suas intenções, orações e descobertas. Um retorno de cada vez.", Modifier.padding(top = 16.dp))
         Row(Modifier.fillMaxWidth().horizontalScroll(rememberScrollState()).padding(horizontal = 18.dp, vertical = 14.dp)) {
             listOf("Intenções", "Coroas", "Diário", "Guardados", "Caminho").forEach { name -> Box(Modifier.widthIn(min = 100.dp)) { QuietAction(name, { section = name; editor = false; noteEditor = false }, "garden-$name", section == name) } }
@@ -65,10 +67,10 @@ fun GardenScreen(model: GardenViewModel? = null, state: GardenState = GardenStat
                             (listOf<String?>(null) + intentionCategories).forEach { cat -> Box(Modifier.widthIn(min = 110.dp)) { QuietAction(cat ?: "Todas", { category = cat }, "filter-${cat ?: "all"}", category == cat) } }
                         }
                         val filtered = state.intentions.filter { it.archived == archived && (category == null || it.category == category) }
-                        if (filtered.isEmpty()) PersonalCard("Um espaço para confiar.", if (archived) "Nenhuma intenção arquivada neste filtro." else "Escreva por quem ou pelo que deseja rezar. Você também pode começar a oração sem escolher uma intenção.")
+                        if (filtered.isEmpty()) PersonalCard("Um espaço para confiar.", if (archived) "Nenhuma intenção arquivada neste filtro." else "Escreva por quem ou pelo que deseja rezar. Você também pode começar a oração sem escolher uma intenção.", illustration = DevotionalIllustration.INTENTIONS)
                         filtered.forEach { intention ->
                             val count = state.offerings.count { link -> link.intentionId == intention.id && state.sessions.any { it.id == link.sessionId && it.status == "COMPLETED" } }
-                            PersonalCard(if (intention.thanksgiving) "✧ ${intention.title}" else intention.title, "${intention.category} · $count ${if (count == 1) "coroa oferecida" else "coroas oferecidas"}", tag = "intention-${intention.id}") {
+                            PersonalCard(if (intention.thanksgiving) "✧ ${intention.title}" else intention.title, "${intention.category} · $count ${if (count == 1) "coroa oferecida" else "coroas oferecidas"}", tag = "intention-${intention.id}", illustration = if (intention.thanksgiving) DevotionalIllustration.TREASURY_THANKSGIVING else DevotionalIllustration.INTENTIONS) {
                                 if (intention.thanksgiving) SacredText("Em ação de graças", style = SertumTheme.typography.micro, color = SertumTheme.colors.gold)
                                 if (intention.description.isNotBlank()) SacredText(intention.description, Modifier.padding(top = 10.dp), SertumTheme.typography.body)
                                 if (intention.answeredNote.isNotBlank()) SacredText(intention.answeredNote, Modifier.padding(top = 10.dp), SertumTheme.typography.whisper)
@@ -104,16 +106,16 @@ fun GardenScreen(model: GardenViewModel? = null, state: GardenState = GardenStat
                             if (count > 1) SacredText("×$count", style = SertumTheme.typography.micro, color = SertumTheme.colors.accentInk, align = TextAlign.Center)
                         }
                     }; repeat(columns - row.size) { Spacer(Modifier.weight(1f)) } } } } }
-                    if (period.isEmpty()) PersonalCard("Seu jardim recebe cada retorno.", "As coroas oferecidas neste período aparecerão aqui. Sem metas nem dias perdidos.")
-                    period.filter { day == null || date(it.finishedAt ?: it.startedAt).toString() == day }.forEach { session -> PersonalCard(PrayerGuide.entries.find { it.name == session.guide }?.title ?: "Coroa oferecida", stamp(session.finishedAt ?: session.startedAt), { sessionId = session.id }, "crown-${session.id}") }
-                    state.sessions.find { it.status == "ACTIVE" }?.let { PersonalCard("Uma oração em andamento", "Sua posição está guardada. Você pode continuar quando desejar.", onResume, "garden-resume") }
+                    if (period.isEmpty()) PersonalCard("Seu jardim recebe cada retorno.", "As coroas oferecidas neste período aparecerão aqui. Sem metas nem dias perdidos.", illustration = DevotionalIllustration.CONTEMPLATIVE_PRAYER)
+                    period.filter { day == null || date(it.finishedAt ?: it.startedAt).toString() == day }.forEach { session -> PersonalCard(PrayerGuide.entries.find { it.name == session.guide }?.title ?: "Coroa oferecida", stamp(session.finishedAt ?: session.startedAt), { sessionId = session.id }, "crown-${session.id}", illustration = DevotionalIllustration.CONTEMPLATIVE_PRAYER) }
+                    state.sessions.find { it.status == "ACTIVE" }?.let { PersonalCard("Uma oração em andamento", "Sua posição está guardada. Você pode continuar quando desejar.", onResume, "garden-resume", illustration = DevotionalIllustration.CONTEMPLATIVE_PRAYER) }
                 }
                 "Diário" -> {
                     if (noteEditor) JournalEditor(state.journal.find { it.id == noteId }, { text -> model?.journal(text, noteSession, state.journal.find { it.id == noteId }); noteEditor = false }, { noteEditor = false })
                     else {
                         SacredPrimaryButton("Guardar uma reflexão", { noteId = null; noteSession = null; noteEditor = true }, tag = "new-reflection")
-                        if (state.journal.isEmpty()) PersonalCard("Uma palavra pode ficar.", "Registre uma descoberta, um agradecimento ou algo que deseja levar à oração.")
-                        state.journal.forEach { note -> PersonalCard(stamp(note.createdAt), note.text, tag = "journal-${note.id}") {
+                        if (state.journal.isEmpty()) PersonalCard("Uma palavra pode ficar.", "Registre uma descoberta, um agradecimento ou algo que deseja levar à oração.", illustration = DevotionalIllustration.JOURNAL)
+                        state.journal.forEach { note -> PersonalCard(stamp(note.createdAt), note.text, tag = "journal-${note.id}", illustration = DevotionalIllustration.JOURNAL) {
                             QuietAction("Editar reflexão", { noteId = note.id; noteSession = note.sessionId; noteEditor = true }, "edit-note-${note.id}")
                             var confirm by rememberSaveable(note.id) { mutableStateOf(false) }
                             QuietAction(if (confirm) "Confirmar exclusão desta reflexão" else "Excluir reflexão", { if (confirm) model?.deleteJournal(note.id) else confirm = true }, "delete-note-${note.id}")
@@ -122,16 +124,16 @@ fun GardenScreen(model: GardenViewModel? = null, state: GardenState = GardenStat
                     }
                 }
                 "Guardados" -> {
-                    if (state.bookmarks.isEmpty()) PersonalCard("Volte ao que tocou seu coração.", "Guarde uma oração no Tesouro ou uma lição no caminho de formação.")
+                    if (state.bookmarks.isEmpty()) PersonalCard("Volte ao que tocou seu coração.", "Guarde uma oração no Tesouro ou uma lição no caminho de formação.", illustration = DevotionalIllustration.BOOKMARKS)
                     state.bookmarks.forEach { item ->
                         val title = if (item.kind == "prayer") TreasuryCatalog.find(item.itemId)?.title else FormationCatalog.lesson(item.itemId)?.title
-                        if (title != null) PersonalCard(title, if (item.kind == "prayer") "Oração guardada" else "Lição guardada", { if (item.kind == "prayer") onPrayer(item.itemId) else onLesson(item.itemId) }) { QuietAction("Remover dos guardados", { model?.bookmark(item.kind, item.itemId) }, "remove-${item.itemId}") }
+                        if (title != null) PersonalCard(title, if (item.kind == "prayer") "Oração guardada" else "Lição guardada", { if (item.kind == "prayer") onPrayer(item.itemId) else onLesson(item.itemId) }, illustration = if (item.kind == "prayer") DevotionalIllustration.BOOKMARKS else lessonIllustration(item.itemId)) { QuietAction("Remover dos guardados", { model?.bookmark(item.kind, item.itemId) }, "remove-${item.itemId}") }
                     }
                 }
                 "Caminho" -> {
                     val completed = state.learning.count { it.completedAt != null }
-                    PersonalCard("Aprender, rezar e viver", "$completed de ${FormationCatalog.lessons.size} lições percorridas. Retome com liberdade.", { onLesson(null) }, "garden-learning")
-                    state.learning.forEach { progress -> FormationCatalog.lesson(progress.lessonId)?.let { lesson -> PersonalCard(lesson.title, if (progress.completedAt != null) "Lição percorrida" else "Continuar a leitura", { onLesson(lesson.id) }) {
+                    PersonalCard("Aprender, rezar e viver", "$completed de ${FormationCatalog.lessons.size} lições percorridas. Retome com liberdade.", { onLesson(null) }, "garden-learning", illustration = DevotionalIllustration.CATECHESIS)
+                    state.learning.forEach { progress -> FormationCatalog.lesson(progress.lessonId)?.let { lesson -> PersonalCard(lesson.title, if (progress.completedAt != null) "Lição percorrida" else "Continuar a leitura", { onLesson(lesson.id) }, illustration = lessonIllustration(lesson.id)) {
                         if (progress.reflection.isNotBlank()) SacredText(progress.reflection, Modifier.padding(top = 8.dp), SertumTheme.typography.whisper)
                         QuietAction(if (progress.practiceDone) "✓ Gesto levado à vida" else "Marcar gesto vivido", { model?.lesson(lesson.id, practice = !progress.practiceDone) }, "practice-${lesson.id}", progress.practiceDone)
                     } } }
@@ -143,6 +145,7 @@ fun GardenScreen(model: GardenViewModel? = null, state: GardenState = GardenStat
     val session = state.sessions.find { it.id == sessionId }
     SacredBottomSheet(session != null, { sessionId = null }, "Coroa oferecida", tag = "crown-detail") {
         if (session != null) {
+            FormationPainting(DevotionalIllustration.CONTEMPLATIVE_PRAYER, "crown-detail-artwork", compact = true)
             SacredText(PrayerGuide.entries.find { it.name == session.guide }?.title ?: "Coroa", style = SertumTheme.typography.heading)
             SacredText(stamp(session.finishedAt ?: session.startedAt), Modifier.padding(top = 8.dp), SertumTheme.typography.body)
             val guide = PrayerGuide.entries.find { it.name == session.guide }
@@ -167,6 +170,7 @@ fun IntentionEditor(existing: IntentionEntity?, onSave: (String, String, String,
     var answer by rememberSaveable(existing?.id) { mutableStateOf(existing?.answeredNote.orEmpty()) }
     var attempted by rememberSaveable { mutableStateOf(false) }
     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        FormationPainting(DevotionalIllustration.INTENTIONS, "intention-editor-artwork", compact = true)
         SacredText(if (existing == null) "Uma intenção para confiar" else "Cuidar desta intenção", style = SertumTheme.typography.section)
         GardenField("Por quem ou pelo que você reza?", title, { title = it }, "intention-title", limit = 120)
         if (attempted && title.isBlank()) SacredText("Escreva um título para guardar a intenção.", style = SertumTheme.typography.body)
@@ -183,6 +187,7 @@ fun IntentionEditor(existing: IntentionEntity?, onSave: (String, String, String,
 private fun JournalEditor(existing: JournalEntry?, save: (String) -> Unit, cancel: () -> Unit) {
     var text by rememberSaveable(existing?.id) { mutableStateOf(existing?.text.orEmpty()) }
     var attempted by rememberSaveable { mutableStateOf(false) }
+    FormationPainting(DevotionalIllustration.JOURNAL, "journal-editor-artwork", compact = true)
     GardenField("O que deseja levar consigo?", text, { text = it }, "journal-text", multiline = true, limit = 8000)
     if (attempted && text.isBlank()) SacredText("Escreva uma palavra antes de guardar.", style = SertumTheme.typography.body)
     SacredPrimaryButton("Guardar reflexão", { attempted = true; if (text.isNotBlank()) save(text) }, tag = "save-reflection")
@@ -194,6 +199,7 @@ fun IntentionPicker(model: GardenViewModel, state: GardenState, selected: Set<St
     var create by rememberSaveable { mutableStateOf(false) }
     if (create) IntentionEditor(null, { title, detail, category, thanks, answer -> model.saveIntention(title, detail, category, thanksgiving = thanks, answer = answer, select = true); create = false }, { create = false })
     else {
+        FormationPainting(DevotionalIllustration.INTENTIONS, "intention-picker-artwork", compact = true)
         SacredText("Escolha intenções ou comece no silêncio do coração. A escolha vale para a próxima coroa.", style = SertumTheme.typography.body)
         state.intentions.filter { !it.archived }.forEach { intention -> QuietAction((if (intention.id in selected) "✓ " else "") + intention.title + if (intention.thanksgiving) " · Ação de graças" else "", { model.toggleIntention(intention.id) }, "pick-${intention.id}", intention.id in selected) }
         QuietAction("Escrever uma nova intenção", { create = true }, "picker-new")

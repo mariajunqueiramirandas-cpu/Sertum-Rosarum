@@ -8,6 +8,9 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.Alignment
+import com.sertumrosarum.ui.canvas.DevotionalArtwork
+import com.sertumrosarum.ui.canvas.DevotionalIllustration
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.testTag
@@ -41,11 +44,18 @@ fun QuietAction(label: String, onClick: () -> Unit, tag: String = label, selecte
 }
 
 @Composable
-fun PersonalCard(title: String, detail: String, onClick: (() -> Unit)? = null, tag: String = title, modifier: Modifier = Modifier, content: @Composable ColumnScope.() -> Unit = {}) {
+fun PersonalCard(title: String, detail: String, onClick: (() -> Unit)? = null, tag: String = title, modifier: Modifier = Modifier,
+    illustration: DevotionalIllustration? = null, illustrationAbove: Boolean = false, content: @Composable ColumnScope.() -> Unit = {}) {
     SacredCard(modifier.fillMaxWidth().padding(vertical = 6.dp)) {
         Column(Modifier.fillMaxWidth().then(if (onClick != null) Modifier.clickable(role = Role.Button, onClick = onClick) else Modifier).testTag(tag).padding(18.dp)) {
-            SacredText(title, style = SertumTheme.typography.section)
-            if (detail.isNotBlank()) SacredText(detail, Modifier.padding(top = 6.dp), SertumTheme.typography.body, SertumTheme.colors.secondary)
+            if (illustration != null && illustrationAbove) DevotionalArtwork(illustration, Modifier.align(Alignment.CenterHorizontally).fillMaxWidth().height(76.dp).padding(bottom = 6.dp))
+            Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                if (illustration != null && !illustrationAbove) DevotionalArtwork(illustration, Modifier.size(64.dp))
+                Column(Modifier.weight(1f)) {
+                    SacredText(title, style = SertumTheme.typography.section)
+                    if (detail.isNotBlank()) SacredText(detail, Modifier.padding(top = 6.dp), SertumTheme.typography.body, SertumTheme.colors.secondary)
+                }
+            }
             content()
         }
     }

@@ -15,6 +15,18 @@ import androidx.compose.ui.res.imageResource
 import com.sertumrosarum.R
 
 enum class DevotionalIllustration(internal val resourceId: Int) {
+    CATECHESIS(R.drawable.formation_catechesis),
+    PERSONAL_GARDEN(R.drawable.formation_garden),
+    FAITH(R.drawable.formation_faith),
+    SACRAMENTS(R.drawable.formation_sacraments),
+    CHARITY(R.drawable.formation_charity),
+    CONTEMPLATIVE_PRAYER(R.drawable.formation_prayer),
+    INTENTIONS(R.drawable.formation_intentions),
+    JOURNAL(R.drawable.formation_journal),
+    BOOKMARKS(R.drawable.formation_bookmarks),
+    QUESTIONS(R.drawable.formation_questions),
+    RECONCILIATION(R.drawable.formation_reconciliation),
+    LITURGICAL_YEAR(R.drawable.formation_liturgical_year),
     PRAYER_BOOK(R.drawable.devotion_prayer_book),
     TREASURY_ENTRANCE(R.drawable.treasury_entrance),
     TREASURY_MORNING(R.drawable.treasury_morning),
