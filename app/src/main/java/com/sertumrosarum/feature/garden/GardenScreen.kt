@@ -1,190 +1,496 @@
 package com.sertumrosarum.feature.garden
 
-import androidx.activity.compose.BackHandler
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.background
-import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.semantics.*
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.horizontalScroll
-import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.runtime.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.clearAndSetSemantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.selected
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import com.sertumrosarum.data.garden.*
+import androidx.compose.ui.unit.sp
+import com.sertumrosarum.data.garden.IntentionEntity
+import com.sertumrosarum.data.garden.JournalEntry
+import com.sertumrosarum.data.garden.PrayerSessionEntity
 import com.sertumrosarum.domain.formation.FormationCatalog
-import com.sertumrosarum.domain.treasury.TreasuryCatalog
-import com.sertumrosarum.feature.guides.PrayerGuide
+import com.sertumrosarum.domain.formation.FormationLesson
 import com.sertumrosarum.domain.prayer.MysterySet
+import com.sertumrosarum.domain.treasury.TreasuryCatalog
+import com.sertumrosarum.feature.formation.chapterOf
+import com.sertumrosarum.feature.formation.numberOf
+import com.sertumrosarum.feature.guides.PrayerGuide
 import com.sertumrosarum.ui.canvas.LocalBotanicalArtwork
 import com.sertumrosarum.ui.canvas.paintBotanical
-import com.sertumrosarum.ui.components.*
+import com.sertumrosarum.ui.canvas.paintLeaf
+import com.sertumrosarum.ui.components.PageWelcome
+import com.sertumrosarum.ui.components.SacredBottomSheet
+import com.sertumrosarum.ui.components.SacredCard
+import com.sertumrosarum.ui.components.SacredChips
+import com.sertumrosarum.ui.components.SacredDivider
+import com.sertumrosarum.ui.components.SacredEyebrow
+import com.sertumrosarum.ui.components.SacredIcon
+import com.sertumrosarum.ui.components.SacredIconButton
+import com.sertumrosarum.ui.components.SacredPrimaryButton
+import com.sertumrosarum.ui.components.SacredSecondaryButton
+import com.sertumrosarum.ui.components.SacredTabs
+import com.sertumrosarum.ui.components.SacredText
+import com.sertumrosarum.ui.components.SacredTextLink
+import com.sertumrosarum.ui.components.SacredToggleRow
+import com.sertumrosarum.ui.components.SanctuaryPage
 import com.sertumrosarum.ui.theme.SertumTheme
-import java.time.*
+import java.time.Instant
+import java.time.LocalDate
+import java.time.YearMonth
+import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
 private val pt = Locale.forLanguageTag("pt-BR")
 private fun date(time: Long) = Instant.ofEpochMilli(time).atZone(ZoneId.systemDefault()).toLocalDate()
 private fun stamp(time: Long) = date(time).format(DateTimeFormatter.ofPattern("d 'de' MMMM 'de' yyyy", pt))
+private fun PrayerSessionEntity.day() = date(finishedAt ?: startedAt)
+private fun PrayerSessionEntity.title() = PrayerGuide.entries.find { it.name == guide }?.title ?: "Coroa oferecida"
+private fun crowns(count: Int) = "$count ${if (count == 1) "coroa" else "coroas"}"
+
+private enum class GardenPlace(val label: String) { INTENTIONS("Intenções"), CROWNS("Coroas"), JOURNAL("Diário"), KEPT("Guardados") }
+
+/** Sentinel for a sheet that writes something new rather than tending what exists. */
+private const val NEW = ""
 
 @Composable
 fun GardenScreen(model: GardenViewModel? = null, state: GardenState = GardenState(), onPrayer: (String) -> Unit = {}, onLesson: (String?) -> Unit = {}, onResume: () -> Unit = {}) {
-    var section by rememberSaveable { mutableStateOf("Intenções") }
-    var editId by rememberSaveable { mutableStateOf<String?>(null) }
-    var editor by rememberSaveable { mutableStateOf(false) }
-    var sessionId by rememberSaveable { mutableStateOf<String?>(null) }
-    var archived by rememberSaveable { mutableStateOf(false) }
-    var category by rememberSaveable { mutableStateOf<String?>(null) }
-    var monthValue by rememberSaveable { mutableStateOf(YearMonth.now().toString()) }
-    var week by rememberSaveable { mutableStateOf(false) }
-    var day by rememberSaveable { mutableStateOf<String?>(null) }
-    var noteId by rememberSaveable { mutableStateOf<String?>(null) }
-    var noteEditor by rememberSaveable { mutableStateOf(false) }
+    var place by rememberSaveable { mutableStateOf(GardenPlace.INTENTIONS) }
+    var intentionSheet by rememberSaveable { mutableStateOf<String?>(null) }
+    var noteSheet by rememberSaveable { mutableStateOf<String?>(null) }
     var noteSession by rememberSaveable { mutableStateOf<String?>(null) }
-    BackHandler(editor || noteEditor || sessionId != null) { editor = false; noteEditor = false; sessionId = null }
-    SanctuaryPage("Meu Jardim", "garden") {
-        PageWelcome("O que cria raízes em você.", "Suas intenções, orações e descobertas. Um retorno de cada vez.", Modifier.padding(top = 16.dp))
-        SacredTabs(listOf("Intenções", "Coroas", "Diário", "Guardados", "Caminho"), section, { it }, { section = it; editor = false; noteEditor = false },
-            Modifier.padding(top = 14.dp, bottom = 16.dp), tag = { "garden-$it" })
-        Column(Modifier.padding(horizontal = SertumTheme.spacing.page).padding(bottom = 44.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            when (section) {
-                "Intenções" -> {
-                    if (editor) IntentionEditor(state.intentions.find { it.id == editId }, onSave = { title, detail, cat, thanks, answer -> model?.saveIntention(title, detail, cat, state.intentions.find { it.id == editId }, thanks, answer); editor = false }, onCancel = { editor = false })
-                    else {
-                        SacredPrimaryButton("Nova intenção", { editId = null; editor = true }, tag = "new-intention")
-                        QuietAction(if (archived) "Ver intenções atuais" else "Ver arquivadas", { archived = !archived }, "intention-archive-filter")
-                        SacredChips(listOf<String?>(null) + intentionCategories, category, { it ?: "Todas" }, { category = it },
-                            tag = { "filter-${it ?: "all"}" }, bleed = SertumTheme.spacing.page)
-                        val filtered = state.intentions.filter { it.archived == archived && (category == null || it.category == category) }
-                        if (filtered.isEmpty()) PersonalCard("Um espaço para confiar.", if (archived) "Nenhuma intenção arquivada neste filtro." else "Escreva por quem ou pelo que deseja rezar. Você também pode começar a oração sem escolher uma intenção.")
-                        filtered.forEach { intention ->
-                            val count = state.offerings.count { link -> link.intentionId == intention.id && state.sessions.any { it.id == link.sessionId && it.status == "COMPLETED" } }
-                            PersonalCard(if (intention.thanksgiving) "✧ ${intention.title}" else intention.title, "${intention.category} · $count ${if (count == 1) "coroa oferecida" else "coroas oferecidas"}", tag = "intention-${intention.id}") {
-                                if (intention.thanksgiving) SacredText("Em ação de graças", style = SertumTheme.typography.micro, color = SertumTheme.colors.gold)
-                                if (intention.description.isNotBlank()) SacredText(intention.description, Modifier.padding(top = 10.dp), SertumTheme.typography.body)
-                                if (intention.answeredNote.isNotBlank()) SacredText(intention.answeredNote, Modifier.padding(top = 10.dp), SertumTheme.typography.whisper)
-                                QuietAction("Editar intenção", { editId = intention.id; editor = true }, "edit-${intention.id}")
-                                QuietAction(if (intention.archived) "Restaurar intenção" else "Arquivar intenção", { model?.archive(intention) }, "archive-${intention.id}")
-                            }
-                        }
-                    }
+    var sessionId by rememberSaveable { mutableStateOf<String?>(null) }
+    Box(Modifier.fillMaxSize()) {
+        SanctuaryPage("Meu Jardim", "garden") {
+            PageWelcome("O que cria raízes em você.", "Suas intenções, suas coroas e o que você descobre pelo caminho.", Modifier.padding(top = 14.dp))
+            SacredTabs(GardenPlace.entries, place, { it.label }, { place = it }, Modifier.padding(top = 22.dp), tag = { "garden-${it.label}" })
+            Column(Modifier.fillMaxWidth().padding(horizontal = SertumTheme.spacing.page).padding(top = 22.dp, bottom = 44.dp)) {
+                when (place) {
+                    GardenPlace.INTENTIONS -> IntentionsPlace(state) { intentionSheet = it }
+                    GardenPlace.CROWNS -> CrownsPlace(state, onResume) { sessionId = it }
+                    GardenPlace.JOURNAL -> JournalPlace(state, onLesson, { noteSession = null; noteSheet = NEW }) { noteSession = it.sessionId; noteSheet = it.id }
+                    GardenPlace.KEPT -> KeptPlace(state, model, onPrayer, onLesson)
                 }
-                "Coroas" -> {
-                    val month = YearMonth.parse(monthValue)
-                    Row { Box(Modifier.weight(1f)) { QuietAction("‹ Mês anterior", { monthValue = month.minusMonths(1).toString(); day = null }, "previous-month") }; Box(Modifier.weight(1f)) { QuietAction("Próximo mês ›", { monthValue = month.plusMonths(1).toString(); day = null }, "next-month") } }
-                    SacredText(month.format(DateTimeFormatter.ofPattern("MMMM 'de' yyyy", pt)), style = SertumTheme.typography.section)
-                    QuietAction(if (week) "Mostrar mês inteiro" else "Mostrar esta semana", { week = !week; day = null }, "garden-period")
-                    val offered = state.sessions.filter { it.status == "COMPLETED" }
-                    val start = if (week) LocalDate.now().with(java.time.temporal.TemporalAdjusters.previousOrSame(DayOfWeek.MONDAY)) else month.atDay(1)
-                    val end = if (week) start.plusDays(6) else month.atEndOfMonth()
-                    val period = offered.filter { date(it.finishedAt ?: it.startedAt) in start..end }
-                    SacredText("${period.size} ${if (period.size == 1) "coroa oferecida" else "coroas oferecidas"} · ${period.sumOf { it.groupCount }} mistérios ou grupos contemplados", style = SertumTheme.typography.body, color = SertumTheme.colors.secondary)
-                    val days = (0 until java.time.temporal.ChronoUnit.DAYS.between(start, end).toInt() + 1).map { start.plusDays(it.toLong()) }
-                    val art = LocalBotanicalArtwork.current
-                    BoxWithConstraints {
-                    val columns = (maxWidth.value / 48.5f).toInt().coerceIn(1, 7)
-                    Column { days.chunked(columns).forEach { row -> Row(Modifier.fillMaxWidth()) { row.forEach { d ->
-                        val count = period.count { date(it.finishedAt ?: it.startedAt) == d }
-                        Column(Modifier.weight(1f).clip(RoundedCornerShape(14.dp))
-                            .then(if (day == d.toString()) Modifier.background(SertumTheme.colors.surface) else Modifier)
-                            .clickable(role = Role.Button) { day = if (day == d.toString()) null else d.toString() }
-                            .semantics { contentDescription = "${d.format(DateTimeFormatter.ofPattern("d 'de' MMMM", pt))}: $count ${if (count == 1) "coroa oferecida" else "coroas oferecidas"}" }
-                            .testTag("garden-day-$d").heightIn(min = 64.dp).padding(4.dp), horizontalAlignment = Alignment.CenterHorizontally) {
-                            if (count > 0) Canvas(Modifier.size(24.dp)) { paintBotanical(art.rose, center, size.minDimension) } else Spacer(Modifier.height(24.dp))
-                            SacredText(d.dayOfMonth.toString(), style = SertumTheme.typography.micro, align = TextAlign.Center)
-                            if (count > 1) SacredText("×$count", style = SertumTheme.typography.micro, color = SertumTheme.colors.accentInk, align = TextAlign.Center)
-                        }
-                    }; repeat(columns - row.size) { Spacer(Modifier.weight(1f)) } } } } }
-                    if (period.isEmpty()) PersonalCard("Seu jardim recebe cada retorno.", "As coroas oferecidas neste período aparecerão aqui. Sem metas nem dias perdidos.")
-                    period.filter { day == null || date(it.finishedAt ?: it.startedAt).toString() == day }.forEach { session -> PersonalCard(PrayerGuide.entries.find { it.name == session.guide }?.title ?: "Coroa oferecida", stamp(session.finishedAt ?: session.startedAt), { sessionId = session.id }, "crown-${session.id}") }
-                    state.sessions.find { it.status == "ACTIVE" }?.let { PersonalCard("Uma oração em andamento", "Sua posição está guardada. Você pode continuar quando desejar.", onResume, "garden-resume") }
-                }
-                "Diário" -> {
-                    if (noteEditor) JournalEditor(state.journal.find { it.id == noteId }, { text -> model?.journal(text, noteSession, state.journal.find { it.id == noteId }); noteEditor = false }, { noteEditor = false })
-                    else {
-                        SacredPrimaryButton("Guardar uma reflexão", { noteId = null; noteSession = null; noteEditor = true }, tag = "new-reflection")
-                        if (state.journal.isEmpty()) PersonalCard("Uma palavra pode ficar.", "Registre uma descoberta, um agradecimento ou algo que deseja levar à oração.")
-                        state.journal.forEach { note -> PersonalCard(stamp(note.createdAt), note.text, tag = "journal-${note.id}") {
-                            QuietAction("Editar reflexão", { noteId = note.id; noteSession = note.sessionId; noteEditor = true }, "edit-note-${note.id}")
-                            var confirm by rememberSaveable(note.id) { mutableStateOf(false) }
-                            QuietAction(if (confirm) "Confirmar exclusão desta reflexão" else "Excluir reflexão", { if (confirm) model?.deleteJournal(note.id) else confirm = true }, "delete-note-${note.id}")
-                            if (confirm) QuietAction("Manter reflexão", { confirm = false })
-                        } }
-                    }
-                }
-                "Guardados" -> {
-                    if (state.bookmarks.isEmpty()) PersonalCard("Volte ao que tocou seu coração.", "Guarde uma oração no Tesouro ou uma lição no caminho de formação.")
-                    state.bookmarks.forEach { item ->
-                        val title = if (item.kind == "prayer") TreasuryCatalog.find(item.itemId)?.title else FormationCatalog.lesson(item.itemId)?.title
-                        if (title != null) PersonalCard(title, if (item.kind == "prayer") "Oração guardada" else "Lição guardada", { if (item.kind == "prayer") onPrayer(item.itemId) else onLesson(item.itemId) }) { QuietAction("Remover dos guardados", { model?.bookmark(item.kind, item.itemId) }, "remove-${item.itemId}") }
-                    }
-                }
-                "Caminho" -> {
-                    val completed = state.learning.count { it.completedAt != null }
-                    PersonalCard("Aprender, rezar e viver", "$completed de ${FormationCatalog.lessons.size} lições percorridas. Retome com liberdade.", { onLesson(null) }, "garden-learning")
-                    state.learning.forEach { progress -> FormationCatalog.lesson(progress.lessonId)?.let { lesson -> PersonalCard(lesson.title, if (progress.completedAt != null) "Lição percorrida" else "Continuar a leitura", { onLesson(lesson.id) }) {
-                        if (progress.reflection.isNotBlank()) SacredText(progress.reflection, Modifier.padding(top = 8.dp), SertumTheme.typography.whisper)
-                        QuietAction(if (progress.practiceDone) "✓ Gesto levado à vida" else "Marcar gesto vivido", { model?.lesson(lesson.id, practice = !progress.practiceDone) }, "practice-${lesson.id}", progress.practiceDone)
-                    } } }
-                }
+                SacredText("Guardado neste aparelho. Sem pontuações nem sequências de dias.", Modifier.fillMaxWidth().padding(top = 36.dp), SertumTheme.typography.micro.copy(fontWeight = FontWeight.Normal), SertumTheme.colors.muted, TextAlign.Center)
             }
-            SacredText("Guardado neste aparelho. Sem pontuações nem sequências de dias.", Modifier.padding(top = 22.dp), SertumTheme.typography.micro, SertumTheme.colors.secondary)
+        }
+
+        val tending = state.intentions.find { it.id == intentionSheet }
+        SacredBottomSheet(intentionSheet != null, { intentionSheet = null }, if (tending == null) "Nova intenção" else "Cuidar desta intenção", tag = "intention-sheet") {
+            IntentionEditor(tending,
+                onSave = { title, detail, cat, thanks, answer -> model?.saveIntention(title, detail, cat, tending, thanks, answer); intentionSheet = null },
+                onCancel = { intentionSheet = null },
+                onArchive = tending?.let { { model?.archive(it); intentionSheet = null } })
+        }
+
+        val note = state.journal.find { it.id == noteSheet }
+        SacredBottomSheet(noteSheet != null, { noteSheet = null }, if (note == null) "Nova reflexão" else "Sua reflexão", tag = "journal-sheet") {
+            JournalEditor(note, noteSession?.let { id -> state.sessions.find { it.id == id } },
+                save = { text -> model?.journal(text, noteSession, note); noteSheet = null },
+                delete = note?.let { { model?.deleteJournal(it.id); noteSheet = null } },
+                cancel = { noteSheet = null })
+        }
+
+        val session = state.sessions.find { it.id == sessionId }
+        SacredBottomSheet(session != null, { sessionId = null }, "Coroa oferecida", tag = "crown-detail") {
+            if (session != null) CrownDetail(session, state) {
+                noteSession = session.id; sessionId = null; place = GardenPlace.JOURNAL; noteSheet = NEW
+            }
         }
     }
-    val session = state.sessions.find { it.id == sessionId }
-    SacredBottomSheet(session != null, { sessionId = null }, "Coroa oferecida", tag = "crown-detail") {
-        if (session != null) {
-            SacredText(PrayerGuide.entries.find { it.name == session.guide }?.title ?: "Coroa", style = SertumTheme.typography.heading)
-            SacredText(stamp(session.finishedAt ?: session.startedAt), Modifier.padding(top = 8.dp), SertumTheme.typography.body)
-            val guide = PrayerGuide.entries.find { it.name == session.guide }
-            val structure = if (guide?.script?.isRosary == true) MysterySet.entries.find { it.name == session.mysterySet }?.label.orEmpty() else guide?.shape?.badge.orEmpty()
-            SacredText("$structure · ${if (session.mode == "SOLO") "A sós" else "Em grupo"}", Modifier.padding(top = 8.dp), SertumTheme.typography.body)
-            val seconds = ((session.finishedAt ?: session.startedAt) - session.startedAt).coerceAtLeast(0) / 1000
-            SacredText("${seconds / 60} min ${seconds % 60} s · ${session.groupCount} grupos", Modifier.padding(top = 8.dp), SertumTheme.typography.body)
-            val offerings = state.offerings.filter { it.sessionId == session.id }
-            SacredText(if (offerings.isEmpty()) "Oferecida no silêncio do seu coração." else "Intenções oferecidas", Modifier.padding(top = 18.dp), SertumTheme.typography.section)
-            offerings.forEach { SacredText((if (it.thanksgiving) "Em ação de graças: " else "Por ") + it.title, Modifier.padding(top = 8.dp), SertumTheme.typography.body) }
-            QuietAction("Registrar uma reflexão sobre esta coroa", { noteSession = session.id; noteId = null; noteEditor = true; section = "Diário"; sessionId = null }, "crown-reflect")
+}
+
+/* ---------- Intenções ---------- */
+
+@Composable
+private fun IntentionsPlace(state: GardenState, open: (String) -> Unit) {
+    val colors = SertumTheme.colors
+    val type = SertumTheme.typography
+    var filter by rememberSaveable { mutableStateOf("all") }
+    val current = state.intentions.filter { !it.archived }
+    val archived = state.intentions.filter { it.archived }
+    val used = intentionCategories.filter { cat -> current.any { it.category == cat } }
+    // Filters appear only when they can tell intentions apart.
+    val filters = buildList { add("all"); if (used.size >= 2) addAll(used); if (archived.isNotEmpty()) add("archived") }
+    val chosen = filter.takeIf { it in filters } ?: "all"
+    SacredPrimaryButton("Nova intenção", { open(NEW) }, tag = "new-intention", compact = true)
+    if (filters.size > 1) SacredChips(filters, chosen, { when (it) { "all" -> "Todas"; "archived" -> "Arquivadas"; else -> it } }, { filter = it },
+        Modifier.padding(top = 14.dp), tag = { "filter-$it" }, bleed = SertumTheme.spacing.page)
+    val shown = when (chosen) { "all" -> current; "archived" -> archived; else -> current.filter { it.category == chosen } }
+    if (state.intentions.isEmpty()) {
+        GardenEmpty("Um espaço para confiar.", "Escreva por quem ou pelo que deseja rezar. Você também pode começar a oração sem escolher uma intenção.")
+        return
+    }
+    SacredText(
+        when (chosen) { "archived" -> "${shown.size} ${if (shown.size == 1) "intenção arquivada" else "intenções arquivadas"}"; else -> "${shown.size} ${if (shown.size == 1) "intenção" else "intenções"} no coração" },
+        Modifier.padding(top = 18.dp, bottom = 4.dp), type.micro, colors.secondary,
+    )
+    if (shown.isEmpty()) SacredText("Nenhuma intenção aqui por enquanto.", Modifier.padding(top = 8.dp), type.body, colors.secondary)
+    shown.forEach { intention ->
+        val count = state.offerings.count { link -> link.intentionId == intention.id && state.sessions.any { it.id == link.sessionId && it.status == "COMPLETED" } }
+        IntentionCard(intention, count, Modifier.padding(top = 10.dp)) { open(intention.id) }
+    }
+}
+
+/** An intention as a page in the garden: its kind, its name, what you keep with it and how often it was offered. */
+@Composable
+private fun IntentionCard(intention: IntentionEntity, offered: Int, modifier: Modifier = Modifier, onOpen: () -> Unit) {
+    val colors = SertumTheme.colors
+    val type = SertumTheme.typography
+    SacredCard(modifier.fillMaxWidth()) {
+        Column(Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = "Cuidar desta intenção", onClick = onOpen).testTag("intention-${intention.id}").padding(20.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                val kind = if (intention.thanksgiving && intention.category != "Ação de graças") "${intention.category} · Em ação de graças" else intention.category
+                SacredEyebrow(kind, Modifier.weight(1f), if (intention.thanksgiving) colors.gold else colors.accentInk)
+                SacredIcon(SacredIcon.PEN, Modifier.size(16.dp), colors.muted)
+            }
+            SacredText(intention.title, Modifier.padding(top = 6.dp), type.section)
+            if (intention.description.isNotBlank()) SacredText(intention.description, Modifier.padding(top = 4.dp), type.body, colors.secondary, maxLines = 3)
+            if (intention.answeredNote.isNotBlank()) SacredText(intention.answeredNote, Modifier.padding(top = 8.dp), type.whisper, colors.gold, maxLines = 3)
+            SacredText(if (offered == 0) "Ainda não oferecida numa coroa" else "Oferecida em ${crowns(offered)}", Modifier.padding(top = 12.dp),
+                type.micro.copy(fontWeight = FontWeight.Medium), if (offered == 0) colors.muted else colors.secondary)
         }
     }
 }
 
 @Composable
-fun IntentionEditor(existing: IntentionEntity?, onSave: (String, String, String, Boolean, String) -> Unit, onCancel: () -> Unit) {
+fun IntentionEditor(existing: IntentionEntity?, onSave: (String, String, String, Boolean, String) -> Unit, onCancel: () -> Unit, onArchive: (() -> Unit)? = null) {
     var title by rememberSaveable(existing?.id) { mutableStateOf(existing?.title.orEmpty()) }
     var detail by rememberSaveable(existing?.id) { mutableStateOf(existing?.description.orEmpty()) }
     var category by rememberSaveable(existing?.id) { mutableStateOf(existing?.category ?: intentionCategories.first()) }
     var thanks by rememberSaveable(existing?.id) { mutableStateOf(existing?.thanksgiving ?: false) }
     var answer by rememberSaveable(existing?.id) { mutableStateOf(existing?.answeredNote.orEmpty()) }
     var attempted by rememberSaveable { mutableStateOf(false) }
-    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-        SacredText(if (existing == null) "Uma intenção para confiar" else "Cuidar desta intenção", style = SertumTheme.typography.section)
+    val colors = SertumTheme.colors
+    Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+        SacredText(if (existing == null) "Uma intenção para confiar" else "Cuidar desta intenção", Modifier.semantics { heading() }, SertumTheme.typography.section)
         GardenField("Por quem ou pelo que você reza?", title, { title = it }, "intention-title", limit = 120)
-        if (attempted && title.isBlank()) SacredText("Escreva um título para guardar a intenção.", style = SertumTheme.typography.body)
+        if (attempted && title.isBlank()) SacredText("Escreva um título para guardar a intenção.", style = SertumTheme.typography.micro, color = colors.ruby)
         GardenField("O que deseja guardar (opcional)", detail, { detail = it }, "intention-description", multiline = true)
+        SacredText("Categoria", Modifier.padding(top = 6.dp), SertumTheme.typography.label, colors.secondary)
         SacredChips(intentionCategories, category, { it }, { category = it }, tag = { "edit-category-$it" }, bleed = SertumTheme.spacing.page)
-        QuietAction(if (thanks) "✓ Em ação de graças" else "Marcar em ação de graças", { thanks = !thanks }, "intention-thanksgiving", thanks)
+        SacredToggleRow("Em ação de graças", "Para agradecer uma graça já recebida.", thanks, { thanks = !thanks }, tag = "intention-thanksgiving")
         if (thanks) GardenField("Uma graça ou agradecimento (opcional)", answer, { answer = it }, "intention-answer", multiline = true)
-        SacredPrimaryButton("Guardar intenção", { attempted = true; if (title.isNotBlank()) onSave(title, detail, category, thanks, answer) }, tag = "save-intention")
-        QuietAction("Cancelar", onCancel, "cancel-intention")
+        SacredPrimaryButton("Guardar intenção", { attempted = true; if (title.isNotBlank()) onSave(title, detail, category, thanks, answer) }, Modifier.padding(top = 10.dp), tag = "save-intention")
+        if (existing != null && onArchive != null) SacredSecondaryButton(if (existing.archived) "Restaurar intenção" else "Arquivar intenção", onArchive, Modifier.fillMaxWidth(), "archive-${existing.id}")
+        SacredTextLink("Cancelar", onCancel, "cancel-intention", Modifier.align(Alignment.CenterHorizontally))
+    }
+}
+
+/* ---------- Coroas ---------- */
+
+@Composable
+private fun CrownsPlace(state: GardenState, onResume: () -> Unit, open: (String) -> Unit) {
+    val colors = SertumTheme.colors
+    val type = SertumTheme.typography
+    var monthValue by rememberSaveable { mutableStateOf(YearMonth.now().toString()) }
+    var day by rememberSaveable { mutableStateOf<String?>(null) }
+    val month = YearMonth.parse(monthValue)
+    val offered = state.sessions.filter { it.status == "COMPLETED" }
+    val inMonth = offered.filter { YearMonth.from(it.day()) == month }
+
+    state.sessions.find { it.status == "ACTIVE" }?.let {
+        SacredCard(Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+            Row(Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onResume).testTag("garden-resume").padding(20.dp), verticalAlignment = Alignment.CenterVertically) {
+                Column(Modifier.weight(1f)) {
+                    SacredEyebrow("Em andamento")
+                    SacredText("Sua oração espera por você", Modifier.padding(top = 4.dp), type.section.copy(fontSize = 18.sp, lineHeight = 24.sp))
+                }
+                SacredIcon(SacredIcon.CHEVRON, Modifier.size(13.dp), colors.muted)
+            }
+        }
+    }
+
+    Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+        SacredIconButton(SacredIcon.CHEVRON_BACK, "Mês anterior", { monthValue = month.minusMonths(1).toString(); day = null }, Modifier.testTag("previous-month"))
+        Column(Modifier.weight(1f), horizontalAlignment = Alignment.CenterHorizontally) {
+            SacredText(month.format(DateTimeFormatter.ofPattern("MMMM 'de' yyyy", pt)).replaceFirstChar { it.uppercaseChar() }, Modifier.semantics { heading() }, type.section, align = TextAlign.Center)
+            SacredText(if (inMonth.isEmpty()) "Nenhuma coroa ainda" else "${crowns(inMonth.size)} · ${inMonth.sumOf { it.groupCount }} mistérios ou grupos",
+                Modifier.padding(top = 2.dp), type.micro.copy(fontWeight = FontWeight.Medium), colors.secondary, TextAlign.Center)
+        }
+        SacredIconButton(SacredIcon.CHEVRON, "Próximo mês", { monthValue = month.plusMonths(1).toString(); day = null }, Modifier.testTag("next-month"), enabled = month < YearMonth.now())
+    }
+    MonthCalendar(month, inMonth, day, Modifier.padding(top = 16.dp)) { picked -> day = if (day == picked.toString()) null else picked.toString() }
+
+    val listed = inMonth.filter { day == null || it.day().toString() == day }.sortedByDescending { it.finishedAt ?: it.startedAt }
+    Row(Modifier.fillMaxWidth().padding(top = 26.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+        SacredText(day?.let { "Em " + LocalDate.parse(it).format(DateTimeFormatter.ofPattern("d 'de' MMMM", pt)) } ?: "Neste mês", Modifier.weight(1f).semantics { heading() }, type.label)
+        if (day != null) SacredTextLink("Ver o mês", { day = null }, "garden-whole-month")
+    }
+    if (listed.isEmpty()) {
+        SacredText(if (day != null) "Nenhuma coroa neste dia." else "As coroas oferecidas neste mês aparecerão aqui. Sem metas nem dias perdidos.", style = type.body, color = colors.secondary)
+        return
+    }
+    SacredCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(vertical = 4.dp)) {
+            listed.forEachIndexed { index, session ->
+                if (index > 0) SacredDivider(Modifier.padding(start = 64.dp, end = 18.dp))
+                CrownRow(session, state.offerings.count { it.sessionId == session.id }) { open(session.id) }
+            }
+        }
+    }
+}
+
+/** A month as it hangs on the wall: weekdays above, and a painted rose on each day a crown was offered. */
+@Composable
+private fun MonthCalendar(month: YearMonth, sessions: List<PrayerSessionEntity>, selected: String?, modifier: Modifier = Modifier, onDay: (LocalDate) -> Unit) {
+    val colors = SertumTheme.colors
+    val type = SertumTheme.typography
+    val art = LocalBotanicalArtwork.current
+    val today = LocalDate.now()
+    val lead = month.atDay(1).dayOfWeek.value % 7
+    val cells = List<LocalDate?>(lead) { null } + (1..month.lengthOfMonth()).map { month.atDay(it) }
+    SacredCard(modifier.fillMaxWidth()) {
+        Column(Modifier.padding(horizontal = 10.dp, vertical = 14.dp)) {
+            Row(Modifier.fillMaxWidth().clearAndSetSemantics {}) {
+                listOf("D", "S", "T", "Q", "Q", "S", "S").forEach { SacredText(it, Modifier.weight(1f), type.micro, colors.muted, TextAlign.Center) }
+            }
+            cells.chunked(7).forEach { week ->
+                Row(Modifier.fillMaxWidth().padding(top = 6.dp)) {
+                    week.forEach { d ->
+                        if (d == null) { Spacer(Modifier.weight(1f)); return@forEach }
+                        val count = sessions.count { it.day() == d }
+                        val chosen = selected == d.toString()
+                        Column(
+                            Modifier.weight(1f).clip(RoundedCornerShape(16.dp)).clickable(role = Role.Button) { onDay(d) }
+                                .semantics(mergeDescendants = true) {
+                                    this.selected = chosen
+                                    contentDescription = "${d.format(DateTimeFormatter.ofPattern("d 'de' MMMM", pt))}: ${if (count == 0) "nenhuma coroa" else crowns(count)}"
+                                }
+                                .testTag("garden-day-$d").heightIn(min = 52.dp).padding(vertical = 4.dp),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                        ) {
+                            Box(
+                                Modifier.size(30.dp)
+                                    .background(if (chosen) colors.marian.copy(alpha = .22f) else Color.Transparent, CircleShape)
+                                    .then(if (d == today) Modifier.border(1.dp, colors.accentInk.copy(alpha = .7f), CircleShape) else Modifier),
+                                contentAlignment = Alignment.Center,
+                            ) {
+                                SacredText(d.dayOfMonth.toString(), style = type.micro.copy(fontSize = 13.sp, fontWeight = if (d == today || chosen) FontWeight.Bold else FontWeight.Medium),
+                                    color = if (d > today) colors.muted else colors.ink, align = TextAlign.Center)
+                            }
+                            if (count > 0) Canvas(Modifier.size(16.dp)) { paintBotanical(art.rose, center, size.minDimension) } else Spacer(Modifier.height(16.dp))
+                        }
+                    }
+                    repeat(7 - week.size) { Spacer(Modifier.weight(1f)) }
+                }
+            }
+        }
     }
 }
 
 @Composable
-private fun JournalEditor(existing: JournalEntry?, save: (String) -> Unit, cancel: () -> Unit) {
+private fun CrownRow(session: PrayerSessionEntity, intentions: Int, onOpen: () -> Unit) {
+    val colors = SertumTheme.colors
+    val type = SertumTheme.typography
+    val art = LocalBotanicalArtwork.current
+    Row(
+        Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = "Ver esta coroa", onClick = onOpen).testTag("crown-${session.id}")
+            .heightIn(min = 72.dp).padding(start = 16.dp, end = 18.dp, top = 12.dp, bottom = 12.dp),
+        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp),
+    ) {
+        Canvas(Modifier.size(32.dp)) { paintBotanical(art.rose, center, size.minDimension) }
+        Column(Modifier.weight(1f)) {
+            SacredText(session.title(), style = type.label.copy(fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold))
+            val detail = listOfNotNull(
+                session.day().format(DateTimeFormatter.ofPattern("d 'de' MMMM", pt)),
+                if (session.mode == "SOLO") "A sós" else "Em grupo",
+                if (intentions > 0) "$intentions ${if (intentions == 1) "intenção" else "intenções"}" else null,
+            ).joinToString(" · ")
+            SacredText(detail, Modifier.padding(top = 2.dp), type.body.copy(fontSize = 14.sp, lineHeight = 20.sp), colors.secondary)
+        }
+        SacredIcon(SacredIcon.CHEVRON, Modifier.size(13.dp), colors.muted)
+    }
+}
+
+@Composable
+private fun ColumnScope.CrownDetail(session: PrayerSessionEntity, state: GardenState, reflect: () -> Unit) {
+    val colors = SertumTheme.colors
+    val type = SertumTheme.typography
+    val guide = PrayerGuide.entries.find { it.name == session.guide }
+    SacredEyebrow(stamp(session.finishedAt ?: session.startedAt))
+    SacredText(session.title(), Modifier.padding(top = 6.dp), type.heading)
+    val structure = if (guide?.script?.isRosary == true) MysterySet.entries.find { it.name == session.mysterySet }?.label.orEmpty() else guide?.shape?.badge.orEmpty()
+    val seconds = ((session.finishedAt ?: session.startedAt) - session.startedAt).coerceAtLeast(0) / 1000
+    SacredText("$structure · ${if (session.mode == "SOLO") "A sós" else "Em grupo"}", Modifier.padding(top = 10.dp), type.body)
+    SacredText("${seconds / 60} min ${seconds % 60} s · ${session.groupCount} grupos", Modifier.padding(top = 2.dp), type.body, colors.secondary)
+    val offerings = state.offerings.filter { it.sessionId == session.id }
+    SacredCard(Modifier.padding(top = 20.dp).fillMaxWidth()) {
+        Column(Modifier.padding(20.dp)) {
+            SacredEyebrow(if (offerings.isEmpty()) "Oferecida" else "Intenções oferecidas")
+            if (offerings.isEmpty()) SacredText("No silêncio do seu coração.", Modifier.padding(top = 6.dp), type.whisper)
+            offerings.forEach { SacredText((if (it.thanksgiving) "Em ação de graças: " else "Por ") + it.title, Modifier.padding(top = 6.dp), type.whisper) }
+        }
+    }
+    SacredSecondaryButton("Escrever uma reflexão sobre esta coroa", reflect, Modifier.padding(top = 18.dp).fillMaxWidth(), "crown-reflect", icon = SacredIcon.PEN)
+}
+
+/* ---------- Diário ---------- */
+
+@Composable
+private fun JournalPlace(state: GardenState, onLesson: (String?) -> Unit, write: () -> Unit, open: (JournalEntry) -> Unit) {
+    val colors = SertumTheme.colors
+    val type = SertumTheme.typography
+    SacredPrimaryButton("Escrever uma reflexão", write, tag = "new-reflection", compact = true)
+    // Notes written here and discoveries kept at the end of a lesson, newest first, on one page.
+    val entries = state.journal.map { JournalItem.Note(it) } +
+        state.learning.filter { it.reflection.isNotBlank() }.mapNotNull { progress -> FormationCatalog.lesson(progress.lessonId)?.let { JournalItem.Discovery(it, progress.reflection, progress.openedAt) } }
+    if (entries.isEmpty()) {
+        GardenEmpty("Uma palavra pode ficar.", "Registre uma descoberta, um agradecimento ou algo que deseja levar à oração.")
+        return
+    }
+    entries.sortedByDescending { it.time }.forEach { entry ->
+        when (entry) {
+            is JournalItem.Note -> with(entry.note) {
+                JournalCard(stamp(createdAt) + if (sessionId != null) " · Depois de uma coroa" else "", text, "journal-$id", Modifier.padding(top = 12.dp)) { open(this) }
+            }
+            is JournalItem.Discovery -> JournalCard("Da lição · ${entry.lesson.title}", entry.text, "journal-lesson-${entry.lesson.id}", Modifier.padding(top = 12.dp), colors.gold) { onLesson(entry.lesson.id) }
+        }
+    }
+    SacredText("As descobertas das lições também aparecem aqui.", Modifier.padding(top = 14.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.muted)
+}
+
+/** What the Diário shows: notes written here, and discoveries kept at the end of a lesson. */
+private sealed interface JournalItem {
+    val time: Long
+    class Note(val note: JournalEntry) : JournalItem { override val time get() = note.createdAt }
+    class Discovery(val lesson: FormationLesson, val text: String, override val time: Long) : JournalItem
+}
+
+@Composable
+private fun JournalCard(eyebrow: String, text: String, tag: String, modifier: Modifier = Modifier, tone: Color = SertumTheme.colors.accentInk, onOpen: () -> Unit) {
+    SacredCard(modifier.fillMaxWidth()) {
+        Column(Modifier.fillMaxWidth().clickable(role = Role.Button, onClick = onOpen).testTag(tag).padding(20.dp)) {
+            SacredEyebrow(eyebrow, color = tone)
+            SacredText(text, Modifier.padding(top = 8.dp), SertumTheme.typography.whisper, maxLines = 8)
+        }
+    }
+}
+
+@Composable
+private fun ColumnScope.JournalEditor(existing: JournalEntry?, session: PrayerSessionEntity?, save: (String) -> Unit, delete: (() -> Unit)?, cancel: () -> Unit) {
     var text by rememberSaveable(existing?.id) { mutableStateOf(existing?.text.orEmpty()) }
     var attempted by rememberSaveable { mutableStateOf(false) }
-    GardenField("O que deseja levar consigo?", text, { text = it }, "journal-text", multiline = true, limit = 8000)
-    if (attempted && text.isBlank()) SacredText("Escreva uma palavra antes de guardar.", style = SertumTheme.typography.body)
-    SacredPrimaryButton("Guardar reflexão", { attempted = true; if (text.isNotBlank()) save(text) }, tag = "save-reflection")
-    QuietAction("Cancelar", cancel)
+    var confirm by rememberSaveable(existing?.id) { mutableStateOf(false) }
+    val colors = SertumTheme.colors
+    SacredText(if (existing == null) "O que deseja levar consigo?" else "Sua reflexão", Modifier.semantics { heading() }, SertumTheme.typography.section)
+    if (session != null) SacredText("Sobre a coroa de ${session.day().format(DateTimeFormatter.ofPattern("d 'de' MMMM", pt))}", Modifier.padding(top = 4.dp), SertumTheme.typography.micro, colors.accentInk)
+    GardenField(if (existing == null) "Uma descoberta, um agradecimento, um pedido" else stamp(existing.createdAt), text, { text = it }, "journal-text", multiline = true, limit = 8000)
+    if (attempted && text.isBlank()) SacredText("Escreva uma palavra antes de guardar.", style = SertumTheme.typography.micro, color = colors.ruby)
+    SacredPrimaryButton("Guardar reflexão", { attempted = true; if (text.isNotBlank()) save(text) }, Modifier.padding(top = 10.dp), tag = "save-reflection")
+    if (existing != null && delete != null) {
+        if (confirm) Row(Modifier.fillMaxWidth().padding(top = 10.dp), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            SacredSecondaryButton("Manter", { confirm = false }, Modifier.weight(1f), "keep-note-${existing.id}")
+            SacredSecondaryButton("Excluir de vez", delete, Modifier.weight(1f), "confirm-delete-note-${existing.id}")
+        } else SacredSecondaryButton("Excluir reflexão", { confirm = true }, Modifier.padding(top = 10.dp).fillMaxWidth(), "delete-note-${existing.id}")
+    }
+    SacredTextLink("Cancelar", cancel, "cancel-reflection", Modifier.align(Alignment.CenterHorizontally))
+}
+
+/* ---------- Guardados ---------- */
+
+@Composable
+private fun KeptPlace(state: GardenState, model: GardenViewModel?, onPrayer: (String) -> Unit, onLesson: (String?) -> Unit) {
+    val prayers = state.bookmarks.filter { it.kind == "prayer" }.mapNotNull { item -> TreasuryCatalog.find(item.itemId)?.let { item.itemId to it.title } }
+    val lessons = state.bookmarks.filter { it.kind == "lesson" }.mapNotNull { item -> FormationCatalog.lesson(item.itemId) }
+    if (prayers.isEmpty() && lessons.isEmpty()) {
+        GardenEmpty("Volte ao que tocou seu coração.", "Guarde uma oração no Tesouro ou uma lição da Catequese, e ela esperará por você aqui.")
+        return
+    }
+    if (prayers.isNotEmpty()) KeptShelf("Orações", prayers.map { (id, title) -> Kept(id, title, "Do Tesouro", SacredIcon.BOOK) { onPrayer(id) } }) { model?.bookmark("prayer", it) }
+    if (lessons.isNotEmpty()) KeptShelf("Lições", lessons.map { lesson ->
+        val chapter = chapterOf(lesson)
+        Kept(lesson.id, lesson.title, "Lição ${numberOf(lesson)} · ${chapter.verb}", SacredIcon.CROSS) { onLesson(lesson.id) }
+    }, Modifier.padding(top = if (prayers.isEmpty()) 0.dp else 26.dp)) { model?.bookmark("lesson", it) }
+}
+
+private class Kept(val id: String, val title: String, val detail: String, val icon: SacredIcon, val open: () -> Unit)
+
+@Composable
+private fun KeptShelf(name: String, items: List<Kept>, modifier: Modifier = Modifier, remove: (String) -> Unit) {
+    val colors = SertumTheme.colors
+    val type = SertumTheme.typography
+    SacredEyebrow(name, modifier.padding(bottom = 10.dp).semantics { heading() })
+    SacredCard(Modifier.fillMaxWidth()) {
+        Column(Modifier.padding(vertical = 4.dp)) {
+            items.forEachIndexed { index, item ->
+                if (index > 0) SacredDivider(Modifier.padding(start = 70.dp, end = 18.dp))
+                Row(Modifier.fillMaxWidth().padding(end = 6.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Row(
+                        Modifier.weight(1f).clickable(role = Role.Button, onClick = item.open).testTag("kept-${item.id}").heightIn(min = 72.dp).padding(start = 16.dp, top = 12.dp, bottom = 12.dp, end = 8.dp),
+                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp),
+                    ) {
+                        Box(Modifier.size(38.dp).background(colors.marian.copy(alpha = .14f), CircleShape), contentAlignment = Alignment.Center) {
+                            SacredIcon(item.icon, Modifier.size(19.dp), colors.accentInk)
+                        }
+                        Column(Modifier.weight(1f)) {
+                            SacredText(item.title, style = type.label.copy(fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold))
+                            SacredText(item.detail, Modifier.padding(top = 2.dp), type.body.copy(fontSize = 14.sp, lineHeight = 20.sp), colors.secondary)
+                        }
+                    }
+                    Box(
+                        Modifier.size(48.dp).clip(CircleShape).clickable(role = Role.Button) { remove(item.id) }
+                            .semantics { contentDescription = "Remover dos guardados" }.testTag("remove-${item.id}"),
+                        contentAlignment = Alignment.Center,
+                    ) { SacredIcon(SacredIcon.BOOKMARK, Modifier.size(18.dp), colors.accentInk) }
+                }
+            }
+        }
+    }
+}
+
+/* ---------- Shared ---------- */
+
+/** An empty bed: a single bud between two leaves, a title and one line about what will grow here. */
+@Composable
+private fun GardenEmpty(title: String, detail: String) {
+    val colors = SertumTheme.colors
+    val art = LocalBotanicalArtwork.current
+    Column(Modifier.fillMaxWidth().padding(top = 26.dp), horizontalAlignment = Alignment.CenterHorizontally) {
+        Canvas(Modifier.size(96.dp)) {
+            drawCircle(colors.marian.copy(alpha = .1f), size.minDimension * .48f)
+            val foot = center + Offset(0f, 22.dp.toPx())
+            paintLeaf(art.leaf, foot, foot + Offset(-24.dp.toPx(), -14.dp.toPx()), .9f)
+            paintLeaf(art.leaf, foot - Offset(0f, 4.dp.toPx()), foot + Offset(24.dp.toPx(), -20.dp.toPx()), .9f)
+            paintBotanical(art.bud, center - Offset(0f, 6.dp.toPx()), 44.dp.toPx())
+        }
+        SacredText(title, Modifier.padding(top = 14.dp), SertumTheme.typography.section, align = TextAlign.Center)
+        SacredText(detail, Modifier.padding(top = 6.dp, start = 12.dp, end = 12.dp), SertumTheme.typography.body, colors.secondary, TextAlign.Center)
+    }
 }
 
 @Composable

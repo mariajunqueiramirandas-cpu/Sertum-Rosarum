@@ -5,6 +5,17 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -154,3 +165,37 @@ private fun Modifier.fadingEdges(scroll: ScrollState, width: Dp = 28.dp) = graph
         if (scroll.canScrollBackward) drawRect(Brush.horizontalGradient(listOf(Color.Transparent, Color.Black), startX = 0f, endX = fade), blendMode = BlendMode.DstIn)
         if (scroll.canScrollForward) drawRect(Brush.horizontalGradient(listOf(Color.Black, Color.Transparent), startX = size.width - fade, endX = size.width), blendMode = BlendMode.DstIn)
     }
+
+/** A quiet search on the page's surface colour; the cross appears only when there is something to clear. */
+@Composable
+fun SacredSearchField(query: String, onQuery: (String) -> Unit, placeholder: String, tag: String, modifier: Modifier = Modifier) {
+    val colors = SertumTheme.colors
+    val type = SertumTheme.typography
+    val focus = LocalFocusManager.current
+    val shape = RoundedCornerShape(26.dp)
+    val text = type.body.copy(fontSize = 16.sp, lineHeight = 22.sp, color = colors.ink)
+    BasicTextField(
+        query, { onQuery(it.take(300)) }, modifier.fillMaxWidth().semantics { contentDescription = placeholder }.testTag(tag),
+        textStyle = text, singleLine = true, cursorBrush = SolidColor(colors.marian),
+        keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { focus.clearFocus() }),
+        decorationBox = { field ->
+            Row(
+                Modifier.fillMaxWidth().clip(shape).background(colors.surface).border(1.dp, colors.border.copy(alpha = .7f), shape).heightIn(min = 52.dp).padding(start = 18.dp, end = 4.dp),
+                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+            ) {
+                SacredIcon(SacredIcon.SEARCH, Modifier.size(18.dp), colors.secondary)
+                Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
+                    if (query.isEmpty()) SacredText(placeholder, style = text, color = colors.muted, maxLines = 1)
+                    field()
+                }
+                if (query.isNotEmpty()) {
+                    Box(
+                        Modifier.size(48.dp).clip(CircleShape).semantics { contentDescription = "Limpar a busca" }
+                            .clickable(role = Role.Button) { onQuery("") }.testTag("$tag-clear"),
+                        contentAlignment = Alignment.Center,
+                    ) { SacredIcon(SacredIcon.CLOSE, Modifier.size(14.dp), colors.secondary) }
+                } else Box(Modifier.size(width = 14.dp, height = 48.dp))
+            }
+        },
+    )
+}
