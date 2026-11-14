@@ -26,7 +26,7 @@ Open Sertum and arrive in a small garden: warm cream, sage leaves, clay-colored 
 
 *Sertum Rosarum* means “crown of roses.” That image shapes the whole app: each prayer becomes a rose, five mysteries form a crown, and the completed rosary is gently offered at the end.
 
-**Phases 1–4 are implemented.** Tesouro includes 61 offline prayers, 28 Portuguese/Latin readings, 78 explained expressions and all twenty mysteries to study. Catequese adds sixteen lessons, twelve curated answers and four practical guides. Meu Jardim preserves intentions, offered crowns, reflections, bookmarks and learning progress. The interface and fixed prayers are in Brazilian Portuguese. Prayer content, fonts, and artwork are bundled; the prayer experience needs no network connection.
+**Phases 1–4 are implemented.** Tesouro includes 61 offline prayers, 28 Portuguese/Latin readings, 78 explained expressions and all twenty mysteries to study. Catequese adds sixteen full study chapters with visual explanations, twelve curated answers and four practical guides. Meu Jardim preserves intentions, offered crowns, reflections, bookmarks and learning progress. The interface and fixed prayers are in Brazilian Portuguese. Prayer content, fonts, and artwork are bundled; the prayer experience needs no network connection.
 
 ## A garden in every screen
 
@@ -373,6 +373,6 @@ The app-wide Início dashboard connects learning, prayer, the Treasury and the p
 
 Meu Jardim now stores intentions, thanksgiving notes, offered crowns, personal reflections and bookmarks. Choose optional intentions before prayer and revisit each offered crown in an adaptive month/week garden. Prayer position and preferences survive fresh launches.
 
-Caminho da fé adds sixteen lessons across the four pillars of the Catechism, twelve searchable questions, and four practical journeys for Mass, confession, reviewing the day and works of mercy. Learning reflections and practical actions remain private on the device. Editorial content carries references, revision dates and an honest pending theological-review status.
+Caminho da fé offers sixteen full study chapters across the four pillars of the Catechism, twelve searchable questions, and four practical journeys. The [expanded curriculum](docs/catechism-curriculum.md) includes 64 developed teaching sections, guided Scripture studies, practical cases, glossaries, summaries and 32 additional retrieval questions. Every lesson has an accessible concept map; four original generated illustrations explain concrete scenes, while six selected historical paintings have guided observation prompts. Contents navigation and revealable explanations support study in stages. Learning reflections and practical actions remain private on the device. Editorial content carries references, revision dates and an honest pending theological-review status.
 
 See [Phase 4 implementation and verification](docs/phase-4.md). Connected source reading and guided audio are outside this phase.

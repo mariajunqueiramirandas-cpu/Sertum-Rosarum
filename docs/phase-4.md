@@ -32,6 +32,8 @@ The journal supports creating, editing and deleting reflections, with confirmati
 
 ## Formation, questions and daily practice
 
+**Curriculum revision 2:** all sixteen lessons have been expanded into full study chapters, with 64 developed sections, biblical studies, cases, glossaries and retrieval exercises. Every lesson now has a native-text concept map, and four generated illustrations join six selectively retained historical paintings. See the [curriculum and visual-teaching notes](catechism-curriculum.md) for the current content and reader behavior.
+
 The Catequese center is accessible from its dedicated tab, Início, Treasury and Jardim. Sixteen original Portuguese lessons cover the four pillars: profession of faith, sacraments, moral life and prayer. Every lesson includes a learning objective, teaching, Scripture and Catechism references, a comprehension question with explanations, a concrete action, a short editorial prayer and an optional saved reflection. Answers carry no points. Correct understanding unlocks completion; readers can revisit any lesson. Returning readers are offered their unfinished lesson or the next unread lesson.
 
 Twelve curated answers address common questions about Mary, repetition, suffering, confession, mortal sin, distraction, the Eucharist, Communion, forgiveness, grace, Baptism and beginning to pray. Search normalizes accents/case and ignores common connecting words; partial relevance retrieves related questions, with an explicit empty state. This is a finite editorial catalog, not an AI response service.
