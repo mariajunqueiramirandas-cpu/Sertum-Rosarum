@@ -4,6 +4,7 @@ import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.UriHandler
 import androidx.compose.ui.semantics.SemanticsActions
+import androidx.compose.ui.semantics.SemanticsProperties
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasTestTag
@@ -16,6 +17,7 @@ import androidx.compose.ui.test.performClick
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
+import androidx.compose.ui.text.font.FontWeight
 import androidx.lifecycle.SavedStateHandle
 import com.github.takahirom.roborazzi.captureRoboImage
 import com.sertumrosarum.data.lumen.LumenApiClient
@@ -108,7 +110,7 @@ class CatechistFlowTest {
         val toolReady = CompletableDeferred<Unit>()
         val replyReady = CompletableDeferred<Unit>()
         val secondSearchStarted = CompletableDeferred<Unit>()
-        val interimReply = "Vou procurar uma oração de hoje e conferir a fonte."
+        val interimReply = "Vou procurar uma *oração de hoje* e conferir a fonte."
         val suggestedReply = "Quero um terço personalizado para hoje."
         val webSource = CatechistSource("Angelus · Vatican News", "https://www.vaticannews.va/pt/utility/prayers/angelus.html")
         var openedUrl: String? = null
@@ -158,10 +160,10 @@ class CatechistFlowTest {
                             )
                         }
                         2 -> {
-                            onUpdate(MistralStepUpdate.Reply("Podemos rezar juntos."))
+                            onUpdate(MistralStepUpdate.Reply("Podemos rezar **juntos**."))
                             replyReady.await()
                             MistralStepResponse(
-                                """{"reply":"Podemos rezar juntos. Quer um terço personalizado?","suggestedFollowUp":"$suggestedReply"}""",
+                                """{"reply":"Podemos rezar **juntos**. Quer um terço personalizado?","suggestedFollowUp":"$suggestedReply"}""",
                                 emptyList(),
                                 "stop",
                             )
@@ -186,20 +188,26 @@ class CatechistFlowTest {
         }
 
         compose.onNodeWithTag("home-open-catechist").performScrollTo().performClick()
-        compose.onNodeWithTag("catechist-input").performTextInput("Busca o Angelus na web?")
+        val question = "Busca o **Angelus** na web?"
+        compose.onNodeWithTag("catechist-input").performTextInput(question)
         compose.onNodeWithTag("catechist-send").performClick()
-        compose.onNodeWithText(interimReply).assertIsDisplayed()
+        compose.onNode(hasText(question) and hasAnyAncestor(hasTestTag("user-message"))).assertExists()
+        compose.onNodeWithText("Vou procurar uma oração de hoje e conferir a fonte.").assertIsDisplayed()
         compose.onNodeWithTag("catechist-interim-reply").assertIsDisplayed()
         compose.onNodeWithText("Mateus está procurando orações na web…").assertIsDisplayed()
         compose.onNodeWithTag("catechist-reply").assertDoesNotExist()
 
         toolReady.complete(Unit)
         compose.onNodeWithText("Consultou orações na web").assertIsDisplayed()
-        compose.onNodeWithText("Podemos rezar juntos.").assertIsDisplayed()
+        val preview = compose.onNodeWithText("Podemos rezar juntos.").assertIsDisplayed()
+            .fetchSemanticsNode().config[SemanticsProperties.Text].single()
+        val bold = preview.spanStyles.single { it.item.fontWeight == FontWeight.Bold }
+        assertEquals("juntos", preview.text.substring(bold.start, bold.end))
         compose.onNodeWithTag("catechist-suggested-reply").assertDoesNotExist()
 
         replyReady.complete(Unit)
         compose.onNodeWithTag("catechist-interim-reply").performScrollTo().assertIsDisplayed()
+        compose.onNodeWithText("Podemos rezar juntos. Quer um terço personalizado?").assertExists()
         compose.onNodeWithTag("catechist-web-source-1").assertDoesNotExist()
         compose.onNodeWithTag("catechist-web-source-0").performScrollTo().performClick()
         compose.runOnIdle { assertEquals(webSource.url, openedUrl) }

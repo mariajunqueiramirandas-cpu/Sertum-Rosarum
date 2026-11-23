@@ -19,6 +19,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -26,6 +27,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.compose.LifecycleEventEffect
@@ -36,6 +38,7 @@ import com.sertumrosarum.data.garden.GardenRepository
 import com.sertumrosarum.data.lumen.LumenRepository
 import com.sertumrosarum.domain.lumen.CatechistAction
 import com.sertumrosarum.domain.lumen.CatechistContext
+import com.sertumrosarum.domain.lumen.CatechistPrayer
 import com.sertumrosarum.domain.lumen.GardenCrownSnapshot
 import com.sertumrosarum.domain.lumen.GardenIntentionSnapshot
 import com.sertumrosarum.domain.lumen.GardenJournalSnapshot
@@ -44,6 +47,7 @@ import com.sertumrosarum.domain.lumen.LumenToolBridge
 import com.sertumrosarum.domain.lumen.PrayerSessionSnapshot
 import com.sertumrosarum.domain.treasury.TreasuryCatalog
 import com.sertumrosarum.feature.catechist.CatechistScreen
+import com.sertumrosarum.feature.catechist.CatechistPrayerSheet
 import com.sertumrosarum.feature.catechist.CatechistViewModel
 import com.sertumrosarum.feature.formation.FormationScreen
 import androidx.compose.foundation.clickable
@@ -112,12 +116,15 @@ fun SertumApp(
     var catechistOpen by rememberSaveable { mutableStateOf(false) }
     var catechistPrepareSheet by rememberSaveable { mutableStateOf(false) }
     var catechistDraft by rememberSaveable { mutableStateOf("") }
+    var displayedCatechistPrayer by remember { mutableStateOf<CatechistPrayer?>(null) }
+    var catechistPrayerOpen by remember { mutableStateOf(false) }
     var formationLesson by rememberSaveable { mutableStateOf<String?>(null) }
     var formationQuestion by rememberSaveable { mutableStateOf<String?>(null) }
     var formationJourney by rememberSaveable { mutableStateOf<String?>(null) }
 
     val state by model.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
+    val focusManager = LocalFocusManager.current
     val haptics = remember(context) { HapticFeedbackController(context) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { model.refreshDay() }
     val activeSet = if (state.screen == SanctuaryScreen.HOME) state.selectedSet else state.activeMysterySet
@@ -157,6 +164,15 @@ fun SertumApp(
         val treasuryState by treasury.state.collectAsStateWithLifecycle()
         val bookmarkedMysteries = remember(personal.bookmarks) {
             personal.bookmarks.filter { it.kind == "mystery" }.map { it.itemId }.toSet()
+        }
+        val savedPrayerIds = remember(personal.savedCatechistPrayers) {
+            personal.savedCatechistPrayers.map { it.id }.toSet()
+        }
+
+        fun openCatechistPrayer(prayer: CatechistPrayer) {
+            focusManager.clearFocus()
+            displayedCatechistPrayer = prayer
+            catechistPrayerOpen = true
         }
 
         fun openMysteryStudy(set: com.sertumrosarum.domain.prayer.MysterySet, index: Int) {
@@ -324,6 +340,7 @@ fun SertumApp(
                                         onJourney = { id -> openFormation(journey = id) },
                                         onResume = model::resume,
                                         sheetHost = gardenSheetHost,
+                                        onCatechistPrayer = ::openCatechistPrayer,
                                     )
                                 }
                             }
@@ -468,15 +485,18 @@ fun SertumApp(
                                         model.startSingleDecade(action.mysterySet, action.mysteryIndex, garden?.selected().orEmpty(), action.meditated)
                                     }
                                     is CatechistAction.LaunchGuide -> {
-                                        val guide = PrayerGuide.byNameOrNull(action.guideName) ?: PrayerGuide.TRADITIONAL
-                                        catechistOpen = false
-                                        model.startGuideWithOptions(
-                                            guide = guide,
-                                            mysterySet = action.mysterySet,
-                                            focusMysteryIndex = action.focusMysteryIndex,
-                                            meditatedOverride = action.meditated,
-                                            intentions = garden?.selected().orEmpty(),
-                                        )
+                                        val guide = PrayerGuide.byNameOrNull(action.guideName)
+                                        if (guide == null) catechistModel.showNotice("Este roteiro não está disponível no aplicativo.")
+                                        else {
+                                            catechistOpen = false
+                                            model.startGuideWithOptions(
+                                                guide = guide,
+                                                mysterySet = action.mysterySet,
+                                                focusMysteryIndex = action.focusMysteryIndex,
+                                                meditatedOverride = action.meditated,
+                                                intentions = garden?.selected().orEmpty(),
+                                            )
+                                        }
                                     }
                                     is CatechistAction.SaveIntention -> {
                                         val normalizedCat = if (action.category.equals("Ação de Graças", ignoreCase = true)) "Ação de graças" else action.category
@@ -517,6 +537,9 @@ fun SertumApp(
                                 model.startCustomRosary(supplement, garden?.selected().orEmpty())
                             },
                             onClearNotice = catechistModel::clearNotice,
+                            savedPrayerIds = savedPrayerIds,
+                            onReadPrayer = ::openCatechistPrayer,
+                            onSetPrayerSaved = garden?.let { it::setCatechistPrayerSaved },
                         )
                     }
                 }
@@ -544,6 +567,26 @@ fun SertumApp(
                             "guide-intentions",
                         )
                         if (inlinePicker) IntentionPicker(garden, personal, selected, inline = true) { inlinePicker = false }
+                    }
+                }
+                displayedCatechistPrayer?.let { prayer ->
+                    key(prayer.id) {
+                        val saved = prayer.id in savedPrayerIds
+                        val guide = PrayerGuide.byNameOrNull(prayer.guideName)
+                        CatechistPrayerSheet(
+                            prayer = prayer,
+                            visible = catechistPrayerOpen,
+                            saved = saved,
+                            onDismiss = { catechistPrayerOpen = false },
+                            onToggleSaved = garden?.let { g -> { g.setCatechistPrayerSaved(prayer, !saved) } },
+                            onStartGuide = guide?.let {
+                                {
+                                    catechistPrayerOpen = false
+                                    catechistOpen = false
+                                    model.start(it, garden?.selected().orEmpty())
+                                }
+                            },
+                        )
                     }
                 }
                 if (saveError != null) Column(Modifier.align(Alignment.TopCenter).fillMaxWidth().background(SertumTheme.colors.background).padding(horizontal = SertumTheme.spacing.page, vertical = 12.dp)) {

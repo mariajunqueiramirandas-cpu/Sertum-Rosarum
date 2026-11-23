@@ -139,6 +139,10 @@ configurations.configureEach {
 }
 
 dependencies {
+    implementation(libs.commonmark.core)
+    implementation(libs.commonmark.alerts)
+    implementation(libs.commonmark.strikethrough)
+    implementation(libs.commonmark.tables)
     implementation(libs.androidx.room.runtime)
     implementation(libs.androidx.room.ktx)
     implementation(libs.androidx.datastore.preferences)

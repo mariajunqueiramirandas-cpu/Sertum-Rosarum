@@ -62,6 +62,7 @@ import androidx.compose.ui.unit.sp
 import com.sertumrosarum.domain.lumen.CatechistAction
 import com.sertumrosarum.domain.lumen.CatechistMessage
 import com.sertumrosarum.domain.lumen.CatechistPersona
+import com.sertumrosarum.domain.lumen.CatechistPrayer
 import com.sertumrosarum.domain.lumen.CatechistProgress
 import com.sertumrosarum.domain.lumen.CustomRosarySupplement
 import com.sertumrosarum.domain.lumen.LumenMood
@@ -117,6 +118,9 @@ fun CatechistScreen(
     onExecuteAction: (CatechistAction) -> Unit,
     onStartCustomRosary: (CustomRosarySupplement) -> Unit,
     onClearNotice: () -> Unit,
+    savedPrayerIds: Set<String> = emptySet(),
+    onReadPrayer: (CatechistPrayer) -> Unit = {},
+    onSetPrayerSaved: ((CatechistPrayer, Boolean) -> Unit)? = null,
 ) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
@@ -261,6 +265,9 @@ fun CatechistScreen(
                                     onAction = onExecuteAction,
                                     onFollowUp = onSend,
                                     canSendFollowUp = !state.isThinking,
+                                    savedPrayerIds = savedPrayerIds,
+                                    onReadPrayer = onReadPrayer,
+                                    onSetPrayerSaved = onSetPrayerSaved,
                                 )
                             }
                         }
@@ -497,6 +504,9 @@ private fun CatechistReplyTurn(
     onAction: (CatechistAction) -> Unit,
     onFollowUp: (String) -> Unit,
     canSendFollowUp: Boolean,
+    savedPrayerIds: Set<String>,
+    onReadPrayer: (CatechistPrayer) -> Unit,
+    onSetPrayerSaved: ((CatechistPrayer, Boolean) -> Unit)?,
 ) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
@@ -516,23 +526,43 @@ private fun CatechistReplyTurn(
         }
         CatechistToolTrace(message.toolTrace)
         CatechistReplyText(message.text)
+        message.prayers.forEach { prayer ->
+            val saved = prayer.id in savedPrayerIds
+            CatechistPrayerCard(
+                prayer = prayer,
+                saved = saved,
+                onOpen = { onReadPrayer(prayer) },
+                onToggleSaved = onSetPrayerSaved?.let { save -> { save(prayer, !saved) } },
+            )
+        }
         message.reference?.let { ref ->
             SacredText(ref, style = type.micro.copy(fontWeight = FontWeight.Medium), color = colors.accentInk)
         }
-        if (message.webSources.isNotEmpty()) {
+        val cardSources = message.prayers.mapNotNull { it.sourceUrl }.toSet()
+        val otherSources = message.webSources.filterNot { it.url in cardSources }
+        if (otherSources.isNotEmpty()) {
             val uriHandler = LocalUriHandler.current
             Column {
                 SacredText("Fontes na web", style = type.micro, color = colors.muted)
-                message.webSources.forEachIndexed { index, source ->
-                    SacredTextLink(
-                        text = source.title,
-                        onClick = { runCatching { uriHandler.openUri(source.url) } },
-                        tag = "catechist-web-source-$index",
-                    )
+                otherSources.forEachIndexed { index, source ->
+                    Row(
+                        Modifier.fillMaxWidth()
+                            .clip(RoundedCornerShape(12.dp))
+                            .clickable(role = Role.Button) { runCatching { uriHandler.openUri(source.url) } }
+                            .testTag("catechist-web-source-$index")
+                            .heightIn(min = 48.dp)
+                            .padding(horizontal = 8.dp, vertical = 6.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        SacredText(source.title, Modifier.weight(1f), type.micro, colors.accentInk)
+                        SacredIcon(SacredIcon.CHEVRON, Modifier.size(10.dp), colors.marian)
+                    }
                 }
             }
         }
-        message.actions.forEachIndexed { idx, action ->
+        val offeredGuideNames = message.prayers.mapNotNull { it.guideName }.toSet()
+        message.actions.filterNot { it is CatechistAction.LaunchGuide && it.guideName in offeredGuideNames }.forEachIndexed { idx, action ->
             EmbeddedActionCard(action, onAction, primaryTag = if (idx == 0) "catechist-action-cta" else "catechist-action-cta-$idx")
         }
         message.suggestedFollowUp?.let { followUp ->
@@ -568,10 +598,8 @@ private fun CatechistToolTrace(trace: List<String>) {
 
 @Composable
 private fun CatechistReplyText(text: String) {
-    val style = SertumTheme.typography.whisper.copy(fontSize = 17.5.sp, lineHeight = 28.sp)
-    text.split("\n\n").forEach { paragraph ->
-        if (paragraph.isNotBlank()) SacredText(paragraph.trim(), style = style, color = SertumTheme.colors.ink)
-    }
+    val whisper = SertumTheme.typography.whisper
+    CatechistMarkdown(text, style = whisper.copy(fontSize = whisper.fontSize * (17.5f / 17f), lineHeight = whisper.lineHeight * (28f / 27f)))
 }
 
 @Composable

@@ -5,6 +5,7 @@ import com.sertumrosarum.domain.lumen.CatechistAction
 import com.sertumrosarum.domain.lumen.CatechistContext
 import com.sertumrosarum.domain.lumen.CatechistMessage
 import com.sertumrosarum.domain.lumen.CatechistPersona
+import com.sertumrosarum.domain.lumen.CatechistPrayerCatalog
 import com.sertumrosarum.domain.lumen.CatechistProgress
 import com.sertumrosarum.domain.lumen.CatechistSource
 import com.sertumrosarum.domain.lumen.CatechistTurnResult
@@ -52,11 +53,23 @@ class LumenRepository(
         if (!onlineEnabled || key.isBlank()) {
             return OfflineCatechistEngine.reply(clean, persona, context)
         }
+        CatechistPrayerCatalog.requestedPrayer(clean)?.let {
+            return OfflineCatechistEngine.prayerReply(listOf(it), offline = false)
+        }
 
         val systemPrompt = LumenGuardrails.conversationSystemPrompt(persona, context)
         val wireMessages = mutableListOf<MistralWireMessage>()
-        history.filterNot { it.isInterim }.takeLast(12).forEach { msg ->
-            wireMessages += MistralWireMessage.Text(if (msg.fromUser) "user" else "assistant", msg.text)
+        val recentHistory = history.filterNot { it.isInterim }.takeLast(12)
+        recentHistory.forEach { msg ->
+            val content = if (msg.prayers.isEmpty()) msg.text else LumenJsonParser.serializeSimple(
+                mapOf(
+                    "reply" to msg.text,
+                    "prayers" to msg.prayers.map {
+                        mapOf("title" to it.title, "id" to it.id, "attribution" to it.attribution, "sourceUrl" to it.sourceUrl)
+                    },
+                ),
+            )
+            wireMessages += MistralWireMessage.Text(if (msg.fromUser) "user" else "assistant", content)
         }
         wireMessages += MistralWireMessage.Text("user", clean)
 
@@ -88,10 +101,19 @@ class LumenRepository(
             )
         }
 
-        fun finalReply(rawText: String?): CatechistTurnResult =
-            rawText?.let {
-                LumenJsonParser.parseConversationTurn(it, context.activeMysterySet, collectedActions, collectedTrace)
-            }?.copy(webSources = collectedSources.distinctBy { it.url }) ?: offlineReply()
+        fun finalReply(rawText: String?): CatechistTurnResult {
+            val prayerSources = collectedSources + recentHistory.flatMap { it.webSources }
+            val turn = rawText?.let {
+                LumenJsonParser.parseConversationTurn(it, context.activeMysterySet, collectedActions, collectedTrace, prayerSources)
+            } ?: return offlineReply()
+            if (turn.prayers.isEmpty()) {
+                val options = CatechistPrayerCatalog.curatedOptions(clean)
+                if (options.isNotEmpty()) {
+                    return OfflineCatechistEngine.prayerReply(options, offline = false).copy(toolTrace = turn.toolTrace)
+                }
+            }
+            return turn.copy(webSources = collectedSources.distinctBy { it.url })
+        }
 
         val onStepUpdate: (MistralStepUpdate) -> Unit = { update ->
             when (update) {

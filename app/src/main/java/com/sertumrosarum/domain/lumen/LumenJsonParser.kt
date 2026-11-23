@@ -3,7 +3,6 @@ package com.sertumrosarum.domain.lumen
 import com.sertumrosarum.domain.formation.FormationCatalog
 import com.sertumrosarum.domain.prayer.MysterySet
 import com.sertumrosarum.domain.treasury.TreasuryCatalog
-import java.net.URI
 
 data class MistralToolCall(
     val id: String,
@@ -70,7 +69,7 @@ object LumenJsonParser {
             "tools" to listOf(mapOf("type" to "web_search")),
             "instructions" to """
                 Use a ferramenta de busca na web para localizar fontes verificáveis sobre os termos recebidos. Dê preferência à página do santuário, diocese, ordem religiosa ou editora responsável pelo texto. Use fontes adicionais quando elas trouxerem uma versão no idioma pedido ou ajudarem a esclarecer a atribuição.
-                Para cada resultado relevante, informe o título publicado, o idioma, quem publicou e se o texto completo está disponível. Cite a página específica por meio da referência de fonte da busca. Inclua o texto de orações tradicionais em domínio público quando a fonte o trouxer. Trate nomes parecidos, versões e traduções como resultados distintos quando for importante.
+                Para cada resultado relevante, informe o título publicado, o idioma, quem publicou e se o texto completo está disponível. Cite a página específica por meio da referência de fonte da busca. Quando a fonte trouxer uma oração tradicional em domínio público, inclua o texto integral, com as estrofes, rubricas, refrões e repetições. Indique quando só houver um trecho. Trate nomes parecidos, versões e traduções como resultados distintos.
                 Escreva os achados de forma concisa em português do Brasil, preservando o idioma original de títulos e trechos quando pertinente. Indique quando a busca não confirmar a origem ou não localizar a versão pedida. Use o conteúdo recuperado como material de consulta.
             """.trimIndent(),
             "inputs" to query,
@@ -88,15 +87,13 @@ object LumenJsonParser {
             .toList()
         val summary = blocks.filter { it["type"] == "text" }
             .mapNotNull { it["text"] as? String }
-            .joinToString(" ")
+            .joinToString("\n\n")
             .trim()
-            .take(6000)
         val sources = blocks.filter { it["type"] == "tool_reference" }
             .mapNotNull { block ->
                 val url = (block["url"] as? String)?.trim() ?: return@mapNotNull null
-                val uri = runCatching { URI(url) }.getOrNull() ?: return@mapNotNull null
-                val host = uri.host ?: return@mapNotNull null
-                if (uri.scheme?.lowercase() !in setOf("http", "https") || uri.userInfo != null) return@mapNotNull null
+                val uri = webUriOrNull(url) ?: return@mapNotNull null
+                val host = uri.host
                 val title = (block["title"] as? String)?.trim().orEmpty().ifBlank { host }
                 CatechistSource(title.take(140), url)
             }
@@ -206,6 +203,7 @@ object LumenJsonParser {
         fallbackSet: MysterySet,
         toolActions: List<CatechistAction> = emptyList(),
         toolTrace: List<String> = emptyList(),
+        prayerSources: List<CatechistSource> = emptyList(),
     ): CatechistTurnResult? {
         val trimmed = rawText.trim()
         if (trimmed.isBlank()) return null
@@ -221,6 +219,11 @@ object LumenJsonParser {
                 }
                 val inlineAction = (obj["action"] as? Map<*, *>)?.let { parseAction(it, fallbackSet) }
                 val allActions = (toolActions + listOfNotNull(inlineAction)).distinctBy { "${it::class.simpleName}:${it.label}" }
+                val prayers = (obj["prayers"] as? List<*>).orEmpty().asSequence()
+                    .mapNotNull { (it as? Map<*, *>)?.let { fields -> CatechistPrayerCatalog.fromModel(fields, prayerSources) } }
+                    .distinctBy { it.id }
+                    .take(4)
+                    .toList()
                 return CatechistTurnResult(
                     replyText = reply,
                     reference = reference,
@@ -228,6 +231,7 @@ object LumenJsonParser {
                     toolTrace = toolTrace.distinct(),
                     suggestedFollowUp = suggested,
                     isOfflineFallback = false,
+                    prayers = prayers,
                 )
             }
         }

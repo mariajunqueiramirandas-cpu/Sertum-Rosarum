@@ -13,8 +13,13 @@ roborazzi = "1.43.1"
 room = "2.7.1"
 datastore = "1.1.4"
 robolectric = "4.14.1"
+commonmark = "0.33.0"
 
 [libraries]
+commonmark-core = { module = "org.commonmark:commonmark", version.ref = "commonmark" }
+commonmark-alerts = { module = "org.commonmark:commonmark-ext-gfm-alerts", version.ref = "commonmark" }
+commonmark-strikethrough = { module = "org.commonmark:commonmark-ext-gfm-strikethrough", version.ref = "commonmark" }
+commonmark-tables = { module = "org.commonmark:commonmark-ext-gfm-tables", version.ref = "commonmark" }
 androidx-room-runtime = { module = "androidx.room:room-runtime", version.ref = "room" }
 androidx-room-ktx = { module = "androidx.room:room-ktx", version.ref = "room" }
 androidx-room-compiler = { module = "androidx.room:room-compiler", version.ref = "room" }

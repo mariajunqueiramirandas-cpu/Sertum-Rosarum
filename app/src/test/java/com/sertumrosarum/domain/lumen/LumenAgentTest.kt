@@ -84,6 +84,42 @@ class LumenAgentTest {
     }
 
     @Test
+    fun structuredPrayersUseBundledTextsAndRetainOnlyCitedExternalVersions() {
+        val source = CatechistSource("Santuário", "https://example.org/oracao")
+        val raw = """
+            {
+              "reply":"Aqui estão duas opções.",
+              "prayers":[
+                {"kind":"guide","id":"TEARS","body":"Texto enviado pelo modelo"},
+                {"kind":"guide","id":"TEARS"},
+                {"kind":"guide","id":"TRADITIONAL"},
+                {"kind":"published","title":"Fonte inventada","body":"Oração.","sourceUrl":"https://example.org/outra"},
+                {"kind":"published","title":"Prece do santuário","language":"Português","body":"## Primeiro verso\n\nSenhor, ouvi-nos.\n**R.** Amém.","sourceUrl":"${source.url}"}
+              ]
+            }
+        """.trimIndent()
+        val turn = requireNotNull(LumenJsonParser.parseConversationTurn(raw, MysterySet.JOYFUL, prayerSources = listOf(source)))
+        val (bundled, published) = turn.prayers
+        assertEquals(2, turn.prayers.size)
+        assertEquals("guide:TEARS", bundled.id)
+        assertTrue(bundled.body.contains("## Encerramento"))
+        assertFalse(bundled.body.contains("Texto enviado pelo modelo"))
+        assertEquals("Português · Santuário", published.attribution)
+        assertEquals(source.url, published.sourceUrl)
+        assertEquals("## Primeiro verso\n\nSenhor, ouvi-nos.\n**R.** Amém.", published.body)
+    }
+
+    @Test
+    fun namedDevotionResolvesToItsCompleteBundledPrayer() {
+        val context = CatechistContext(MysterySet.JOYFUL)
+        val result = OfflineCatechistEngine.reply("Queria a Coroa de Nossa Senhora das Lágrimas inteira, por favor", CatechistPersona.MATEUS, context)
+        assertEquals("guide:TEARS", result.prayers.single().id)
+        assertEquals(7, Regex("· 7 vezes").findAll(result.prayers.single().body).count())
+        assertTrue(result.actions.isEmpty())
+        assertNull(CatechistPrayerCatalog.requestedPrayer("Coroa das Lágrimas em inglês"))
+    }
+
+    @Test
     fun parsesCustomRosarySupplementJson() {
         val raw = """
             ```json

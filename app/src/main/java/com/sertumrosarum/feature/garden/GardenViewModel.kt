@@ -4,6 +4,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.sertumrosarum.data.garden.*
+import com.sertumrosarum.domain.lumen.CatechistPrayer
 import com.sertumrosarum.feature.prayer.OfferedIntention
 import kotlinx.coroutines.flow.*
 import java.util.UUID
@@ -14,6 +15,7 @@ data class GardenState(
     val intentions: List<IntentionEntity> = emptyList(), val sessions: List<PrayerSessionEntity> = emptyList(),
     val offerings: List<SessionIntentionEntity> = emptyList(), val journal: List<JournalEntry> = emptyList(),
     val bookmarks: List<BookmarkEntity> = emptyList(), val learning: List<LearningEntity> = emptyList(),
+    val savedCatechistPrayers: List<CatechistPrayer> = emptyList(),
 )
 
 class GardenViewModel(val repository: GardenRepository) : ViewModel() {
@@ -21,6 +23,9 @@ class GardenViewModel(val repository: GardenRepository) : ViewModel() {
     val state = combine(dao.intentions(), dao.sessions(), dao.offerings(), dao.journal(), dao.bookmarks()) { intentions, sessions, offerings, journal, bookmarks ->
         GardenState(intentions, sessions, offerings, journal, bookmarks)
     }.combine(dao.learning()) { state, learning -> state.copy(learning = learning) }
+        .combine(dao.savedCatechistPrayers()) { state, prayers ->
+            state.copy(savedCatechistPrayers = prayers.map { it.prayer })
+        }
         .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), GardenState())
     private val pendingIntentions = mutableMapOf<String, IntentionEntity>()
     private val selectedIds = MutableStateFlow<Set<String>>(emptySet())
@@ -82,6 +87,11 @@ class GardenViewModel(val repository: GardenRepository) : ViewModel() {
             if (current) dao.deleteBookmark(kind, id) else dao.saveBookmark(BookmarkEntity(kind, id, System.currentTimeMillis()))
         }
     }
+    fun setCatechistPrayerSaved(prayer: CatechistPrayer, saved: Boolean) {
+        if (saved) repository.enqueue { dao.saveCatechistPrayer(SavedCatechistPrayer(prayer, System.currentTimeMillis())) }
+        else removeCatechistPrayer(prayer.id)
+    }
+    fun removeCatechistPrayer(id: String) { repository.enqueue { dao.deleteCatechistPrayer(id) } }
     fun lesson(id: String, reflection: String? = null, complete: Boolean = false, practice: Boolean? = null) { repository.enqueue {
         val old = dao.lesson(id) ?: LearningEntity(id, System.currentTimeMillis())
         dao.saveLearning(old.copy(openedAt = System.currentTimeMillis(), completedAt = old.completedAt ?: System.currentTimeMillis().takeIf { complete },

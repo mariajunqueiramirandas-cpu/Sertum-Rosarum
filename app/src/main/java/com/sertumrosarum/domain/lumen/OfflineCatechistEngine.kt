@@ -18,6 +18,9 @@ object OfflineCatechistEngine {
         context: CatechistContext,
     ): CatechistTurnResult {
         val clean = LumenGuardrails.sanitizeInput(userText)
+        CatechistPrayerCatalog.requestedPrayer(clean)?.let { return prayerReply(listOf(it), offline = true) }
+        val options = CatechistPrayerCatalog.curatedOptions(clean)
+        if (options.isNotEmpty()) return prayerReply(options, offline = true)
         val norm = normalize(clean)
 
         return when {
@@ -43,6 +46,14 @@ object OfflineCatechistEngine {
                 generalReply(persona, context)
         }
     }
+
+    internal fun prayerReply(prayers: List<CatechistPrayer>, offline: Boolean): CatechistTurnResult = CatechistTurnResult(
+        replyText = if (prayers.size == 1) "Aqui está **${prayers.single().title}**, com o texto completo para você rezar no seu ritmo."
+        else "Separei algumas formas diferentes de rezar. Abra a que mais tocar seu coração hoje.",
+        reference = null,
+        isOfflineFallback = offline,
+        prayers = prayers,
+    )
 
     fun generateCustomRosary(
         intentionRaw: String,
