@@ -35,6 +35,40 @@ class GardenViewModel(val repository: GardenRepository) : ViewModel() {
         repository.enqueue { dao.saveIntention(value) }
         if (select) selectedIds.value += value.id
     }
+    fun createIntentionReturningId(title: String, description: String, category: String, thanksgiving: Boolean = false, select: Boolean = true): String? {
+        if (title.isBlank()) return null
+        val id = UUID.randomUUID().toString()
+        val value = IntentionEntity(
+            id = id,
+            title = title.trim().take(120),
+            description = description.trim().take(4000),
+            category = category.takeIf { it in intentionCategories } ?: "Família",
+            thanksgiving = thanksgiving,
+            answeredNote = "",
+            createdAt = System.currentTimeMillis(),
+        )
+        pendingIntentions[id] = value
+        repository.enqueue { dao.saveIntention(value) }
+        if (select) selectedIds.value += id
+        return id
+    }
+    fun markThanksgiving(intentionId: String, note: String = ""): Boolean {
+        val existing = (state.value.intentions + pendingIntentions.values).firstOrNull { it.id == intentionId && !it.archived }
+            ?: return false
+        val updated = existing.copy(
+            thanksgiving = true,
+            answeredNote = note.trim().take(4000).ifBlank { existing.answeredNote },
+        )
+        pendingIntentions[updated.id] = updated
+        repository.enqueue { dao.saveIntention(updated) }
+        return true
+    }
+    fun selectIntention(intentionId: String): Boolean {
+        val exists = (state.value.intentions + pendingIntentions.values).any { it.id == intentionId && !it.archived }
+        if (!exists) return false
+        selectedIds.value += intentionId
+        return true
+    }
     fun archive(value: IntentionEntity) { pendingIntentions[value.id] = value.copy(archived = !value.archived); repository.enqueue { dao.saveIntention(value.copy(archived = !value.archived)) }; selectedIds.value -= value.id }
     fun journal(text: String, sessionId: String? = null, existing: JournalEntry? = null) {
         if (text.isBlank()) return

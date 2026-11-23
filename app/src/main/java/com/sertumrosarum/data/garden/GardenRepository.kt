@@ -21,6 +21,9 @@ data class PersonalPreferences(
     val welcomed: Boolean = false,
     val readingScale: String = "STANDARD",
     val volumeKeys: Boolean = true,
+    val catechistPersona: String = "mateus",
+    val lumenOnline: Boolean = true,
+    val mistralApiKey: String = "",
 )
 
 /** One ordered writer, owned by the application rather than an activity or a disappearing screen. */
@@ -69,6 +72,9 @@ class GardenRepository(val database: SertumDatabase, private val store: androidx
             welcomed = p[booleanPreferencesKey("welcomed")] ?: false,
             readingScale = p[stringPreferencesKey("readingScale")] ?: "STANDARD",
             volumeKeys = p[booleanPreferencesKey("volumeKeys")] ?: true,
+            catechistPersona = p[stringPreferencesKey("catechistPersona")] ?: "mateus",
+            lumenOnline = p[booleanPreferencesKey("lumenOnline")] ?: true,
+            mistralApiKey = p[stringPreferencesKey("mistralApiKey")] ?: "",
         )
     }
     suspend fun storePrayerPreferences(
@@ -91,6 +97,13 @@ class GardenRepository(val database: SertumDatabase, private val store: androidx
         }
     }
     suspend fun storeReadingLanguage(value: String) { store.edit { it[stringPreferencesKey("readingLanguage")] = value } }
+    suspend fun storeLumenPreferences(personaId: String, online: Boolean, apiKey: String) {
+        store.edit {
+            it[stringPreferencesKey("catechistPersona")] = personaId
+            it[booleanPreferencesKey("lumenOnline")] = online
+            it[stringPreferencesKey("mistralApiKey")] = apiKey
+        }
+    }
     suspend fun welcome() { store.edit { it[booleanPreferencesKey("welcomed")] = true } }
     suspend fun savePreferences(value: PersonalPreferences) {
         store.edit {
@@ -103,6 +116,9 @@ class GardenRepository(val database: SertumDatabase, private val store: androidx
             it[booleanPreferencesKey("welcomed")] = value.welcomed
             it[stringPreferencesKey("readingScale")] = value.readingScale
             it[booleanPreferencesKey("volumeKeys")] = value.volumeKeys
+            it[stringPreferencesKey("catechistPersona")] = value.catechistPersona
+            it[booleanPreferencesKey("lumenOnline")] = value.lumenOnline
+            it[stringPreferencesKey("mistralApiKey")] = value.mistralApiKey
         }
     }
     suspend fun saveCrown(session: PrayerSessionEntity, intentions: List<SessionIntentionEntity>) = database.withTransaction {

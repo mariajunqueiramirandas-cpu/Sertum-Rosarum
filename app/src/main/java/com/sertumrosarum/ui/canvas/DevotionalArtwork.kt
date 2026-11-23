@@ -42,6 +42,10 @@ enum class DevotionalIllustration(internal val resourceId: Int) {
     CONSOLATION(R.drawable.devotion_consolation),
     PEACE(R.drawable.devotion_peace),
     SEVEN_JOYS(R.drawable.devotion_seven_joys),
+    CATECHIST_MATEUS(R.drawable.catechist_mateus),
+    CATECHIST_LUCAS(R.drawable.catechist_lucas),
+    CATECHIST_CLARA(R.drawable.catechist_clara),
+    CATECHIST_BENTO(R.drawable.catechist_bento),
 }
 
 /** Decode each painting once, only when it is first needed; cards and sheets share it. */

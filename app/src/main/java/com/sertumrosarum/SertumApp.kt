@@ -33,7 +33,18 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sertumrosarum.core.haptics.HapticFeedbackController
 import com.sertumrosarum.data.garden.GardenRepository
+import com.sertumrosarum.data.lumen.LumenRepository
+import com.sertumrosarum.domain.lumen.CatechistAction
+import com.sertumrosarum.domain.lumen.CatechistContext
+import com.sertumrosarum.domain.lumen.GardenCrownSnapshot
+import com.sertumrosarum.domain.lumen.GardenIntentionSnapshot
+import com.sertumrosarum.domain.lumen.GardenJournalSnapshot
+import com.sertumrosarum.domain.lumen.GardenSnapshot
+import com.sertumrosarum.domain.lumen.LumenToolBridge
+import com.sertumrosarum.domain.lumen.PrayerSessionSnapshot
 import com.sertumrosarum.domain.treasury.TreasuryCatalog
+import com.sertumrosarum.feature.catechist.CatechistScreen
+import com.sertumrosarum.feature.catechist.CatechistViewModel
 import com.sertumrosarum.feature.formation.FormationScreen
 import com.sertumrosarum.feature.garden.GardenScreen
 import com.sertumrosarum.feature.garden.GardenState
@@ -64,8 +75,14 @@ import com.sertumrosarum.ui.components.SertumScaffold
 import com.sertumrosarum.ui.theme.SertumTheme
 
 @Composable
-fun SertumApp(model: PrayerSessionViewModel = viewModel(), repository: GardenRepository? = null) {
+fun SertumApp(
+    model: PrayerSessionViewModel = viewModel(),
+    repository: GardenRepository? = null,
+    lumenRepository: LumenRepository = remember { LumenRepository() },
+) {
     val garden: GardenViewModel? = if (repository != null) viewModel(factory = remember(repository) { GardenViewModel.factory(repository) }) else null
+    val catechistModel: CatechistViewModel = viewModel(factory = remember(lumenRepository) { CatechistViewModel.factory(lumenRepository) })
+    val catechistState by catechistModel.state.collectAsStateWithLifecycle()
     val personal = garden?.state?.collectAsStateWithLifecycle()?.value ?: GardenState()
     val selected = garden?.selection?.collectAsStateWithLifecycle()?.value ?: emptySet()
     val saveError = repository?.error?.collectAsStateWithLifecycle()?.value
@@ -76,6 +93,9 @@ fun SertumApp(model: PrayerSessionViewModel = viewModel(), repository: GardenRep
     var picker by rememberSaveable { mutableStateOf(false) }
     var rosarySetup by rememberSaveable { mutableStateOf(false) }
     var searchOpen by rememberSaveable { mutableStateOf(false) }
+    var catechistOpen by rememberSaveable { mutableStateOf(false) }
+    var catechistPrepareSheet by rememberSaveable { mutableStateOf(false) }
+    var catechistDraft by rememberSaveable { mutableStateOf("") }
     var formationLesson by rememberSaveable { mutableStateOf<String?>(null) }
     var formationQuestion by rememberSaveable { mutableStateOf<String?>(null) }
     var formationJourney by rememberSaveable { mutableStateOf<String?>(null) }
@@ -91,7 +111,7 @@ fun SertumApp(model: PrayerSessionViewModel = viewModel(), repository: GardenRep
             if (repository != null) {
                 startupError = false
                 try {
-                    model.connect(repository); treasury.connect(repository)
+                    model.connect(repository); treasury.connect(repository); catechistModel.connect(repository)
                     welcomed = repository.preferences().welcomed
                     ready = true
                 } catch (e: Exception) { if (e is kotlinx.coroutines.CancellationException) throw e; startupError = true }
@@ -143,9 +163,34 @@ fun SertumApp(model: PrayerSessionViewModel = viewModel(), repository: GardenRep
             model.selectTab(SanctuaryTab.CATECHISM)
         }
 
-        BackHandler(!tabbed) { model.returnHome() }
-        BackHandler(tabbed && state.tab != SanctuaryTab.HOME) { model.selectTab(SanctuaryTab.HOME) }
-        BackHandler(tabbed && state.tab == SanctuaryTab.GUIDES && rosarySetup) { rosarySetup = false }
+        fun openCatechist(
+            draft: String = "",
+            openPrepare: Boolean = false,
+            mysterySet: com.sertumrosarum.domain.prayer.MysterySet = activeSet,
+            mysteryIndex: Int? = null,
+            mysteryTitle: String? = null,
+            autoSendQuestion: String? = null,
+        ) {
+            val ctx = CatechistContext(
+                activeMysterySet = mysterySet,
+                activeMysteryIndex = mysteryIndex,
+                activeMysteryTitle = mysteryTitle,
+                liturgicalSummary = state.liturgicalDay.headerLabel,
+                recentIntentions = personal.intentions.filter { !it.archived }.take(3).map { it.title },
+            )
+            catechistModel.updateContext(ctx)
+            catechistDraft = draft
+            catechistPrepareSheet = openPrepare
+            catechistOpen = true
+            if (!autoSendQuestion.isNullOrBlank()) {
+                catechistModel.sendMessage(autoSendQuestion, ctx)
+            }
+        }
+
+        BackHandler(catechistOpen) { catechistOpen = false }
+        BackHandler(!catechistOpen && !tabbed) { model.returnHome() }
+        BackHandler(!catechistOpen && tabbed && state.tab != SanctuaryTab.HOME) { model.selectTab(SanctuaryTab.HOME) }
+        BackHandler(!catechistOpen && tabbed && state.tab == SanctuaryTab.GUIDES && rosarySetup) { rosarySetup = false }
         SertumScaffold {
             Box(Modifier.align(Alignment.TopCenter).fillMaxHeight().widthIn(max = 560.dp).fillMaxWidth()) {
                 Crossfade(state.screen, animationSpec = tween(450), label = "sanctuary-transition") { screen ->
@@ -182,6 +227,10 @@ fun SertumApp(model: PrayerSessionViewModel = viewModel(), repository: GardenRep
                                         onResume = model::resume,
                                         onIntentions = { model.selectTab(SanctuaryTab.GARDEN) },
                                         onWelcome = { welcomed = true; repository?.enqueue { repository.welcome() } },
+                                        catechist = catechistState.persona,
+                                        onOpenCatechist = { openCatechist() },
+                                        onPrepareCustomRosary = { openCatechist(openPrepare = true) },
+                                        onRecallPrompt = { title -> openCatechist(draft = "Sobre minha intenção anterior: $title", openPrepare = true) },
                                     )
                                     SanctuaryTab.CATECHISM -> FormationScreen(
                                         model = garden,
@@ -189,6 +238,8 @@ fun SertumApp(model: PrayerSessionViewModel = viewModel(), repository: GardenRep
                                         initialLesson = formationLesson,
                                         initialQuestion = formationQuestion,
                                         initialJourney = formationJourney,
+                                        catechist = catechistState.persona,
+                                        onAskCatechist = { q -> openCatechist(draft = q, autoSendQuestion = q.takeIf { it.isNotBlank() }) },
                                     ) { rosarySetup = true; model.selectTab(SanctuaryTab.GUIDES) }
                                     SanctuaryTab.GUIDES -> if (rosarySetup) SanctuaryHome(
                                         state, model,
@@ -224,14 +275,193 @@ fun SertumApp(model: PrayerSessionViewModel = viewModel(), repository: GardenRep
                                 model.selectTab(tab)
                             })
                         }
-                        SanctuaryScreen.PRAYER -> ImmersivePrayerScreen(state, model, state.language, model::selectLanguage, TreasuryCatalog.latinFor(state.step.prayer)) {
+                        SanctuaryScreen.PRAYER -> ImmersivePrayerScreen(
+                            state = state,
+                            model = model,
+                            language = state.language,
+                            onLanguage = model::selectLanguage,
+                            latin = TreasuryCatalog.latinFor(state.step.prayer),
+                            catechistName = catechistState.persona.displayName,
+                            onAskCatechistAboutMystery = { set, idx, title ->
+                                openCatechist(
+                                    mysterySet = set,
+                                    mysteryIndex = idx,
+                                    mysteryTitle = title,
+                                )
+                            },
+                        ) {
                             model.next()?.let { if (state.hapticsEnabled) haptics.play(it) }
                         }
                         SanctuaryScreen.DELIVERED -> CrownDeliveredScreen(state, model::returnHome, onReflect = garden?.let { g -> { text -> g.journal(text, state.sessionId) } })
                     }
                 }
+                val liveToolBridge = remember(garden, model) {
+                    object : LumenToolBridge {
+                        override fun readGarden(): GardenSnapshot {
+                            val g = garden?.state?.value ?: GardenState()
+                            return GardenSnapshot(
+                                intentions = g.intentions.map {
+                                    GardenIntentionSnapshot(
+                                        id = it.id,
+                                        title = it.title,
+                                        description = it.description,
+                                        category = it.category,
+                                        thanksgiving = it.thanksgiving,
+                                        answeredNote = it.answeredNote,
+                                        archived = it.archived,
+                                        createdAtMillis = it.createdAt,
+                                    )
+                                },
+                                recentCrowns = g.sessions.map {
+                                    val finished = it.finishedAt
+                                    GardenCrownSnapshot(
+                                        id = it.id,
+                                        guideName = it.guide,
+                                        mysterySet = it.mysterySet,
+                                        completedAtMillis = finished ?: it.startedAt,
+                                        durationSeconds = if (finished != null) {
+                                            ((finished - it.startedAt) / 1000L).coerceAtLeast(0L)
+                                        } else {
+                                            0L
+                                        },
+                                        status = it.status,
+                                    )
+                                },
+                                recentJournal = g.journal.map {
+                                    GardenJournalSnapshot(it.id, it.text, it.createdAt)
+                                },
+                                bookmarkedKeys = g.bookmarks.map { "${it.kind}:${it.itemId}" },
+                                completedLessonIds = g.learning.filter { it.completedAt != null }.map { it.lessonId },
+                                inProgressLessonIds = g.learning.filter { it.completedAt == null }.map { it.lessonId },
+                            )
+                        }
+
+                        override fun readPrayerSession(): PrayerSessionSnapshot {
+                            val s = model.state.value
+                            return PrayerSessionSnapshot(
+                                hasActiveSession = s.hasSession,
+                                guideName = s.sessionGuide.name,
+                                guideTitle = s.sessionGuide.title,
+                                mysterySet = s.activeMysterySet,
+                                currentStepTitle = s.step.title,
+                                currentMysteryTitle = s.activeMystery?.title,
+                                currentDecadeNumber = s.step.decadeIndex?.plus(1),
+                                currentBeadNumber = s.step.beadIndex?.plus(1),
+                                meditated = s.meditated,
+                                language = s.language.name,
+                                offeredIntentions = s.offeredIntentions.map { it.title },
+                                today = s.today,
+                            )
+                        }
+
+                        override fun createIntention(
+                            title: String,
+                            description: String,
+                            category: String,
+                            thanksgiving: Boolean,
+                            selectForNextRosary: Boolean,
+                        ): String? = garden?.createIntentionReturningId(title, description, category, thanksgiving, selectForNextRosary)
+
+                        override fun markIntentionThanksgiving(intentionId: String, note: String): Boolean =
+                            garden?.markThanksgiving(intentionId, note) ?: false
+
+                        override fun selectIntentionForNextRosary(intentionId: String): Boolean =
+                            garden?.selectIntention(intentionId) ?: false
+
+                        override fun saveJournalReflection(text: String): Boolean {
+                            val g = garden ?: return false
+                            g.journal(text, model.state.value.sessionId)
+                            return true
+                        }
+
+                        override fun bookmarkContent(kind: String, itemId: String): Boolean {
+                            val g = garden ?: return false
+                            val already = g.state.value.bookmarks.any { it.kind == kind && it.itemId == itemId }
+                            if (!already) g.bookmark(kind, itemId)
+                            return true
+                        }
+                    }
+                }
+                LaunchedEffect(liveToolBridge) { catechistModel.attachToolBridge(liveToolBridge) }
+                if (catechistOpen) {
+                    Box(Modifier.fillMaxSize().background(SertumTheme.colors.background)) {
+                        CatechistScreen(
+                            state = catechistState,
+                            selectedMysterySet = activeSet,
+                            initialDraft = catechistDraft,
+                            openPrepareInitially = catechistPrepareSheet,
+                            onBack = { catechistOpen = false; catechistPrepareSheet = false },
+                            onSend = { msg -> catechistModel.sendMessage(msg) },
+                            onSelectPersona = catechistModel::selectPersona,
+                            onToggleOnline = catechistModel::setOnlineEnabled,
+                            onSaveApiKey = catechistModel::setCustomApiKey,
+                            onNewConversation = catechistModel::newConversation,
+                            onPrepareCustomRosary = catechistModel::prepareCustomRosary,
+                            onExecuteAction = { action ->
+                                when (action) {
+                                    is CatechistAction.StartCustomRosary -> {
+                                        catechistOpen = false
+                                        model.startCustomRosary(action.supplement, garden?.selected().orEmpty(), action.singleDecadeIndex)
+                                    }
+                                    is CatechistAction.StartQuickDecade -> {
+                                        catechistOpen = false
+                                        model.startSingleDecade(action.mysterySet, action.mysteryIndex, garden?.selected().orEmpty(), action.meditated)
+                                    }
+                                    is CatechistAction.LaunchGuide -> {
+                                        val guide = PrayerGuide.byNameOrNull(action.guideName) ?: PrayerGuide.TRADITIONAL
+                                        catechistOpen = false
+                                        model.startGuideWithOptions(
+                                            guide = guide,
+                                            mysterySet = action.mysterySet,
+                                            focusMysteryIndex = action.focusMysteryIndex,
+                                            meditatedOverride = action.meditated,
+                                            intentions = garden?.selected().orEmpty(),
+                                        )
+                                    }
+                                    is CatechistAction.SaveIntention -> {
+                                        val normalizedCat = if (action.category.equals("Ação de Graças", ignoreCase = true)) "Ação de graças" else action.category
+                                        garden?.saveIntention(
+                                            title = action.intentionTitle,
+                                            description = action.intentionDescription,
+                                            category = normalizedCat,
+                                            thanksgiving = normalizedCat == "Ação de graças",
+                                            select = true,
+                                        )
+                                        catechistModel.showNotice("Intenção guardada no Meu Jardim e pronta para o próximo terço.")
+                                    }
+                                    is CatechistAction.OpenTreasuryPrayer -> {
+                                        catechistOpen = false
+                                        openTreasuryPrayer(action.prayerId)
+                                    }
+                                    is CatechistAction.OpenFormationLesson -> {
+                                        catechistOpen = false
+                                        openFormation(lesson = action.lessonId)
+                                    }
+                                    is CatechistAction.OpenFormationQuestion -> {
+                                        catechistOpen = false
+                                        openFormation(question = action.questionId)
+                                    }
+                                    is CatechistAction.OpenPracticeJourney -> {
+                                        catechistOpen = false
+                                        openFormation(journey = action.journeyId)
+                                    }
+                                    is CatechistAction.OpenMysteryStudy -> {
+                                        catechistOpen = false
+                                        openMysteryStudy(action.mysterySet, action.mysteryIndex)
+                                    }
+                                }
+                            },
+                            onStartCustomRosary = { supplement ->
+                                catechistOpen = false
+                                catechistPrepareSheet = false
+                                model.startCustomRosary(supplement, garden?.selected().orEmpty())
+                            },
+                            onClearNotice = catechistModel::clearNotice,
+                        )
+                    }
+                }
                 SacredBottomSheet(
-                    openGuide != null && tabbed, { openGuide = null }, shownGuide.title, tag = "guide-sheet",
+                    openGuide != null && tabbed && !catechistOpen, { openGuide = null }, shownGuide.title, tag = "guide-sheet",
                     footer = { GuideSheetFooter { openGuide = null; model.start(shownGuide, garden?.selected().orEmpty()) } },
                 ) {
                     GuideSheetContent(
@@ -258,16 +488,16 @@ fun SertumApp(model: PrayerSessionViewModel = viewModel(), repository: GardenRep
                 TreasurySheets(
                     state = treasuryState,
                     actions = treasury,
-                    visible = tabbed && state.tab == SanctuaryTab.TREASURY,
+                    visible = tabbed && !catechistOpen && state.tab == SanctuaryTab.TREASURY,
                     bookmarkedMysteries = bookmarkedMysteries,
                     onToggleMysteryBookmark = garden?.let { g -> { key -> g.bookmark("mystery", key) } },
                     onPraySingleDecade = { set, index -> model.startSingleDecade(set, index, garden?.selected().orEmpty()) },
                     onPraySet = { set -> model.startRosarySet(set, garden?.selected().orEmpty()) },
                 )
-                SacredBottomSheet(picker && tabbed, { picker = false }, "Intenções para esta coroa", tag = "intention-picker") {
+                SacredBottomSheet(picker && tabbed && !catechistOpen, { picker = false }, "Intenções para esta coroa", tag = "intention-picker") {
                     if (garden != null) IntentionPicker(garden, personal, selected) { picker = false }
                 }
-                SacredBottomSheet(searchOpen && tabbed, { searchOpen = false }, "Buscar no Sertum", tag = "unified-search-sheet") {
+                SacredBottomSheet(searchOpen && tabbed && !catechistOpen, { searchOpen = false }, "Buscar no Sertum", tag = "unified-search-sheet") {
                     UnifiedSearchSheetContent(
                         onOpenMystery = { set, idx -> searchOpen = false; openMysteryStudy(set, idx) },
                         onOpenGuide = { guide -> searchOpen = false; shownGuide = guide; openGuide = guide },

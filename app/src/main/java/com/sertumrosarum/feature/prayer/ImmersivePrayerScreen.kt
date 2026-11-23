@@ -88,6 +88,8 @@ fun ImmersivePrayerScreen(
     onLanguage: (PrayerLanguage) -> Unit = {},
     /** The Treasury's entry for the prayer being prayed, when it carries a Latin text. */
     latin: TreasuryPrayer? = null,
+    catechistName: String = "Mateus",
+    onAskCatechistAboutMystery: ((com.sertumrosarum.domain.prayer.MysterySet, Int, String) -> Unit)? = null,
     onNext: () -> Unit,
 ) {
     val context = LocalContext.current
@@ -175,6 +177,14 @@ fun ImmersivePrayerScreen(
                             SacredText(themedDetail.intention, Modifier.padding(bottom = 12.dp).testTag("themed-meditation"), type.whisper, colors.accentInk, TextAlign.Center)
                         }
                         if (activeMystery != null && announcing && contemplation != null) {
+                            state.customMysteryDecade?.let { customDecade ->
+                                CustomReflectionBanner(
+                                    eyebrow = "Para o que você vive hoje",
+                                    body = customDecade.adaptedReflection,
+                                    footnote = customDecade.spiritualFruitApplication.takeIf { it.isNotBlank() },
+                                    modifier = Modifier.padding(bottom = 14.dp),
+                                )
+                            }
                             MysteryDimensions(
                                 activeMystery,
                                 contemplation,
@@ -209,6 +219,16 @@ fun ImmersivePrayerScreen(
                                     SacredText(latinText, Modifier.testTag("prayer-latin-text"), type.prayer.inLatin, colors.secondary, alignment)
                                 }
                             } else SacredText(if (inLatin) latinText.orEmpty() else state.prayerText, Modifier.widthIn(max = 480.dp).fillMaxWidth().testTag("prayer-text"), if (inLatin) type.prayer.inLatin else type.prayer, colors.ink, alignment)
+                        }
+                        if (step.prayer == FixedPrayer.OFFERING) {
+                            state.customSupplement?.let { sup ->
+                                CustomReflectionBanner(
+                                    eyebrow = "Na sua intenção de hoje",
+                                    body = sup.personalizedOffering,
+                                    footnote = sup.preparatoryPrayer ?: if (sup.suggestEyesClosed) "Dica: o modo Olhos fechados abaixo pode ajudar a rezar sem esforço." else null,
+                                    modifier = Modifier.padding(top = 16.dp),
+                                )
+                            }
                         }
                         if (showOfferedOnStep) {
                             OfferedIntentionsBanner(state.offeredIntentions, Modifier.padding(top = 16.dp))
@@ -281,6 +301,14 @@ fun ImmersivePrayerScreen(
                     SacredPainting(FineArt.forMystery(state.activeMysterySet, effIndex), Modifier.padding(top = 16.dp), "prayer-mystery-painting")
                 }
                 SacredFlourish(Modifier.align(Alignment.CenterHorizontally).padding(top = 14.dp, bottom = 18.dp))
+                state.customMysteryDecade?.let { customDecade ->
+                    CustomReflectionBanner(
+                        eyebrow = "Para o que você vive hoje",
+                        body = customDecade.adaptedReflection,
+                        footnote = customDecade.spiritualFruitApplication.takeIf { it.isNotBlank() },
+                        modifier = Modifier.padding(bottom = 16.dp),
+                    )
+                }
                 state.themedDetail?.let { detail ->
                     SacredCard(Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
                         Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
@@ -323,11 +351,55 @@ fun ImmersivePrayerScreen(
                         MysteryDeepStudySections(study, Modifier.padding(top = 14.dp))
                     }
                 }
-                if (state.script.isRosary && state.meditated && contemplation.beads.isNotEmpty()) {
+                if (onAskCatechistAboutMystery != null && effIndex != null && state.script.isRosary) {
+                    Row(
+                        Modifier.fillMaxWidth().padding(top = 14.dp).clip(RoundedCornerShape(18.dp))
+                            .background(colors.elevated)
+                            .border(1.dp, colors.gold.copy(alpha = .45f), RoundedCornerShape(18.dp))
+                            .clickable(role = Role.Button) {
+                                contemplating = false
+                                onAskCatechistAboutMystery(state.activeMysterySet, effIndex, mystery.title)
+                            }
+                            .testTag("mystery-ask-catechist")
+                            .heightIn(min = 48.dp).padding(horizontal = 16.dp, vertical = 12.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            SacredText("Conversar com $catechistName sobre este mistério", style = type.label, color = colors.ink)
+                            SacredText("Tire dúvidas ou leve este mistério para a sua vida hoje.", style = type.micro.copy(fontWeight = FontWeight.Normal), color = colors.secondary)
+                        }
+                        SacredIcon(SacredIcon.CHEVRON, Modifier.size(13.dp), colors.gold)
+                    }
+                }
+                val activeBeads = state.customMysteryDecade?.beadMeditations?.takeIf { it.isNotEmpty() } ?: contemplation.beads
+                if (state.script.isRosary && state.meditated && activeBeads.isNotEmpty()) {
                     SacredText("Conta a conta", Modifier.padding(start = 6.dp, top = 24.dp, bottom = 8.dp), type.section)
-                    BeadByBeadList(contemplation.beads, step.beadIndex.takeIf { step.prayer == FixedPrayer.HAIL_MARY })
+                    BeadByBeadList(activeBeads, step.beadIndex.takeIf { step.prayer == FixedPrayer.HAIL_MARY })
                 }
             }
+        }
+    }
+}
+
+/** Warm honey-edged contemplative reflection card woven by Lumen around fixed Church prayers. */
+@Composable
+private fun CustomReflectionBanner(eyebrow: String, body: String, footnote: String?, modifier: Modifier = Modifier) {
+    val colors = SertumTheme.colors
+    val type = SertumTheme.typography
+    val shape = RoundedCornerShape(22.dp)
+    Column(
+        modifier.widthIn(max = 480.dp).fillMaxWidth().clip(shape)
+            .background(colors.elevated)
+            .border(1.dp, colors.gold.copy(alpha = .5f), shape)
+            .testTag("lumen-custom-reflection")
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        SacredEyebrow(eyebrow, color = colors.gold)
+        SacredText(body, style = type.whisper, color = colors.ink)
+        if (!footnote.isNullOrBlank()) {
+            SacredText(footnote, style = type.micro.copy(fontWeight = FontWeight.Normal), color = colors.secondary)
         }
     }
 }

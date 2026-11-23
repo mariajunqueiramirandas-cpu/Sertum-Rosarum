@@ -57,6 +57,8 @@ fun FormationScreen(
     initialLesson: String?,
     initialQuestion: String? = null,
     initialJourney: String? = null,
+    catechist: com.sertumrosarum.domain.lumen.CatechistPersona = com.sertumrosarum.domain.lumen.CatechistPersona.DEFAULT,
+    onAskCatechist: ((String) -> Unit)? = null,
     onPray: () -> Unit,
 ) {
     var place by rememberSaveable(initialQuestion, initialJourney) {
@@ -85,7 +87,7 @@ fun FormationScreen(
         when {
             lesson != null -> LessonPage(lesson, state, model, onPray) { lessonId = it }
             journey != null -> JourneyPage(journey, state, model, onPray)
-            else -> CoursePage(state, model, place, { place = it }, query, { query = it }, { lessonId = it }, { journeyId = it }, initialQuestion)
+            else -> CoursePage(state, model, place, { place = it }, query, { query = it }, { lessonId = it }, { journeyId = it }, initialQuestion, catechist, onAskCatechist)
         }
     }
 }

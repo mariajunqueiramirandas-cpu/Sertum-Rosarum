@@ -1,49 +1,54 @@
-# ✨ Lumen — Contemplative AI Engine Specification
+# ✨ Lumen — Contemplative AI & Conversational Catechist Specification
 
-> **Engine Name:** `Lumen` (*Luz para contemplação*)  
-> **Core Principle:** Invisible, reverent integration into the sacred editorial UI—never a generic chat bubble interface.
-
----
-
-## 1. Role & Philosophy
-
-**Lumen** is a specialist Catholic spirituality AI assistant integrated into **Sertum Rosarum**. Its purpose is not to replace human prayer or alter traditional liturgical formulas, but to act as a **quiet spiritual companion and catechist** that bridges the eternal Mysteries of the Gospel with the concrete joys, anxieties, and questions the user carries into prayer today.
-
-### Why No Chat Bubble UI?
-Traditional chat interfaces encourage rapid back-and-forth messaging and break the stillness of prayer. Instead:
-* User inputs are collected through calm, reflective prompts (e.g., *"O que você traz no coração para este terço?"*) or contextual single-tap contemplation lenses.
-* **Lumen** returns structured JSON that renders directly inside the app's native `SacredCard` and `SacredBottomSheet` components using the `Lora` / `Cormorant Garamond` editorial typography.
+> **Engine Name:** `Lumen` (*Luz para contemplação*) — powered by **Mistral Large 4** (`mistral-large-4`) with full offline fallback.  
+> **Core Principle:** Reverent, correspondence-style integration into **O Jardim de Maria** — Fraunces & Nunito typography, soft sage note-cards, open parchment replies, watercolor portraits (**MeshyAI `gpt-image-2-6-sunburst`**), and embedded native prayer actions — never generic chat bubbles.
 
 ---
 
-## 2. The Four Core Capabilities of Lumen
+## 1. Role, Philosophy & The Four Catechist Companions
 
-### 2.1 Custom Rosary Script Generation (`Geração de Roteiros Sob Medida — Intenção Viva`)
-* **Trigger:** On the `Início (O Santuário do Dia)` screen, the user shares what they are living before starting the Rosary (e.g., *"Estou aflito com uma cirurgia da minha mãe e cansado no trabalho"*).
-* **Generated Output (`CustomRosarySupplement`)**:
-  1. **Personalized Initial Offering (`Oferecimento Inicial Personalizado`)**: Elevates the user's raw intention into solemn, reverent prayer language while preserving the traditional Rosary offering structure.
-  2. **5 Adapted Mystery Reflections (`Reflexões nos 5 Mistérios`)**: For each of the 5 Mysteries of the day, generates a contemplative paragraph showing how Christ's life in that specific mystery speaks to the user's pain, fatigue, or gratitude.
-  3. **50 Bead-by-Bead Meditations (`10 Meditações por Dezena`)**: 10 short, one-sentence contemplative prompts per decade connecting the Gospel scene with the specific grace the user needs today.
+**Lumen** is a specialist Catholic spirituality companion and catechist integrated into **Sertum Rosarum**. Its purpose is not to replace human prayer, spiritual direction, or the Sacraments, nor to alter traditional liturgical formulas, but to walk beside the believer—answering honest questions, offering warm encouragement, and bridging real life directly into the Rosary, `Tesouro`, `Catequese`, and `Meu Jardim`.
 
-### 2.2 Contextual Catechist (`Catequista Contextual — "Compreender este Mistério"`)
-* **Trigger:** Tapping the discreet *"Compreender este mistério"* button in the top corner of the **Immersive Prayer Screen** or inside the **Tesouro** study guide.
-* **Three Contemplative Lenses**:
-  1. **Beginner Lens (`"Explique de forma simples para quem está começando"`)**: Clear, warm, jargon-free explanation of the mystery and why we meditate on it.
-  2. **Biblical & Historical Lens (`"Qual o contexto histórico e judaico desta passagem?"`)**: Explains first-century Jewish customs, geography (Nazareth, Ein Karem, Jerusalem, Galilee), and Old Testament prophecies fulfilled in the scene.
-  3. **Wisdom of the Saints (`"O que os Santos ensinam sobre este mistério?"`)**: Curates authentic insights and spiritual commentary from **St. Louis Marie Grignion de Montfort** (*Tratado da Verdadeira Devoção* / *Segredo Admirável do Santíssimo Rosário*), **St. Thomas Aquinas** (*Summa Theologiae*), **St. Teresa of Ávila**, and **St. John Paul II** (*Rosarium Virginis Mariae*).
+### Four Selectable Named Catechists
+Users can talk directly with their companion (by typing or voice input) and switch personalities anytime:
+* **Mateus (*Café & Alegria · default*)**: Blends relatable everyday analogies (*Café no Jardim*, inspired by Bl./St. Pier Giorgio Frassati & Carlo Acutis) with joyful, disarming wit (*Alegre & Perspicaz*, inspired by St. Philip Neri & Chesterton).
+* **Lucas (*Café no Jardim*)**: Warm, grounded friend for everyday struggles—work, family, fatigue, and distraction.
+* **Clara (*Alegre & Perspicaz*)**: Bright, witty, incisive catechist who dissolves anxious scrupulosity with saint stories and Gospel clarity (inspired by St. Teresa of Ávila & St. Philip Neri).
+* **Bento (*Mestre Sereno*)**: Gentle, pastoral elder mentor for quiet nights, grief, and unhurried contemplation (inspired by St. Francis de Sales & St. John Paul II).
 
-### 2.3 Mood & Interior State Curation (`Curadoria por Estado de Espírito`)
-* **Trigger:** User selects or types their interior state before prayer (e.g., *"Estou seco espiritualmente e sem foco"*, *"Estou ansioso"*, *"Estou cansado ao fim do dia"*).
-* **Behavior**:
-  * Generates or selects a brief **Preparatory Prayer to the Holy Spirit** tailored to that interior state.
-  * Automatically adjusts the Rosary session configuration: for spiritual dryness or fatigue, switches to concise, single-breath bead meditations and enables the **"Eyes Closed"** tactile mode reminder.
+### Why Correspondence Layout Instead of Generic Chat Bubbles?
+Traditional chat bubbles feel noisy and pull users out of stillness. Instead:
+* User notes sit right-aligned on soft sage surface cards; the catechist writes openly on the warm parchment canvas in **Fraunces**, headed by their watercolor portrait medallion ([catechists artwork](artwork/catechists/README.md)) and separated by botanical sprigs.
+* **Lumen** runs a **multi-step native Mistral Large 4 Function Calling loop** (`mistral-large-4`, `reasoning_effort: low`, **no `max_tokens` cap**, up to 6 parallel tool rounds) that grounds every answer in the app's real catalogs and `Meu Jardim` database and attaches up to multiple **embedded native action cards** (`Rezar este terço agora`, `Rezar esta dezena agora`, `Iniciar roteiro`, `Guardar no Meu Jardim`, `Abrir no Tesouro`, `Abrir na Catequese`, `Abrir dúvida`, `Abrir caminho prático`, `Estudar mistério`).
 
-### 2.4 Contemplative Memory (`Memória Contemplativa — Diário de Intenções`)
-* **Trigger:** On opening `Início`, `LumenMemoryUseCase` inspects recent entries in `Meu Jardim` (e.g., an intention prayed for 5–14 days ago).
-* **Behavior**:
-  * Displays a gentle, non-intrusive card on the Sanctuary screen:
-    > *"Na semana passada você rezou pela cirurgia de sua mãe. Deseja incluir uma ação de graças ou renovar esta intenção na coroa de hoje?"*
-  * With one tap, weaves that thanksgiving or renewed petition into today's Rosary offering.
+---
+
+## 2. The Core Capabilities & 14 Native Agent Tools (`LumenTools`)
+
+Lumen has full read/write agency across **Sertum Rosarum** through **14 native Mistral Function Calling tools** (declared in `LumenTools.mistralToolsJson` and wired to live Room/DataStore state via `LumenToolBridge` in `SertumApp`):
+
+### 2.1 Read & Grounding Tools (8)
+1. **`search_treasury`** — Searches all 61 bundled Catholic prayers (Portuguese & Latin) and 78 explained theological expressions (`Toque para Entender`).
+2. **`read_treasury_prayer`** — Reads the full Portuguese & Latin text and annotations of a specific prayer by ID.
+3. **`search_catechism`** — Searches all 16 Catechism study chapters, 12 curated faith Q&As, and 4 practical journeys (*Missa*, *Confissão*, *Exame da Noite*, *Obras de Misericórdia*).
+4. **`read_catechism_lesson`** — Reads the full teaching, Scripture references, CIC citations, and daily practice of any chapter.
+5. **`read_mystery_study`** — Reads the 4 contemplative dimensions (scene, meaning, fruit, practice, 10 bead lines) plus historical/Jewish context, Saints' voices, symbols, and CIC references for all 20 Rosary Mysteries.
+6. **`read_liturgy_and_guides`** — Reads today's live liturgical day (season, feast, color, Marian antiphon, recommended mystery set) and lists every playable Rosary, themed Rosary, devotional crown (*Misericórdia*, *São José*, *Lágrimas*, *Sete Alegrias Franciscanas*), and *Via-Sacra*.
+7. **`read_my_garden`** — Reads the user's real local `Meu Jardim` records: active & thanksgiving intentions, recent completed crowns, journal reflections, bookmarks, and Catechism lesson progress.
+8. **`read_current_prayer_session`** — Reads the live active/paused prayer session (guide, mystery, decade, bead, meditated mode, offered intentions).
+
+### 2.2 Write & Action Tools (6)
+9. **`build_custom_rosary`** — Crafts a complete personalized Rosary (all 5 decades + 50 bead meditations, or 1 focused decade + 10 bead meditations) with `personalizedOffering`, `preparatoryPrayer`, and `suggestEyesClosed`, attaching a 1-tap launch card while keeping `FixedPrayer` strictly immutable.
+10. **`suggest_prayer_guide`** — Attaches a 1-tap launch card for any bundled guide in `Roteiros` (including mystery set, focus decade, and meditated toggle).
+11. **`manage_intention`** — Mutates real Room `Meu Jardim` intentions (`create`, `mark_thanksgiving` with answered note, or `select_for_next_rosary`).
+12. **`save_journal_reflection`** — Saves a contemplative reflection directly into the user's `Diário` in Room.
+13. **`bookmark_content`** — Bookmarks a Treasury prayer, Catechism lesson, or Mystery study into `Guardados`.
+14. **`open_app_content`** — Attaches a 1-tap deep-link card directly into a `prayer`, `lesson`, `question`, `journey`, or `mystery_study`.
+
+### 2.3 Contextual Catechist, Interior State & Contemplative Memory
+* **Contextual Mystery Bridge**: From the Immersive Prayer Screen's `mystery-sheet` (*"Conversar com [nome] sobre este mistério"*), opens the catechist pre-seeded with the active mystery and bead context.
+* **Interior State Adaptation**: Automatically adapts offering length, bead meditations, and `"Eyes Closed"` mode suggestion for fatigue, anxiety, grief, or spiritual dryness.
+* **Contemplative Memory (`LumenMemoryUseCase`)**: On `Início`, inspects `Meu Jardim` intentions prayed 5–14 days ago and gently invites renewal or thanksgiving in today's crown.
 
 ---
 
@@ -51,22 +56,23 @@ Traditional chat interfaces encourage rapid back-and-forth messaging and break t
 
 ```mermaid
 flowchart LR
-    Input["User Intention / Question"] --> Sanitizer["Input Sanitizer"]
-    Sanitizer --> Prompt["Doctrinal System Prompt\n(CIC + Scripture + Rosarium Virginis Mariae)"]
-    Prompt --> LLM["LLM Provider / Offline Fallback"]
-    LLM --> Parser["Strict JSON Schema Validator"]
-    Parser --> Guard["Immutable Prayer Guardrail\n(Fixed Prayers Loaded from Local DB Only)"]
-    Guard --> UI["Native SacredCard UI"]
+    Input["User Note / Voice"] --> Sanitizer["Input Sanitizer"]
+    Sanitizer --> Prompt["Persona + Doctrinal System Prompt\n(CIC + Scripture + Rosarium Virginis Mariae)"]
+    Prompt --> Loop["Mistral Large 4 Agent Loop\n(No max_tokens · Up to 6 Parallel Tool Rounds)"]
+    Loop <--> Tools["14 Native Read/Write Tools\n(Catalogs + Liturgy + Room Meu Jardim)"]
+    Loop --> Parser["Structured Reply + Action Cards"]
+    Parser --> Guard["Immutable Prayer Guardrail\n(Fixed Prayers Loaded from Local Binary Only)"]
+    Guard --> UI["O Jardim de Maria Correspondence UI"]
 ```
 
 ### 3.1 Hard Architectural Separation of Fixed Prayers
 * **Rule:** The LLM **never** outputs, modifies, or supplies the text of the *Sinal da Cruz*, *Pai-Nosso*, *Ave-Maria*, *Glória ao Pai*, *Credo*, *Jaculatória de Fátima*, *Salve Rainha*, or *Ladainha Lauretana*.
-* **Enforcement:** In `PrayerStateMachine`, every `PrayerStep.fixedPrayer` reference resolves directly against `ImmutablePrayerCatalog` compiled into the app binary. `CustomRosarySupplement` can only populate `customOfferingAddition`, `decadeReflectionOverride`, and `beadMeditationOverrides`.
+* **Enforcement:** In `PrayerUiState` (`PrayerSessionViewModel`), every `PrayerStep.prayer` reference resolves directly against `FixedPrayer` compiled into the app binary. `CustomRosarySupplement` can only populate `personalizedOffering`, `preparatoryPrayer`, `adaptedReflection`, `spiritualFruitApplication`, and `beadMeditations`.
 
 ### 3.2 Theological Anchoring (`System Prompt Specification`)
 All calls to the AI engine include a non-overridable system instruction enforcing:
 1. Strict fidelity to the **Magisterium of the Catholic Church**, the **Catechism of the Catholic Church (CIC)**, Sacred Scripture, and Pope St. John Paul II's Apostolic Letter ***Rosarium Virginis Mariae***.
-2. A **reverent, serene, pastoral tone** in Brazilian Portuguese (`pt-BR`)—free of colloquial slang, secular self-help clichés, or superstitious promises.
+2. Warm, human, pastoral **Brazilian Portuguese (`pt-BR`)** shaped by the user's chosen catechist companion—free of secular self-help clichés or superstitious promises.
 3. Refusal to give medical, legal, or psychological diagnoses; when a user expresses severe distress, Lumen responds with gentle spiritual consolation anchored in Christ's compassion while encouraging appropriate human and pastoral support.
 
 ---

@@ -71,7 +71,7 @@ fun SacredText(
     maxLines: Int = Int.MAX_VALUE,
 ) = BasicText(text, modifier, style.copy(color = color, textAlign = align ?: style.textAlign), overflow = TextOverflow.Ellipsis, maxLines = maxLines)
 
-enum class SacredIcon { SUN, MOON, SYSTEM, BACK, CLOSE, EYE, HAPTIC, CHEVRON, CROSS, CHECK, ROSE, ARCH, BEADS, BOOK, SPROUT, SEARCH, BOOKMARK, PEN, CHEVRON_BACK }
+enum class SacredIcon { SUN, MOON, SYSTEM, BACK, CLOSE, EYE, HAPTIC, CHEVRON, CROSS, CHECK, ROSE, ARCH, BEADS, BOOK, SPROUT, SEARCH, BOOKMARK, PEN, CHEVRON_BACK, MIC, SEND }
 
 @Composable
 fun SacredIcon(icon: SacredIcon, modifier: Modifier = Modifier, color: Color = SertumTheme.colors.ink) {
@@ -185,6 +185,17 @@ fun SacredIcon(icon: SacredIcon, modifier: Modifier = Modifier, color: Color = S
                 }
                 drawPath(pen, color, style = Stroke(stroke, join = androidx.compose.ui.graphics.StrokeJoin.Round))
                 line(13.5f, 7f, 17f, 10.5f)
+            }
+            SacredIcon.MIC -> {
+                drawRoundRect(color, point(9f, 3.5f), Size(6f * unit, 10f * unit), CornerRadius(3f * unit), style = Stroke(stroke))
+                drawArc(color, 0f, 180f, false, point(6f, 6.5f), Size(12f * unit, 10.5f * unit), style = Stroke(stroke, cap = StrokeCap.Round))
+                line(12f, 17f, 12f, 20.5f)
+                line(8.5f, 20.5f, 15.5f, 20.5f)
+            }
+            SacredIcon.SEND -> {
+                line(12f, 19f, 12f, 5f)
+                line(12f, 5f, 6.5f, 10.5f)
+                line(12f, 5f, 17.5f, 10.5f)
             }
             SacredIcon.ROSE -> Unit // The painted rose is rendered above.
         }

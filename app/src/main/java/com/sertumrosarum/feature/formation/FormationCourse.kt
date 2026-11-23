@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
@@ -39,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sertumrosarum.domain.formation.FormationCatalog
 import com.sertumrosarum.domain.formation.FormationLesson
+import com.sertumrosarum.feature.catechist.portrait
 import com.sertumrosarum.feature.garden.GardenState
 import com.sertumrosarum.feature.garden.GardenViewModel
 import com.sertumrosarum.ui.canvas.DevotionalArtwork
@@ -72,6 +74,8 @@ internal fun ColumnScope.CoursePage(
     query: String, onQuery: (String) -> Unit,
     openLesson: (String) -> Unit, openJourney: (String) -> Unit,
     initialQuestion: String? = null,
+    catechist: com.sertumrosarum.domain.lumen.CatechistPersona = com.sertumrosarum.domain.lumen.CatechistPersona.DEFAULT,
+    onAskCatechist: ((String) -> Unit)? = null,
 ) {
     val page = SertumTheme.spacing.page
     // One frame for every painting, so changing place never moves the words beneath it.
@@ -82,7 +86,7 @@ internal fun ColumnScope.CoursePage(
     Column(Modifier.fillMaxWidth().padding(horizontal = page).padding(top = 20.dp, bottom = 44.dp)) {
         when (place) {
             FormationPlace.LEARN -> LearnPlace(state, query, onQuery, openLesson)
-            FormationPlace.QUESTIONS -> QuestionsPlace(state, model, query, onQuery, initialQuestion)
+            FormationPlace.QUESTIONS -> QuestionsPlace(state, model, query, onQuery, initialQuestion, catechist, onAskCatechist)
             FormationPlace.LIFE -> LifePlace(openJourney, openLesson)
         }
         EditorialNote("formation", "Revisão 2 · 14/11/2026", model, Modifier.padding(top = 36.dp))
@@ -231,7 +235,15 @@ private fun LessonList(lessons: List<FormationLesson>, state: GardenState, next:
 
 /** Common questions, each opening in place beneath itself. */
 @Composable
-private fun QuestionsPlace(state: GardenState, model: GardenViewModel?, query: String, onQuery: (String) -> Unit, initialQuestion: String? = null) {
+private fun QuestionsPlace(
+    state: GardenState,
+    model: GardenViewModel?,
+    query: String,
+    onQuery: (String) -> Unit,
+    initialQuestion: String? = null,
+    catechist: com.sertumrosarum.domain.lumen.CatechistPersona = com.sertumrosarum.domain.lumen.CatechistPersona.DEFAULT,
+    onAskCatechist: ((String) -> Unit)? = null,
+) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     SacredSearchField(query, onQuery, "Que pergunta você traz?", "formation-search")
@@ -240,6 +252,10 @@ private fun QuestionsPlace(state: GardenState, model: GardenViewModel?, query: S
         Modifier.padding(top = 18.dp, bottom = 10.dp), type.micro, colors.secondary)
     if (answers.isEmpty()) {
         QuietNote("Sua pergunta merece atenção.", "Tente outro termo ou converse com um catequista da sua comunidade. Esta biblioteca não responde a todas as situações pessoais.")
+        if (onAskCatechist != null) {
+            Spacer(Modifier.height(14.dp))
+            CatechistQuestionBridge(catechist, query, onAskCatechist)
+        }
         return
     }
     SacredCard(Modifier.fillMaxWidth()) {
@@ -276,6 +292,43 @@ private fun QuestionsPlace(state: GardenState, model: GardenViewModel?, query: S
                     }
                 }
             }
+        }
+    }
+    if (onAskCatechist != null) {
+        Spacer(Modifier.height(16.dp))
+        CatechistQuestionBridge(catechist, query, onAskCatechist)
+    }
+}
+
+@Composable
+private fun CatechistQuestionBridge(
+    catechist: com.sertumrosarum.domain.lumen.CatechistPersona,
+    query: String,
+    onAskCatechist: (String) -> Unit,
+) {
+    val colors = SertumTheme.colors
+    val type = SertumTheme.typography
+    SacredCard(Modifier.fillMaxWidth()) {
+        Row(
+            Modifier.fillMaxWidth()
+                .clickable(role = Role.Button) { onAskCatechist(query) }
+                .testTag("formation-ask-catechist")
+                .padding(horizontal = 16.dp, vertical = 14.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(14.dp),
+        ) {
+            DevotionalArtwork(catechist.portrait(), Modifier.size(56.dp))
+            Column(Modifier.weight(1f)) {
+                SacredText("Quer conversar mais fundo?", style = type.section.copy(fontSize = 18.sp, lineHeight = 24.sp))
+                SacredText(
+                    if (query.isBlank()) "Pergunte direto para ${catechist.displayName} (${catechist.styleTitle})."
+                    else "Leve “${query.take(48)}” para conversar com ${catechist.displayName}.",
+                    Modifier.padding(top = 3.dp),
+                    type.body.copy(fontSize = 13.5.sp, lineHeight = 19.sp),
+                    colors.secondary,
+                )
+            }
+            SacredIcon(SacredIcon.CHEVRON, Modifier.size(13.dp), colors.gold)
         }
     }
 }
