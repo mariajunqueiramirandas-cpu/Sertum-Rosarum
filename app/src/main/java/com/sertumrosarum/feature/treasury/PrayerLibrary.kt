@@ -67,72 +67,80 @@ internal fun PrayerLibrary(state: TreasuryUiState, actions: TreasuryActions, scr
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     Column(Modifier.fillMaxSize().testTag("treasury")) {
-        Row(Modifier.fillMaxWidth().padding(start = SertumTheme.spacing.page, top = 10.dp, bottom = 2.dp).heightIn(min = 48.dp),
+        Row(Modifier.fillMaxWidth().padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, top = 10.dp, bottom = 2.dp).heightIn(min = 48.dp),
             verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
             RoseMark(Modifier.size(30.dp))
             SacredText("Tesouro", Modifier.semantics { heading() }, type.brand)
         }
-        LazyColumn(Modifier.fillMaxSize().testTag("treasury-scroll"), state = scroll) {
-            if (state.query.isBlank()) item("welcome") {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    val category = state.category
-                    // One frame for every painting and one slot for every greeting, so choosing a moment never moves the search and choices below.
-                    Box(Modifier.padding(top = 10.dp).size(width = 256.dp, height = 144.dp), contentAlignment = Alignment.Center) {
-                        if (category == null) DevotionalArtwork(DevotionalIllustration.TREASURY_ENTRANCE, Modifier.fillMaxSize())
-                        else TreasuryArtwork(category, Modifier.size(120.dp))
-                    }
-                    SteadySlot(listOf<PrayerCategory?>(null) + PrayerCategory.entries, category, Modifier.padding(top = 10.dp).fillMaxWidth()) { moment, _ ->
-                        PageWelcome(moment?.label ?: "Rezar e compreender.", moment?.caption ?: "Orações para cada momento, e o sentido de cada palavra.")
-                    }
-                }
-            }
-            item("formation-entry") { formation() }
-            item("search") { SacredSearchField(state.query, actions::search, "Buscar uma oração", "treasury-search", Modifier.padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, top = 22.dp)) }
-            item("categories") { CategoryChoices(state.category, actions::selectCategory, Modifier.padding(top = 10.dp)) }
-            if (state.query.isBlank() && state.category == null) {
-                item("formation") {
-                    SacredCard(Modifier.padding(horizontal = SertumTheme.spacing.page, vertical = 14.dp).fillMaxWidth()) {
-                        Row(Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = "Abrir o guia de estudo", onClick = actions::openMysteries)
-                            .testTag("open-mysteries").heightIn(min = 84.dp).padding(16.dp),
-                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                            CrownGlyph(5, 10, Modifier.size(48.dp))
-                            Column(Modifier.weight(1f)) {
-                                SacredText("Os vinte mistérios", style = type.label)
-                                SacredText("A cena, o sentido, o fruto e as dez meditações.", Modifier.padding(top = 4.dp), type.body, colors.secondary)
-                            }
-                            SacredIcon(SacredIcon.CHEVRON, Modifier.size(13.dp), colors.muted)
+        Box(Modifier.weight(1f)) {
+            LazyColumn(Modifier.fillMaxSize().testTag("treasury-scroll"), state = scroll) {
+                if (state.query.isBlank()) item("welcome") {
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        val category = state.category
+                        // One frame for every painting and one slot for every greeting, so choosing a moment never moves the search and choices below.
+                        Box(Modifier.padding(top = 10.dp).size(width = 256.dp, height = 144.dp), contentAlignment = Alignment.Center) {
+                            if (category == null) DevotionalArtwork(DevotionalIllustration.TREASURY_ENTRANCE, Modifier.fillMaxSize())
+                            else TreasuryArtwork(category, Modifier.size(120.dp))
+                        }
+                        SteadySlot(listOf<PrayerCategory?>(null) + PrayerCategory.entries, category, Modifier.padding(top = 10.dp).fillMaxWidth()) { moment, _ ->
+                            PageWelcome(moment?.label ?: "Rezar e compreender.", moment?.caption ?: "Orações para cada momento, e o sentido de cada palavra.")
                         }
                     }
                 }
-            }
-            item("result-count") {
-                SacredText("${state.prayers.size} ${if (state.prayers.size == 1) "oração" else "orações"}",
-                    Modifier.padding(horizontal = SertumTheme.spacing.page, vertical = 8.dp).testTag("treasury-result-count"), type.micro, colors.secondary)
-            }
-            if (state.prayers.isEmpty()) {
-                item("empty") { EmptyShelf(if (state.query.isNotBlank()) "Nenhuma oração encontrada para “${state.query.trim()}”." else "Nenhuma oração neste momento.") }
-            } else {
-                val shelves = state.prayers.groupBy { it.category }
-                PrayerCategory.entries.filter { it in shelves }.forEach { category ->
-                    if (state.category == null) item("heading-${category.name}") {
-                        Row(Modifier.fillMaxWidth().padding(start = SertumTheme.spacing.page - 4.dp, end = SertumTheme.spacing.page, top = 12.dp, bottom = 10.dp).testTag("shelf-${category.name}"),
-                            verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                            TreasuryArtwork(category, Modifier.size(76.dp))
-                            Column(Modifier.weight(1f)) {
-                                SacredText(category.label, Modifier.semantics { heading() }, type.section)
-                                SacredText(category.caption, Modifier.padding(top = 4.dp), type.body.copy(fontSize = 14.sp, lineHeight = 21.sp), colors.secondary)
+                item("search") { SacredSearchField(state.query, actions::search, "Buscar uma oração", "treasury-search", Modifier.padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, top = 18.dp)) }
+                item("categories") { CategoryChoices(state.category, actions::selectCategory, Modifier.padding(top = 10.dp)) }
+                if (state.query.isBlank() && state.category == null) {
+                    item("formation") {
+                        SacredCard(Modifier.padding(horizontal = SertumTheme.spacing.page, vertical = 14.dp).fillMaxWidth()) {
+                            Column(Modifier.padding(vertical = 4.dp)) {
+                                Row(Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = "Abrir o guia de estudo", onClick = actions::openMysteries)
+                                    .testTag("open-mysteries").heightIn(min = 80.dp).padding(horizontal = 16.dp, vertical = 14.dp),
+                                    verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                                    CrownGlyph(5, 10, Modifier.size(48.dp))
+                                    Column(Modifier.weight(1f)) {
+                                        SacredText("Os vinte mistérios", style = type.label.copy(fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold))
+                                        SacredText("A cena, o sentido, o fruto e as dez meditações.", Modifier.padding(top = 3.dp), type.body.copy(fontSize = 14.sp, lineHeight = 20.sp), colors.secondary)
+                                    }
+                                    SacredIcon(SacredIcon.CHEVRON, Modifier.size(13.dp), colors.muted)
+                                }
+                                formation()
                             }
                         }
                     }
-                    items(shelves.getValue(category), key = { "prayer-${it.id}" }, contentType = { "prayer" }) { prayer ->
-                        SacredCard(Modifier.padding(horizontal = SertumTheme.spacing.page).padding(bottom = 6.dp).fillMaxWidth()) { PrayerRow(prayer) { actions.openPrayer(prayer) } }
+                }
+                item("result-count") {
+                    SacredText("${state.prayers.size} ${if (state.prayers.size == 1) "oração" else "orações"}",
+                        Modifier.padding(horizontal = SertumTheme.spacing.page, vertical = 8.dp).testTag("treasury-result-count"), type.micro, colors.secondary)
+                }
+                if (state.prayers.isEmpty()) {
+                    item("empty") { EmptyShelf(if (state.query.isNotBlank()) "Nenhuma oração encontrada para “${state.query.trim()}”." else "Nenhuma oração neste momento.") }
+                } else {
+                    val shelves = state.prayers.groupBy { it.category }
+                    PrayerCategory.entries.filter { it in shelves }.forEach { category ->
+                        if (state.category == null) item("heading-${category.name}") {
+                            Row(Modifier.fillMaxWidth().padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, top = 14.dp, bottom = 10.dp).testTag("shelf-${category.name}"),
+                                verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                                TreasuryArtwork(category, Modifier.size(72.dp))
+                                Column(Modifier.weight(1f)) {
+                                    SacredText(category.label, Modifier.semantics { heading() }, type.section)
+                                    SacredText(category.caption, Modifier.padding(top = 4.dp), type.body.copy(fontSize = 14.sp, lineHeight = 21.sp), colors.secondary)
+                                }
+                            }
+                        }
+                        items(shelves.getValue(category), key = { "prayer-${it.id}" }, contentType = { "prayer" }) { prayer ->
+                            SacredCard(Modifier.padding(horizontal = SertumTheme.spacing.page).padding(bottom = 8.dp).fillMaxWidth()) { PrayerRow(prayer) { actions.openPrayer(prayer) } }
+                        }
                     }
                 }
+                item("closing") {
+                    SacredText("“Maria guardava todas estas coisas, meditando-as no seu coração.”", Modifier.fillMaxWidth().padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, top = 28.dp), type.whisper, colors.secondary, TextAlign.Center)
+                    SacredText("Lucas 2, 19", Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 44.dp), type.micro, colors.muted, TextAlign.Center)
+                }
             }
-            item("closing") {
-                SacredText("“Maria guardava todas estas coisas, meditando-as no seu coração.”", Modifier.fillMaxWidth().padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, top = 28.dp), type.whisper, colors.secondary, TextAlign.Center)
-                SacredText("Lucas 2, 19", Modifier.fillMaxWidth().padding(top = 6.dp, bottom = 44.dp), type.micro, colors.muted, TextAlign.Center)
-            }
+            Box(
+                Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(28.dp)
+                    .background(androidx.compose.ui.graphics.Brush.verticalGradient(listOf(colors.background.copy(alpha = 0f), colors.background))),
+            )
         }
     }
 }

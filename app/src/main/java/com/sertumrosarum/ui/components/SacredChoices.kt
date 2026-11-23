@@ -53,11 +53,19 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.runtime.remember
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.text.rememberTextMeasurer
 import com.sertumrosarum.ui.theme.SertumTheme
 
 /**
  * The places within a page, as tabs: plain words over a hairline, with a sage bar under the chosen one.
- * The row runs to the screen's edges and fades where more places wait beyond them.
+ * When all tabs fit comfortably, they span the full width evenly; at larger text sizes the row scrolls
+ * smoothly to the edges with soft fades.
  *
  * [bleed] is the side padding of the column this row sits in, so the row can reach past it.
  */
@@ -75,23 +83,53 @@ fun <T> SacredTabs(
     val style = SertumTheme.typography.label.copy(fontSize = 15.sp)
     val scroll = rememberScrollState()
     val edge = SertumTheme.spacing.page
-    Box(modifier.bleed(bleed).fillMaxWidth()) {
-        // The hairline the tabs stand on, from edge to edge.
+    val measurer = rememberTextMeasurer()
+    val density = LocalDensity.current
+    val neededWidth = with(density) {
+        options.fold(0.dp) { acc, opt ->
+            acc + measurer.measure(label(opt), style.copy(fontWeight = FontWeight.Bold), softWrap = false).size.width.toDp() + 24.dp
+        }
+    }
+    BoxWithConstraints(modifier.bleed(bleed).fillMaxWidth()) {
+        val available = maxWidth - edge * 2
+        val fitsEvenly = available >= neededWidth && options.isNotEmpty()
+        // The hairline the tabs stand on, aligned to the page margins.
         Box(Modifier.align(Alignment.BottomStart).padding(horizontal = edge).fillMaxWidth().height(1.dp).background(colors.border))
-        Row(
-            Modifier.fillMaxWidth().fadingEdges(scroll).horizontalScroll(scroll).selectableGroup().padding(horizontal = edge - 12.dp),
-        ) {
-            options.forEach { option ->
-                val active = option == selected
-                val bar by animateFloatAsState(if (active) 1f else 0f, label = "tab-bar")
-                Column(
-                    Modifier.width(IntrinsicSize.Max).clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
-                        .selectable(active, role = Role.Tab, onClick = { onSelect(option) })
-                        .testTag(tag(option)).heightIn(min = 48.dp).padding(horizontal = 12.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Box(Modifier.padding(top = 12.dp, bottom = 10.dp)) { SteadyWord(label(option), style, active, if (active) colors.ink else colors.secondary) }
-                    Box(Modifier.align(Alignment.CenterHorizontally).alpha(bar).fillMaxWidth().height(3.dp).clip(RoundedCornerShape(2.dp)).background(colors.marian))
+        if (fitsEvenly) {
+            Row(
+                Modifier.fillMaxWidth().padding(horizontal = edge).selectableGroup(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+            ) {
+                options.forEach { option ->
+                    val active = option == selected
+                    val bar by animateFloatAsState(if (active) 1f else 0f, label = "tab-bar")
+                    Column(
+                        Modifier.weight(1f).clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
+                            .selectable(active, role = Role.Tab, onClick = { onSelect(option) })
+                            .testTag(tag(option)).heightIn(min = 48.dp).padding(horizontal = 4.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Box(Modifier.padding(top = 12.dp, bottom = 10.dp)) { SteadyWord(label(option), style, active, if (active) colors.ink else colors.secondary) }
+                        Box(Modifier.align(Alignment.CenterHorizontally).alpha(bar).fillMaxWidth(.72f).height(3.dp).clip(RoundedCornerShape(2.dp)).background(colors.marian))
+                    }
+                }
+            }
+        } else {
+            Row(
+                Modifier.fillMaxWidth().fadingEdges(scroll).horizontalScroll(scroll).selectableGroup().padding(horizontal = edge - 12.dp),
+            ) {
+                options.forEach { option ->
+                    val active = option == selected
+                    val bar by animateFloatAsState(if (active) 1f else 0f, label = "tab-bar")
+                    Column(
+                        Modifier.width(IntrinsicSize.Max).clip(RoundedCornerShape(topStart = 12.dp, topEnd = 12.dp))
+                            .selectable(active, role = Role.Tab, onClick = { onSelect(option) })
+                            .testTag(tag(option)).heightIn(min = 48.dp).padding(horizontal = 12.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Box(Modifier.padding(top = 12.dp, bottom = 10.dp)) { SteadyWord(label(option), style, active, if (active) colors.ink else colors.secondary) }
+                        Box(Modifier.align(Alignment.CenterHorizontally).alpha(bar).fillMaxWidth().height(3.dp).clip(RoundedCornerShape(2.dp)).background(colors.marian))
+                    }
                 }
             }
         }
@@ -167,27 +205,33 @@ private fun Modifier.fadingEdges(scroll: ScrollState, width: Dp = 28.dp) = graph
         if (scroll.canScrollForward) drawRect(Brush.horizontalGradient(listOf(Color.Black, Color.Transparent), startX = size.width - fade, endX = size.width), blendMode = BlendMode.DstIn)
     }
 
-/** A quiet search on the page's surface colour; the cross appears only when there is something to clear. */
+/** A quiet search on warm parchment; gently highlights on focus and shows a clear button only when non-empty. */
 @Composable
 fun SacredSearchField(query: String, onQuery: (String) -> Unit, placeholder: String, tag: String, modifier: Modifier = Modifier) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     val focus = LocalFocusManager.current
     val keyboard = LocalSoftwareKeyboardController.current
+    val interaction = remember { MutableInteractionSource() }
+    val focused by interaction.collectIsFocusedAsState()
+    val restingFill = lerp(colors.elevated, colors.surface, if (colors.isDark) .65f else .5f)
+    val fill by animateColorAsState(if (focused) colors.elevated else restingFill, label = "search-fill")
+    val stroke by animateColorAsState(if (focused) colors.marian else colors.border.copy(alpha = .9f), label = "search-border")
     val shape = RoundedCornerShape(26.dp)
-    val text = type.body.copy(fontSize = 16.sp, lineHeight = 22.sp, color = colors.ink)
+    val text = type.body.copy(fontSize = 15.5.sp, lineHeight = 22.sp, color = colors.ink)
     BasicTextField(
         query, { onQuery(it.take(300)) }, modifier.fillMaxWidth().semantics { contentDescription = placeholder }.testTag(tag),
         textStyle = text, singleLine = true, cursorBrush = SolidColor(colors.marian),
+        interactionSource = interaction,
         keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search), keyboardActions = KeyboardActions(onSearch = { keyboard?.hide(); focus.clearFocus() }),
         decorationBox = { field ->
             Row(
-                Modifier.fillMaxWidth().clip(shape).background(colors.surface).border(1.dp, colors.border.copy(alpha = .7f), shape).heightIn(min = 52.dp).padding(start = 18.dp, end = 4.dp),
+                Modifier.fillMaxWidth().clip(shape).background(fill).border(if (focused) 1.5.dp else 1.dp, stroke, shape).heightIn(min = 52.dp).padding(start = 18.dp, end = 4.dp),
                 verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-                SacredIcon(SacredIcon.SEARCH, Modifier.size(18.dp), colors.secondary)
+                SacredIcon(SacredIcon.SEARCH, Modifier.size(18.dp), if (focused) colors.accentInk else colors.secondary)
                 Box(Modifier.weight(1f), contentAlignment = Alignment.CenterStart) {
-                    if (query.isEmpty()) SacredText(placeholder, style = text, color = colors.muted, maxLines = 1)
+                    if (query.isEmpty()) SacredText(placeholder, style = text, color = colors.muted.copy(alpha = .85f), maxLines = 1)
                     field()
                 }
                 if (query.isNotEmpty()) {

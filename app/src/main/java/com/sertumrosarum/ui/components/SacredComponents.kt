@@ -298,13 +298,13 @@ fun SacredToggleRow(title: String, caption: String, checked: Boolean, onToggle: 
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     Row(
-        modifier.fillMaxWidth().clip(RoundedCornerShape(22.dp)).toggleable(checked, role = Role.Switch, onValueChange = { onToggle() })
-            .testTag(tag).heightIn(min = 56.dp).padding(horizontal = 6.dp, vertical = 8.dp),
+        modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).toggleable(checked, role = Role.Switch, onValueChange = { onToggle() })
+            .testTag(tag).heightIn(min = 56.dp).padding(vertical = 8.dp),
         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
         Column(Modifier.weight(1f)) {
             SacredText(title, style = type.label)
-            SacredText(caption, Modifier.padding(top = 1.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.secondary)
+            SacredText(caption, Modifier.padding(top = 2.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.secondary)
         }
         SacredSwitch(checked)
     }
@@ -370,7 +370,33 @@ fun SacredEyebrow(text: String, modifier: Modifier = Modifier, color: Color = Se
 
 /** A small sage word that acts, for the least of a page's actions. */
 @Composable
-fun SacredTextLink(text: String, onClick: () -> Unit, tag: String, modifier: Modifier = Modifier) {
-    SacredText(text, modifier.clip(RoundedCornerShape(14.dp)).clickable(role = Role.Button, onClick = onClick).testTag(tag).heightIn(min = 48.dp).padding(horizontal = 12.dp, vertical = 14.dp),
-        SertumTheme.typography.label.copy(fontWeight = FontWeight.SemiBold), SertumTheme.colors.accentInk, TextAlign.Center)
+fun SacredTextLink(text: String, onClick: () -> Unit, tag: String, modifier: Modifier = Modifier, align: TextAlign = TextAlign.Center, flush: Boolean = false) {
+    SacredText(text, modifier.clip(RoundedCornerShape(14.dp)).clickable(role = Role.Button, onClick = onClick).testTag(tag).heightIn(min = 48.dp).padding(horizontal = if (flush) 0.dp else 12.dp, vertical = 14.dp),
+        SertumTheme.typography.label.copy(fontWeight = FontWeight.SemiBold), SertumTheme.colors.accentInk, align)
+}
+
+/** A quiet bookmark pill shared across prayers, lessons, mysteries, questions and journeys. */
+@Composable
+fun SacredKeepToggle(
+    kept: Boolean,
+    tag: String,
+    onToggle: () -> Unit,
+    modifier: Modifier = Modifier,
+    keptLabel: String = "Guardada",
+    unkeptLabel: String = "Guardar",
+) {
+    val colors = SertumTheme.colors
+    val shape = RoundedCornerShape(50)
+    Row(
+        modifier.clip(shape)
+            .background(if (kept) colors.marian.copy(alpha = .16f) else Color.Transparent)
+            .border(1.dp, if (kept) colors.marian.copy(alpha = .55f) else colors.border, shape)
+            .clickable(role = Role.Button, onClick = onToggle).testTag(tag)
+            .heightIn(min = 40.dp).padding(start = 12.dp, end = 14.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        SacredIcon(SacredIcon.BOOKMARK, Modifier.size(16.dp), if (kept) colors.accentInk else colors.secondary)
+        SacredText(if (kept) keptLabel else unkeptLabel, style = SertumTheme.typography.micro, color = if (kept) colors.accentInk else colors.secondary)
+    }
 }

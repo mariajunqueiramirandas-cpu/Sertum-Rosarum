@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
@@ -104,7 +106,7 @@ fun SacredBottomSheet(
             val release = with(LocalDensity.current) { 96.dp.toPx() }
             val scroll = rememberScrollState()
             Column(
-                Modifier.fillMaxWidth().heightIn(max = tallest).offset { IntOffset(0, pull.value.roundToInt()) }
+                Modifier.fillMaxWidth().imePadding().heightIn(max = tallest).offset { IntOffset(0, pull.value.roundToInt()) }
                     .drawBehind {
                         // One rounded page that continues below the screen's edge.
                         val round = 34.dp.toPx()
@@ -132,10 +134,15 @@ fun SacredBottomSheet(
                         ),
                     contentAlignment = Alignment.Center,
                 ) { Box(Modifier.width(42.dp).height(4.dp).background(colors.muted.copy(alpha = .38f), CircleShape)) }
-                Column(
-                    Modifier.weight(1f, fill = false).softScrollTop(scroll, 16.dp).verticalScroll(scroll).testTag("$tag-scroll").padding(horizontal = SertumTheme.spacing.page).padding(bottom = 20.dp),
-                    content = content,
-                )
+                Box(Modifier.weight(1f, fill = false).fillMaxWidth()) {
+                    Column(
+                        Modifier.fillMaxWidth().softScrollTop(scroll, 16.dp).verticalScroll(scroll).testTag("$tag-scroll").padding(horizontal = SertumTheme.spacing.page).padding(bottom = 24.dp),
+                        content = content,
+                    )
+                    if (footer != null) {
+                        Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(22.dp).background(Brush.verticalGradient(listOf(colors.background.copy(alpha = 0f), colors.background))))
+                    }
+                }
                 if (footer != null) Column(Modifier.fillMaxWidth().padding(horizontal = SertumTheme.spacing.page).padding(top = 4.dp, bottom = 16.dp), horizontalAlignment = Alignment.CenterHorizontally, content = footer)
             }
         }

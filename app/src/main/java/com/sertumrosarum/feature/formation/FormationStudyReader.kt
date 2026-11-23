@@ -1,14 +1,34 @@
 package com.sertumrosarum.feature.formation
 
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
-import androidx.compose.runtime.*
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
@@ -16,13 +36,17 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.stateDescription
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.foundation.layout.defaultMinSize
+import androidx.compose.ui.platform.LocalDensity
 import com.sertumrosarum.domain.formation.FormationLesson
 import com.sertumrosarum.ui.components.SacredCard
+import com.sertumrosarum.ui.components.SacredDivider
 import com.sertumrosarum.ui.components.SacredEyebrow
+import com.sertumrosarum.ui.components.SacredIcon
 import com.sertumrosarum.ui.components.SacredPainting
 import com.sertumrosarum.ui.components.SacredText
-import kotlinx.coroutines.launch
 import com.sertumrosarum.ui.theme.SertumTheme
+import kotlinx.coroutines.launch
 
 /** Expanded chapters stay open; a small contents list gives direct access to each study stage. */
 @Composable
@@ -31,17 +55,33 @@ internal fun StudyReader(lesson: FormationLesson) {
     val study = lesson.study
     val type = SertumTheme.typography
     val colors = SertumTheme.colors
+    val badgeSize = if (LocalDensity.current.fontScale > 1.25f) 34.dp else 26.dp
     val scope = rememberCoroutineScope()
     val anchors = remember(lesson.id) { List(study.sections.size + 3) { BringIntoViewRequester() } }
     val contents = remember(lesson.id) { BringIntoViewRequester() }
     val labels = study.sections.map { it.title } + listOf("Bíblia aberta", "Uma situação para discernir", "Síntese e revisão")
     SacredCard(Modifier.fillMaxWidth().padding(top = 24.dp).bringIntoViewRequester(contents).testTag("lesson-contents")) {
-        Column(Modifier.padding(18.dp)) {
+        Column(Modifier.padding(20.dp)) {
             SacredEyebrow("Roteiro de estudo")
-            SacredText("Cerca de ${lesson.readingMinutes} min de leitura, além das atividades. Leia em etapas, no seu ritmo.", Modifier.padding(top = 8.dp), type.body, colors.secondary)
+            SacredText("Cerca de ${lesson.readingMinutes} min de leitura, além das atividades. Leia em etapas, no seu ritmo.", Modifier.padding(top = 8.dp, bottom = 10.dp), type.body, colors.secondary)
             labels.forEachIndexed { index, title ->
-                SacredText(title, Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = "Ir para $title") { scope.launch { anchors[index].bringIntoView() } }
-                    .testTag("lesson-jump-$index").heightIn(min = 48.dp).padding(vertical = 12.dp), type.label, colors.accentInk)
+                if (index > 0) SacredDivider()
+                Row(
+                    Modifier.fillMaxWidth()
+                        .clip(RoundedCornerShape(12.dp))
+                        .clickable(role = Role.Button, onClickLabel = "Ir para $title") { scope.launch { anchors[index].bringIntoView() } }
+                        .testTag("lesson-jump-$index")
+                        .heightIn(min = 48.dp)
+                        .padding(vertical = 10.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Box(Modifier.defaultMinSize(minWidth = badgeSize, minHeight = badgeSize).background(colors.marian.copy(alpha = .14f), CircleShape).padding(horizontal = 4.dp), contentAlignment = Alignment.Center) {
+                        SacredText("${index + 1}", style = type.micro, color = colors.accentInk)
+                    }
+                    SacredText(title.replaceFirst(Regex("^\\d+\\s*·\\s*"), ""), Modifier.weight(1f), type.label, colors.accentInk)
+                    SacredIcon(SacredIcon.CHEVRON, Modifier.size(12.dp), colors.muted)
+                }
             }
         }
     }
@@ -62,7 +102,7 @@ internal fun StudyReader(lesson: FormationLesson) {
         SacredText(study.scripture.reference, Modifier.padding(top = 10.dp), type.label, colors.accentInk)
         StudyParagraphs(study.scripture.context)
         SacredCard(Modifier.fillMaxWidth().padding(top = 16.dp)) {
-            Column(Modifier.padding(18.dp)) {
+            Column(Modifier.padding(20.dp)) {
                 SacredEyebrow("Para acompanhar a leitura")
                 SacredText(study.scripture.reading, Modifier.padding(top = 10.dp), type.body.copy(fontSize = 16.sp, lineHeight = 27.sp))
                 SacredText("Resumo editorial · não é transcrição da Bíblia", Modifier.padding(top = 10.dp), type.micro, colors.muted)
@@ -83,8 +123,10 @@ internal fun StudyReader(lesson: FormationLesson) {
     Column(Modifier.fillMaxWidth().padding(top = 30.dp).testTag("lesson-summary")) {
         SacredText("O essencial para guardar", Modifier.bringIntoViewRequester(anchors[study.sections.size + 2]).semantics { heading() }, type.section)
         study.takeaways.forEachIndexed { index, text ->
-            Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                SacredText("${index + 1}", style = type.label, color = colors.accentInk)
+            Row(Modifier.padding(top = 14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.Top) {
+                Box(Modifier.padding(top = 2.dp).defaultMinSize(minWidth = badgeSize, minHeight = badgeSize).background(colors.marian.copy(alpha = .14f), CircleShape).padding(horizontal = 4.dp), contentAlignment = Alignment.Center) {
+                    SacredText("${index + 1}", style = type.micro, color = colors.accentInk)
+                }
                 SacredText(text, Modifier.weight(1f), type.body)
             }
         }
@@ -114,12 +156,27 @@ private fun StudyParagraphs(text: String) {
 internal fun RevealAnswer(label: String, answer: String, key: String) {
     var expanded by rememberSaveable(key) { mutableStateOf(false) }
     val colors = SertumTheme.colors
-    Column(Modifier.fillMaxWidth()) {
-        SacredText(if (expanded) "Fechar explicação ↑" else "$label ↓", Modifier.fillMaxWidth().clickable(role = Role.Button) { expanded = !expanded }
-            .semantics { stateDescription = if (expanded) "Explicação aberta" else "Explicação fechada" }
-            .testTag("reveal-$key").heightIn(min = 48.dp).padding(vertical = 14.dp), SertumTheme.typography.label, colors.accentInk)
+    val turn by animateFloatAsState(if (expanded) -90f else 90f, label = "reveal-chevron")
+    val shape = RoundedCornerShape(18.dp)
+    Column(Modifier.fillMaxWidth().padding(top = 10.dp)) {
+        Row(
+            Modifier.fillMaxWidth()
+                .clip(shape)
+                .background(if (expanded) colors.marian.copy(alpha = .12f) else colors.surface.copy(alpha = .65f))
+                .border(1.dp, if (expanded) colors.marian.copy(alpha = .4f) else colors.border, shape)
+                .clickable(role = Role.Button) { expanded = !expanded }
+                .semantics { stateDescription = if (expanded) "Explicação aberta" else "Explicação fechada" }
+                .testTag("reveal-$key")
+                .heightIn(min = 48.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
+        ) {
+            SacredText(if (expanded) "Fechar explicação" else label, Modifier.weight(1f), SertumTheme.typography.label, colors.accentInk)
+            SacredIcon(SacredIcon.CHEVRON, Modifier.size(12.dp).rotate(turn), colors.accentInk)
+        }
         AnimatedVisibility(expanded) {
-            SacredText(answer, Modifier.padding(bottom = 12.dp).testTag("explanation-$key"), SertumTheme.typography.body.copy(fontSize = 16.sp, lineHeight = 27.sp), colors.secondary)
+            SacredText(answer, Modifier.padding(top = 12.dp, bottom = 8.dp).testTag("explanation-$key"), SertumTheme.typography.body.copy(fontSize = 16.sp, lineHeight = 27.sp), colors.secondary)
         }
     }
 }
