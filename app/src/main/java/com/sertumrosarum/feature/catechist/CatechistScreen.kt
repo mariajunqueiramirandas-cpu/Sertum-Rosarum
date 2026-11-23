@@ -39,15 +39,20 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalUriHandler
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.LiveRegionMode
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
@@ -57,6 +62,7 @@ import androidx.compose.ui.unit.sp
 import com.sertumrosarum.domain.lumen.CatechistAction
 import com.sertumrosarum.domain.lumen.CatechistMessage
 import com.sertumrosarum.domain.lumen.CatechistPersona
+import com.sertumrosarum.domain.lumen.CatechistProgress
 import com.sertumrosarum.domain.lumen.CustomRosarySupplement
 import com.sertumrosarum.domain.lumen.LumenMood
 import com.sertumrosarum.domain.prayer.MysterySet
@@ -145,10 +151,21 @@ fun CatechistScreen(
         }
     }
 
-    LaunchedEffect(state.messages.size, state.isThinking) {
-        if (state.messages.isNotEmpty()) {
-            scroll.animateScrollTo(scroll.maxValue)
+    val hasMessages = state.messages.isNotEmpty()
+    val scrollThreshold = with(LocalDensity.current) { 48.dp.roundToPx() }
+    LaunchedEffect(hasMessages, scrollThreshold) {
+        if (!hasMessages) return@LaunchedEffect
+        var previousEnd = scroll.value
+        snapshotFlow { scroll.maxValue }.collect { end ->
+            if (end == Int.MAX_VALUE) return@collect
+            val followReply = scroll.value >= previousEnd - scrollThreshold && !scroll.isScrollInProgress
+            previousEnd = end
+            if (followReply) scroll.scrollTo(end)
         }
+    }
+    val latestUserMessageId = state.messages.lastOrNull { it.fromUser }?.id
+    LaunchedEffect(latestUserMessageId) {
+        if (latestUserMessageId != null) scroll.scrollTo(scroll.maxValue)
     }
 
     Box(Modifier.fillMaxSize().imePadding().testTag("catechist-screen")) {
@@ -243,11 +260,12 @@ fun CatechistScreen(
                                     fallbackPersona = state.persona,
                                     onAction = onExecuteAction,
                                     onFollowUp = onSend,
+                                    canSendFollowUp = !state.isThinking,
                                 )
                             }
                         }
-                        if (state.isThinking) {
-                            ThinkingIndicator(state.persona, state.thinkingStatus)
+                        state.progress?.let { progress ->
+                            CatechistProgressTurn(progress)
                         }
                         if (!state.isThinking && state.messages.isNotEmpty()) {
                             Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.Center) {
@@ -478,14 +496,15 @@ private fun CatechistReplyTurn(
     fallbackPersona: CatechistPersona,
     onAction: (CatechistAction) -> Unit,
     onFollowUp: (String) -> Unit,
+    canSendFollowUp: Boolean,
 ) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     val speaker = message.persona ?: fallbackPersona
-    val paragraphs = message.text.split("\n\n").map { it.trim() }.filter { it.isNotEmpty() }
-
     Column(
-        Modifier.fillMaxWidth().testTag("catechist-reply"),
+        Modifier.fillMaxWidth()
+            .testTag(if (message.isInterim) "catechist-interim-reply" else "catechist-reply")
+            .semantics { if (message.isInterim) liveRegion = LiveRegionMode.Polite },
         verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(8.dp)) {
@@ -495,19 +514,23 @@ private fun CatechistReplyTurn(
                 SacredText("· modo offline", style = type.micro.copy(fontWeight = FontWeight.Normal), color = colors.muted)
             }
         }
-        if (message.toolTrace.isNotEmpty()) {
-            SacredText(
-                message.toolTrace.joinToString(" · "),
-                Modifier.testTag("catechist-tool-trace"),
-                type.micro.copy(fontWeight = FontWeight.Normal, fontSize = 12.sp),
-                colors.accentInk,
-            )
-        }
-        paragraphs.forEach { para ->
-            SacredText(para, style = type.whisper.copy(fontSize = 17.5.sp, lineHeight = 28.sp), color = colors.ink)
-        }
+        CatechistToolTrace(message.toolTrace)
+        CatechistReplyText(message.text)
         message.reference?.let { ref ->
             SacredText(ref, style = type.micro.copy(fontWeight = FontWeight.Medium), color = colors.accentInk)
+        }
+        if (message.webSources.isNotEmpty()) {
+            val uriHandler = LocalUriHandler.current
+            Column {
+                SacredText("Fontes na web", style = type.micro, color = colors.muted)
+                message.webSources.forEachIndexed { index, source ->
+                    SacredTextLink(
+                        text = source.title,
+                        onClick = { runCatching { uriHandler.openUri(source.url) } },
+                        tag = "catechist-web-source-$index",
+                    )
+                }
+            }
         }
         message.actions.forEachIndexed { idx, action ->
             EmbeddedActionCard(action, onAction, primaryTag = if (idx == 0) "catechist-action-cta" else "catechist-action-cta-$idx")
@@ -517,15 +540,37 @@ private fun CatechistReplyTurn(
                 Modifier.fillMaxWidth()
                     .clip(RoundedCornerShape(18.dp))
                     .border(1.dp, colors.border, RoundedCornerShape(18.dp))
-                    .clickable(role = Role.Button) { onFollowUp(followUp) }
+                    .clickable(enabled = canSendFollowUp, role = Role.Button, onClickLabel = "Enviar resposta sugerida") {
+                        onFollowUp(followUp)
+                    }
+                    .testTag("catechist-suggested-reply")
                     .padding(horizontal = 14.dp, vertical = 11.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
-                SacredText("“$followUp”", Modifier.weight(1f), type.micro.copy(fontWeight = FontWeight.Normal), colors.secondary)
+                SacredText(followUp, Modifier.weight(1f), type.micro.copy(fontWeight = FontWeight.Normal), colors.secondary)
                 SacredIcon(SacredIcon.CHEVRON, Modifier.size(11.dp), colors.marian)
             }
         }
+    }
+}
+
+@Composable
+private fun CatechistToolTrace(trace: List<String>) {
+    if (trace.isEmpty()) return
+    SacredText(
+        trace.joinToString(" · "),
+        Modifier.testTag("catechist-tool-trace"),
+        SertumTheme.typography.micro.copy(fontWeight = FontWeight.Normal, fontSize = 12.sp),
+        SertumTheme.colors.accentInk,
+    )
+}
+
+@Composable
+private fun CatechistReplyText(text: String) {
+    val style = SertumTheme.typography.whisper.copy(fontSize = 17.5.sp, lineHeight = 28.sp)
+    text.split("\n\n").forEach { paragraph ->
+        if (paragraph.isNotBlank()) SacredText(paragraph.trim(), style = style, color = SertumTheme.colors.ink)
     }
 }
 
@@ -572,7 +617,7 @@ private fun EmbeddedActionCard(
 }
 
 @Composable
-private fun ThinkingIndicator(persona: CatechistPersona, statusText: String? = null) {
+private fun CatechistProgressTurn(progress: CatechistProgress) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     val transition = rememberInfiniteTransition(label = "catechist-thinking")
@@ -582,13 +627,24 @@ private fun ThinkingIndicator(persona: CatechistPersona, statusText: String? = n
         animationSpec = infiniteRepeatable(tween(1200), RepeatMode.Reverse),
         label = "pulse",
     )
-    Row(
-        Modifier.fillMaxWidth().padding(vertical = 8.dp),
-        verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(10.dp),
+    Column(
+        Modifier.fillMaxWidth().testTag("catechist-progress"),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        PortraitMedallion(persona, size = 32, modifier = Modifier.alpha(pulse))
-        SacredText(statusText ?: persona.thinkingLine, style = type.whisper, color = colors.secondary)
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(8.dp),
+        ) {
+            PortraitMedallion(progress.persona, size = 30, modifier = Modifier.alpha(pulse))
+            SacredText(
+                progress.status,
+                Modifier.semantics { liveRegion = LiveRegionMode.Polite },
+                type.micro,
+                colors.secondary,
+            )
+        }
+        CatechistToolTrace(progress.toolTrace)
+        progress.replyPreview?.let { CatechistReplyText(it) }
     }
 }
 

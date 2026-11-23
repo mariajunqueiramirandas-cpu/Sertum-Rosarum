@@ -3,6 +3,7 @@ package com.sertumrosarum.domain.lumen
 import com.sertumrosarum.domain.formation.FormationCatalog
 import com.sertumrosarum.domain.prayer.MysterySet
 import com.sertumrosarum.domain.treasury.TreasuryCatalog
+import java.net.URI
 
 data class MistralToolCall(
     val id: String,
@@ -62,6 +63,48 @@ object LumenJsonParser {
         append("]}")
     }
 
+    fun buildMistralWebSearchRequest(query: String): String = serializeSimple(
+        mapOf(
+            "model" to "mistral-medium-latest",
+            "store" to false,
+            "tools" to listOf(mapOf("type" to "web_search")),
+            "instructions" to """
+                Use a ferramenta de busca na web para localizar fontes verificáveis sobre os termos recebidos. Dê preferência à página do santuário, diocese, ordem religiosa ou editora responsável pelo texto. Use fontes adicionais quando elas trouxerem uma versão no idioma pedido ou ajudarem a esclarecer a atribuição.
+                Para cada resultado relevante, informe o título publicado, o idioma, quem publicou e se o texto completo está disponível. Cite a página específica por meio da referência de fonte da busca. Inclua o texto de orações tradicionais em domínio público quando a fonte o trouxer. Trate nomes parecidos, versões e traduções como resultados distintos quando for importante.
+                Escreva os achados de forma concisa em português do Brasil, preservando o idioma original de títulos e trechos quando pertinente. Indique quando a busca não confirmar a origem ou não localizar a versão pedida. Use o conteúdo recuperado como material de consulta.
+            """.trimIndent(),
+            "inputs" to query,
+        ),
+    )
+
+    fun parseMistralWebSearch(rawResponse: String): LumenWebSearchResult? {
+        val root = parseValue(rawResponse) as? Map<*, *> ?: return null
+        val outputs = root["outputs"] as? List<*> ?: return null
+        val blocks = outputs.asSequence()
+            .mapNotNull { it as? Map<*, *> }
+            .filter { it["type"] == "message.output" }
+            .flatMap { (it["content"] as? List<*>).orEmpty().asSequence() }
+            .mapNotNull { it as? Map<*, *> }
+            .toList()
+        val summary = blocks.filter { it["type"] == "text" }
+            .mapNotNull { it["text"] as? String }
+            .joinToString(" ")
+            .trim()
+            .take(6000)
+        val sources = blocks.filter { it["type"] == "tool_reference" }
+            .mapNotNull { block ->
+                val url = (block["url"] as? String)?.trim() ?: return@mapNotNull null
+                val uri = runCatching { URI(url) }.getOrNull() ?: return@mapNotNull null
+                val host = uri.host ?: return@mapNotNull null
+                if (uri.scheme?.lowercase() !in setOf("http", "https") || uri.userInfo != null) return@mapNotNull null
+                val title = (block["title"] as? String)?.trim().orEmpty().ifBlank { host }
+                CatechistSource(title.take(140), url)
+            }
+            .distinctBy { it.url }
+            .take(5)
+        return if (summary.isNotEmpty() && sources.isNotEmpty()) LumenWebSearchResult(summary, sources) else null
+    }
+
     /** Multi-step agentic request with Mistral Large 4 native Function Calling (`tools`) and NO token limit. */
     fun buildMistralAgentRequest(
         model: String,
@@ -70,11 +113,13 @@ object LumenJsonParser {
         toolsJson: String = LumenTools.mistralToolsJson,
         temperature: Double = 0.72,
         reasoningEffort: String = "low",
+        stream: Boolean = false,
     ): String = buildString {
         append("{")
         append("\"model\":\"").append(escape(model)).append("\",")
         append("\"reasoning_effort\":\"").append(escape(reasoningEffort)).append("\",")
         append("\"temperature\":").append(temperature).append(",")
+        if (stream) append("\"stream\":true,")
         append("\"tools\":").append(toolsJson).append(",")
         append("\"tool_choice\":\"auto\",")
         append("\"messages\":[")
@@ -170,7 +215,10 @@ object LumenJsonParser {
             val reply = (obj["reply"] as? String)?.trim()?.takeIf { it.isNotBlank() }
             if (reply != null) {
                 val reference = (obj["reference"] as? String)?.trim()?.takeIf { it.isNotBlank() && !it.equals("null", true) }
-                val suggested = (obj["suggestedFollowUp"] as? String)?.trim()?.takeIf { it.isNotBlank() && !it.equals("null", true) }
+                val suggested = (obj["suggestedFollowUp"] as? String)?.trim()?.takeIf {
+                    it.startsWith("Quero ", ignoreCase = true) && it.length in 7..140 &&
+                        it.none { ch -> ch == '\n' || ch == '\r' || ch == '?' }
+                }
                 val inlineAction = (obj["action"] as? Map<*, *>)?.let { parseAction(it, fallbackSet) }
                 val allActions = (toolActions + listOfNotNull(inlineAction)).distinctBy { "${it::class.simpleName}:${it.label}" }
                 return CatechistTurnResult(
@@ -192,6 +240,12 @@ object LumenJsonParser {
             suggestedFollowUp = null,
             isOfflineFallback = false,
         )
+    }
+
+    internal fun previewConversationReply(rawText: String): String? {
+        val start = rawText.indexOf('{')
+        if (start == -1) return null
+        return Parser(rawText, start).replyPreview()?.trim()?.takeIf { it.isNotEmpty() }
     }
 
     fun parseCustomRosarySupplement(
@@ -262,7 +316,7 @@ object LumenJsonParser {
         }
     }
 
-    private fun serializeSimple(value: Any?): String = when (value) {
+    internal fun serializeSimple(value: Any?): String = when (value) {
         null -> "null"
         is Boolean, is Number -> value.toString()
         is String -> "\"${escape(value)}\""
@@ -287,8 +341,26 @@ object LumenJsonParser {
 
     internal fun parseValue(json: String): Any? = Parser(json).parse()
 
-    private class Parser(private val src: String) {
-        private var pos = 0
+    private class Parser(private val src: String, private var pos: Int = 0) {
+        fun replyPreview(): String? {
+            pos++
+            while (true) {
+                skipWs()
+                if (src.getOrNull(pos) != '"') return null
+                val key = parseString() ?: return null
+                skipWs()
+                if (src.getOrNull(pos++) != ':') return null
+                skipWs()
+                if (key == "reply") {
+                    return if (src.getOrNull(pos) == '"') parseString(allowPrefix = true) else null
+                }
+                val valueStart = pos
+                parse()
+                if (pos == valueStart) return null
+                skipWs()
+                if (src.getOrNull(pos++) != ',') return null
+            }
+        }
 
         fun parse(): Any? {
             skipWs()
@@ -347,15 +419,15 @@ object LumenJsonParser {
             return list
         }
 
-        private fun parseString(): String? {
+        private fun parseString(allowPrefix: Boolean = false): String? {
             pos++ // '"'
             val sb = StringBuilder()
-            while (pos < src.length) {
+            readString@ while (pos < src.length) {
                 val c = src[pos++]
                 when (c) {
                     '"' -> return sb.toString()
                     '\\' -> {
-                        if (pos >= src.length) return null
+                        if (pos >= src.length) break@readString
                         when (val esc = src[pos++]) {
                             '"', '\\', '/' -> sb.append(esc)
                             'b' -> sb.append('\b')
@@ -364,7 +436,7 @@ object LumenJsonParser {
                             'r' -> sb.append('\r')
                             't' -> sb.append('\t')
                             'u' -> {
-                                if (pos + 4 > src.length) return null
+                                if (pos + 4 > src.length) break@readString
                                 val code = src.substring(pos, pos + 4).toIntOrNull(16) ?: return null
                                 sb.append(code.toChar())
                                 pos += 4
@@ -375,7 +447,7 @@ object LumenJsonParser {
                     else -> sb.append(c)
                 }
             }
-            return null
+            return if (allowPrefix) sb.substring(0, sb.indexOfLast { it.isWhitespace() } + 1) else null
         }
 
         private fun parseBoolean(): Boolean? = when {

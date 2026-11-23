@@ -54,7 +54,7 @@ class LumenAgentTest {
                     "role": "assistant",
                     "content": [
                       {"type": "thinking", "thinking": [{"type": "text", "text": "internal thought"}]},
-                      {"type": "text", "text": "{\"reply\":\"Fica em paz, até Santa Teresa lutava contra distrações.\\n\\nVamos rezar uma dezena calma agora?\",\"reference\":\"CIC §2729 · Santa Teresa\",\"suggestedFollowUp\":\"Como rezar quando estou cansado?\",\"action\":{\"type\":\"start_quick_decade\",\"label\":\"Rezar 1º Mistério Doloroso\",\"subtitle\":\"Ritmo leve de um fôlego\",\"mysterySet\":\"SORROWFUL\",\"mysteryIndex\":0}}"}
+                      {"type": "text", "text": "{\"reply\":\"Fica em paz, até Santa Teresa lutava contra distrações.\\n\\nVamos rezar uma dezena calma agora?\",\"reference\":\"CIC §2729 · Santa Teresa\",\"suggestedFollowUp\":\"Quero rezar uma dezena com calma.\",\"action\":{\"type\":\"start_quick_decade\",\"label\":\"Rezar 1º Mistério Doloroso\",\"subtitle\":\"Ritmo leve de um fôlego\",\"mysterySet\":\"SORROWFUL\",\"mysteryIndex\":0}}"}
                     ]
                   }
                 }
@@ -67,11 +67,20 @@ class LumenAgentTest {
         assertNotNull(turn)
         assertTrue(turn!!.replyText.contains("Santa Teresa"))
         assertEquals("CIC §2729 · Santa Teresa", turn.reference)
-        assertEquals("Como rezar quando estou cansado?", turn.suggestedFollowUp)
+        assertEquals("Quero rezar uma dezena com calma.", turn.suggestedFollowUp)
         assertFalse(turn.isOfflineFallback)
         val action = turn.action as CatechistAction.StartQuickDecade
         assertEquals(MysterySet.SORROWFUL, action.mysterySet)
         assertEquals(0, action.mysteryIndex)
+    }
+
+    @Test
+    fun catechistOfferIsNeverSentAsASuggestedReply() {
+        val offer = "Quer que eu monte um terço personalizado pra hoje?"
+        val raw = """{"reply":"$offer","suggestedFollowUp":"$offer"}"""
+        val turn = requireNotNull(LumenJsonParser.parseConversationTurn(raw, MysterySet.JOYFUL))
+        assertEquals(offer, turn.replyText)
+        assertNull(turn.suggestedFollowUp)
     }
 
     @Test
@@ -193,10 +202,10 @@ class LumenAgentTest {
     }
 
     @Test
-    fun allFourteenNativeToolsHaveValidJsonSchemasAndNoTokenCap() {
+    fun agentToolsHaveValidJsonSchemasAndNoTokenCap() {
         val parsed = LumenJsonParser.parseValue(LumenTools.mistralToolsJson) as? List<*>
         assertNotNull(parsed)
-        assertEquals(14, parsed!!.size)
+        assertEquals(16, parsed!!.size)
 
         val agentReq = LumenJsonParser.buildMistralAgentRequest(
             model = LumenGuardrails.MISTRAL_MODEL,
@@ -207,7 +216,36 @@ class LumenAgentTest {
         assertTrue(agentReq.contains("\"tool_choice\":\"auto\""))
         assertTrue(agentReq.contains("build_custom_rosary"))
         assertTrue(agentReq.contains("read_my_garden"))
+        assertTrue(agentReq.contains("send_interim_reply"))
+        assertTrue(agentReq.contains("search_web_prayers"))
         assertFalse(agentReq.contains("max_tokens"))
+    }
+
+    @Test
+    fun mistralWebSearchUsesBuiltinSearchAndKeepsOnlyCitedWebLinks() {
+        val query = "Angelus em \"português\""
+        val request = LumenJsonParser.parseValue(LumenJsonParser.buildMistralWebSearchRequest(query)) as Map<*, *>
+        assertEquals(query, request["inputs"])
+        assertEquals(false, request["store"])
+        assertEquals(listOf(mapOf("type" to "web_search")), request["tools"])
+
+        val response = """
+            {
+              "outputs": [
+                {"type":"tool.execution","name":"web_search","info":"ignored"},
+                {"type":"message.output","content":[
+                  {"type":"text","text":"O Angelus está disponível em português."},
+                  {"type":"tool_reference","title":"Angelus · Vatican News","url":"https://www.vaticannews.va/angelus.html"},
+                  {"type":"tool_reference","title":"Repetido","url":"https://www.vaticannews.va/angelus.html"},
+                  {"type":"tool_reference","title":"Arquivo","url":"file:///secret"},
+                  {"type":"tool_reference","title":"Endereço inválido","url":"https://not-a-source@valid.example"}
+                ]}
+              ]
+            }
+        """.trimIndent()
+        val result = requireNotNull(LumenJsonParser.parseMistralWebSearch(response))
+        assertEquals("O Angelus está disponível em português.", result.summary)
+        assertEquals(listOf(CatechistSource("Angelus · Vatican News", "https://www.vaticannews.va/angelus.html")), result.sources)
     }
 
     @Test
@@ -280,7 +318,9 @@ class LumenAgentTest {
     fun multiStepParallelMistralToolLoopExecutesToolsAndReturnsGroundedReply() = runBlocking {
         var stepCount = 0
         var markedId: String? = null
-        val statuses = mutableListOf<String>()
+        val progress = mutableListOf<CatechistProgress>()
+        val interimReplies = mutableListOf<String>()
+        val interimReply = "Vou separar uma oração de agradecimento pela recuperação da sua mãe."
 
         val multiStepClient = object : LumenApiClient {
             override suspend fun completeJson(
@@ -298,6 +338,7 @@ class LumenAgentTest {
                 toolsJson: String,
                 model: String,
                 temperature: Double,
+                onUpdate: (MistralStepUpdate) -> Unit,
             ): Result<MistralStepResponse> {
                 stepCount++
                 return when (stepCount) {
@@ -321,18 +362,26 @@ class LumenAgentTest {
                                 toolCalls = listOf(
                                     MistralToolCall("tc_3", "manage_intention", "{\"operation\":\"mark_thanksgiving\",\"intentionId\":\"int-mom\",\"thanksgivingNote\":\"Alta recebida!\"}"),
                                     MistralToolCall("tc_4", "suggest_prayer_guide", "{\"guideName\":\"DIVINE_MERCY\",\"label\":\"Rezar Divina Misericórdia em gratidão\",\"subtitle\":\"Para celebrar a recuperação da sua mãe\"}"),
+                                    MistralToolCall("tc_5", "send_interim_reply", """{"message":"$interimReply"}"""),
                                 ),
                                 finishReason = "tool_calls",
                             ),
                         )
                     }
-                    else -> Result.success(
-                        MistralStepResponse(
-                            textContent = "{\"reply\":\"Que notícia abençoada! Já marquei a intenção pela sua mãe em ação de graças no seu Jardim e separei o Terço da Divina Misericórdia pra gente agradecer agora.\",\"reference\":\"1Ts 5, 18 · CIC §2637\",\"suggestedFollowUp\":\"Quer também anotar essa graça no Diário?\"}",
-                            toolCalls = emptyList(),
-                            finishReason = "stop",
-                        ),
-                    )
+                    else -> {
+                        assertEquals(listOf(interimReply), interimReplies)
+                        assertTrue(messages.filterIsInstance<MistralWireMessage.ToolResult>().any {
+                            it.toolCallId == "tc_5" && it.content == """{"ok":true}"""
+                        })
+                        onUpdate(MistralStepUpdate.Reply("Que notícia abençoada!"))
+                        Result.success(
+                            MistralStepResponse(
+                                textContent = "{\"reply\":\"Que notícia abençoada! Já marquei a intenção pela sua mãe em ação de graças no seu Jardim e separei o Terço da Divina Misericórdia pra gente agradecer agora.\",\"reference\":\"1Ts 5, 18 · CIC §2637\",\"suggestedFollowUp\":\"Quero anotar essa graça no Diário.\"}",
+                                toolCalls = emptyList(),
+                                finishReason = "stop",
+                            ),
+                        )
+                    }
                 }
             }
         }
@@ -355,7 +404,8 @@ class LumenAgentTest {
             context = CatechistContext(activeMysterySet = MysterySet.GLORIOUS),
             toolBridge = bridge,
             onlineEnabled = true,
-            onToolStatus = { statuses += it },
+            onInterimReply = { interimReplies += it },
+            onProgress = { progress += it },
         )
 
         assertEquals(3, stepCount)
@@ -366,6 +416,9 @@ class LumenAgentTest {
         assertTrue(turn.actions.first() is CatechistAction.LaunchGuide)
         assertTrue(turn.toolTrace.contains("Consultou o Meu Jardim"))
         assertTrue(turn.toolTrace.contains("Marcou em ação de graças"))
-        assertTrue(statuses.isNotEmpty())
+        assertTrue(progress.any { it.status == "Mateus está olhando o seu Jardim…" })
+        assertTrue(progress.any { "Consultou o Meu Jardim" in it.toolTrace && it.replyPreview == null })
+        assertEquals("Que notícia abençoada!", progress.last().replyPreview)
+        assertEquals(turn.toolTrace, progress.last().toolTrace)
     }
 }

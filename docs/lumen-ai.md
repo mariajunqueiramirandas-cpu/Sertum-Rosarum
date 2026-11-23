@@ -23,9 +23,9 @@ Traditional chat bubbles feel noisy and pull users out of stillness. Instead:
 
 ---
 
-## 2. The Core Capabilities & 14 Native Agent Tools (`LumenTools`)
+## 2. The Core Capabilities & 16 Agent Tools (`LumenTools`)
 
-Lumen has full read/write agency across **Sertum Rosarum** through **14 native Mistral Function Calling tools** (declared in `LumenTools.mistralToolsJson` and wired to live Room/DataStore state via `LumenToolBridge` in `SertumApp`):
+Lumen uses **16 Mistral function-calling tools** declared in `LumenTools.mistralToolsJson`. Garden and prayer session tools access app state through `LumenToolBridge` in `SertumApp`.
 
 ### 2.1 Read & Grounding Tools (8)
 1. **`search_treasury`** — Searches all 61 bundled Catholic prayers (Portuguese & Latin) and 78 explained theological expressions (`Toque para Entender`).
@@ -46,6 +46,8 @@ Lumen has full read/write agency across **Sertum Rosarum** through **14 native M
 14. **`open_app_content`** — Attaches a 1-tap deep-link card directly into a `prayer`, `lesson`, `question`, `journey`, or `mystery_study`.
 
 ### 2.3 Contextual Catechist, Interior State & Contemplative Memory
+* **`send_interim_reply`** posts a short message to the chat while the catechist continues a longer task. The message stays in the conversation when the final reply arrives.
+* **`search_web_prayers`** finds prayers and devotional sources beyond the Tesouro through Mistral web search in online mode. The chat links to the cited pages.
 * **Contextual Mystery Bridge**: From the Immersive Prayer Screen's `mystery-sheet` (*"Conversar com [nome] sobre este mistério"*), opens the catechist pre-seeded with the active mystery and bead context.
 * **Interior State Adaptation**: Automatically adapts offering length, bead meditations, and `"Eyes Closed"` mode suggestion for fatigue, anxiety, grief, or spiritual dryness.
 * **Contemplative Memory (`LumenMemoryUseCase`)**: On `Início`, inspects `Meu Jardim` intentions prayed 5–14 days ago and gently invites renewal or thanksgiving in today's crown.
@@ -59,7 +61,7 @@ flowchart LR
     Input["User Note / Voice"] --> Sanitizer["Input Sanitizer"]
     Sanitizer --> Prompt["Persona + Doctrinal System Prompt\n(CIC + Scripture + Rosarium Virginis Mariae)"]
     Prompt --> Loop["Mistral Large 4 Agent Loop\n(No max_tokens · Up to 6 Parallel Tool Rounds)"]
-    Loop <--> Tools["14 Native Read/Write Tools\n(Catalogs + Liturgy + Room Meu Jardim)"]
+    Loop <--> Tools["16 Agent Tools\n(Catalogs + Liturgy + Meu Jardim + Web Search + Interim Replies)"]
     Loop --> Parser["Structured Reply + Action Cards"]
     Parser --> Guard["Immutable Prayer Guardrail\n(Fixed Prayers Loaded from Local Binary Only)"]
     Guard --> UI["O Jardim de Maria Correspondence UI"]
