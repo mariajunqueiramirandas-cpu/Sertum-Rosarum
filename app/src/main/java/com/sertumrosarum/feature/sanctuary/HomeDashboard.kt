@@ -14,6 +14,9 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.sertumrosarum.domain.formation.FormationCatalog
 import com.sertumrosarum.domain.liturgy.LiturgicalColor
+import com.sertumrosarum.domain.lumen.CatechistPersona
+import com.sertumrosarum.domain.lumen.OfflineCatechistEngine
+import com.sertumrosarum.feature.catechist.portrait
 import com.sertumrosarum.feature.garden.*
 import com.sertumrosarum.feature.guides.PrayerGuide
 import com.sertumrosarum.feature.prayer.*
@@ -53,12 +56,21 @@ fun HomeDashboard(
     onResume: () -> Unit,
     onIntentions: () -> Unit,
     onWelcome: () -> Unit,
+    catechist: CatechistPersona = CatechistPersona.DEFAULT,
+    onOpenCatechist: () -> Unit = {},
+    onPrepareCustomRosary: () -> Unit = {},
+    onRecallPrompt: (String) -> Unit = { onOpenCatechist() },
 ) {
     val type = SertumTheme.typography
     val colors = SertumTheme.colors
     val liturgy = state.liturgicalDay
     val next = personal.learning.firstOrNull { it.completedAt == null }?.lessonId?.let(FormationCatalog::lesson)
         ?: FormationCatalog.lessons.firstOrNull { lesson -> personal.learning.none { it.lessonId == lesson.id && it.completedAt != null } }
+    val memoryRecall = OfflineCatechistEngine.recallIntention(
+        personal.intentions
+            .filter { !it.archived && !it.thanksgiving }
+            .map { Triple(it.id, it.title, it.createdAt) },
+    )
     Column(Modifier.fillMaxSize().testTag("sanctuary")) {
         SanctuaryHeader(
             mode = state.themeMode,
@@ -127,6 +139,28 @@ fun HomeDashboard(
             if (!welcomed) PersonalCard("Comece por onde seu coração está.", "Você pode aprender do início, buscar uma resposta ou simplesmente rezar.") {
                 QuietAction("Quero aprender a rezar", { onWelcome(); onLesson("prayer") }, "welcome-learn")
                 QuietAction("Já conheço · seguir pelo jardim", onWelcome, "welcome-dismiss")
+            }
+
+            // Conversational Catechist companion card (Mateus / Lucas / Clara / Bento)
+            PersonalCard(
+                title = "Conversar com ${catechist.displayName}",
+                detail = "${catechist.styleTitle} · Tire dúvidas de fé, converse sobre seu dia ou prepare o terço juntos.",
+                tag = "home-catechist-card",
+                illustration = catechist.portrait(),
+            ) {
+                SacredPrimaryButton("Abrir conversa", onOpenCatechist, Modifier.padding(top = 12.dp), tag = "home-open-catechist", compact = true)
+                QuietAction("Preparar terço sob medida com ${catechist.displayName}", onPrepareCustomRosary, "home-prepare-custom-rosary")
+            }
+
+            if (memoryRecall != null) {
+                PersonalCard(
+                    title = memoryRecall.heading,
+                    detail = memoryRecall.body,
+                    tag = "home-memory-recall",
+                    illustration = DevotionalIllustration.INTENTIONS,
+                ) {
+                    QuietAction("Incluir ação de graças ou renovar no terço", { onRecallPrompt(memoryRecall.intentionTitle) }, "home-memory-action")
+                }
             }
 
             // Today's Rosary card with 1-tap start, customization, single decade, and deep Mystery study.

@@ -4,6 +4,7 @@ import androidx.lifecycle.SavedStateHandle
 import androidx.lifecycle.ViewModel
 import com.sertumrosarum.domain.liturgy.LiturgicalCalendar
 import com.sertumrosarum.domain.liturgy.LiturgicalDay
+import com.sertumrosarum.domain.lumen.CustomRosarySupplement
 import com.sertumrosarum.domain.treasury.PrayerLanguage
 import com.sertumrosarum.domain.prayer.ChapletContemplations
 import com.sertumrosarum.domain.prayer.FixedPrayer
@@ -64,11 +65,13 @@ data class PrayerUiState(
     val sessionId: String? = null,
     val revision: Long = 0,
     val offeredIntentions: List<OfferedIntention> = emptyList(),
+    val customSupplement: CustomRosarySupplement? = null,
 ) {
     val liturgicalDay: LiturgicalDay get() = LiturgicalCalendar.forDate(today)
     val script get() = sessionGuide.script
     val sequence = script.build(sessionSet, sessionFocusMystery)
     val step get() = sequence[stepIndex]
+    /** Fixed liturgical prayers ALWAYS resolve from [FixedPrayer] and can never be replaced by Lumen. */
     val prayerText get() = step.prayer?.textFor(sessionMode) ?: step.reading?.textFor(sessionMode) ?: step.text
     val groupCount get() = script.groupCount
     /** Active mystery set for the current step (transitions automatically across sets in the Full Rosary). */
@@ -113,8 +116,19 @@ data class PrayerUiState(
     val mysteryStudy: MysteryStudy? get() = effectiveMysteryIndex?.takeIf { script.isRosary }?.let { MysteryStudyCatalog.studyFor(activeMysterySet, it) }
     val themedMeditation get() = effectiveMysteryIndex?.let { ThemedMeditations.forMystery(script, activeMysterySet, it) }
     val themedDetail: ThemedMysteryDetail? get() = effectiveMysteryIndex?.let { ThemedMeditations.detailFor(script, activeMysterySet, it) }
+    /** Personalized reflection for the active mystery when praying with a Lumen custom supplement. */
+    val customMysteryDecade get() = customSupplement?.takeIf { script.isRosary }?.let { sup ->
+        effectiveMysteryIndex?.let { sup.decadeFor(it) }
+    }
     /** One line for the current Ave-Maria, shown only while the bead-by-bead rosary is on. */
-    val beadMeditation get() = if (meditated && script.isRosary && step.prayer == FixedPrayer.HAIL_MARY) contemplation?.beads?.getOrNull(step.beadIndex ?: -1) else null
+    val beadMeditation get() = if (meditated && script.isRosary && step.prayer == FixedPrayer.HAIL_MARY) {
+        val customLine = customSupplement?.let { sup ->
+            val mIdx = effectiveMysteryIndex
+            val bIdx = step.beadIndex
+            if (mIdx != null && bIdx != null) sup.beadMeditationFor(mIdx, bIdx) else null
+        }
+        customLine ?: contemplation?.beads?.getOrNull(step.beadIndex ?: -1)
+    } else null
     val catecheticalNote get() = if (sessionGuide.catechetical) MysteryContent.catecheticalNote(step) else null
     val resumeDescription get() = buildString {
         append(sessionGuide.title); append(" · ")
@@ -247,15 +261,32 @@ class PrayerSessionViewModel(
     fun start(guide: PrayerGuide) = start(guide, emptyList())
 
     fun start(guide: PrayerGuide, intentions: List<OfferedIntention>) {
+        startGuideWithOptions(guide, intentions = intentions)
+    }
+
+    /** Launches any bundled PrayerGuide (Rosary, themed rosary, devotional crown, or Via-Sacra) with optional overrides. */
+    fun startGuideWithOptions(
+        guide: PrayerGuide,
+        mysterySet: MysterySet? = null,
+        focusMysteryIndex: Int? = null,
+        meditatedOverride: Boolean? = null,
+        intentions: List<OfferedIntention> = emptyList(),
+    ) {
         update {
+            val targetSet = mysterySet ?: it.selectedSet
+            val targetFocus = (focusMysteryIndex ?: it.selectedFocusMystery).coerceIn(0, 4)
             it.copy(
                 sessionId = UUID.randomUUID().toString(),
                 offeredIntentions = intentions.distinctBy { item -> item.id },
                 screen = SanctuaryScreen.PRAYER,
-                sessionSet = it.selectedSet,
-                sessionFocusMystery = it.selectedFocusMystery,
+                selectedSet = targetSet,
+                sessionSet = targetSet,
+                selectedFocusMystery = targetFocus,
+                sessionFocusMystery = targetFocus,
                 sessionMode = it.selectedMode,
                 sessionGuide = guide,
+                meditated = meditatedOverride ?: it.meditated,
+                customSupplement = null,
                 stepIndex = 0,
                 startedAt = clock.millis(),
                 finishedAt = null,
@@ -263,8 +294,13 @@ class PrayerSessionViewModel(
         }
     }
 
-    /** Starts a single-decade Rosary focused on a specific mystery (e.g., from the Mystery Study screen). */
-    fun startSingleDecade(set: MysterySet, mysteryIndex: Int, intentions: List<OfferedIntention> = emptyList()) {
+    /** Starts a single-decade Rosary focused on a specific mystery (e.g., from Mystery Study or the Catechist). */
+    fun startSingleDecade(
+        set: MysterySet,
+        mysteryIndex: Int,
+        intentions: List<OfferedIntention> = emptyList(),
+        meditatedOverride: Boolean? = null,
+    ) {
         val focus = mysteryIndex.coerceIn(0, 4)
         update {
             it.copy(
@@ -277,6 +313,36 @@ class PrayerSessionViewModel(
                 sessionFocusMystery = focus,
                 sessionMode = it.selectedMode,
                 sessionGuide = PrayerGuide.SINGLE_DECADE,
+                meditated = meditatedOverride ?: it.meditated,
+                customSupplement = null,
+                stepIndex = 0,
+                startedAt = clock.millis(),
+                finishedAt = null,
+            )
+        }
+    }
+
+    /** Starts a Rosary woven with a Lumen [CustomRosarySupplement] (fixed Church prayers remain immutable). */
+    fun startCustomRosary(
+        supplement: CustomRosarySupplement,
+        intentions: List<OfferedIntention> = emptyList(),
+        singleDecadeIndex: Int? = null,
+    ) {
+        val focus = (singleDecadeIndex ?: 0).coerceIn(0, 4)
+        val guide = if (singleDecadeIndex != null) PrayerGuide.SINGLE_DECADE else PrayerGuide.TRADITIONAL
+        update {
+            it.copy(
+                sessionId = UUID.randomUUID().toString(),
+                offeredIntentions = intentions.distinctBy { item -> item.id },
+                screen = SanctuaryScreen.PRAYER,
+                selectedSet = supplement.mysterySet,
+                sessionSet = supplement.mysterySet,
+                selectedFocusMystery = focus,
+                sessionFocusMystery = focus,
+                sessionMode = it.selectedMode,
+                sessionGuide = guide,
+                meditated = true,
+                customSupplement = supplement,
                 stepIndex = 0,
                 startedAt = clock.millis(),
                 finishedAt = null,
@@ -295,6 +361,7 @@ class PrayerSessionViewModel(
                 sessionSet = set,
                 sessionMode = it.selectedMode,
                 sessionGuide = PrayerGuide.TRADITIONAL,
+                customSupplement = null,
                 stepIndex = 0,
                 startedAt = clock.millis(),
                 finishedAt = null,

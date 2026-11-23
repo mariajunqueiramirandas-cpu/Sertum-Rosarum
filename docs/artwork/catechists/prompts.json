@@ -1,0 +1,72 @@
+{
+  "generator": "meshy.ai /openapi/v1/text-to-image (gpt-image-2-6-sunburst)",
+  "generatedDate": "2026-11-22",
+  "transparent_background": true,
+  "style": "Create ONE original Catholic watercolor and gouache portrait illustration for the Sertum Rosarum Android app, in a coordinated devotional botanical painting series. Painterly refined naturalistic face and hands, delicate real paper-like pigment texture within the painted subject, gentle diffused warm light, restrained antique gold, muted sage leaves, blush pink roses, warm ivory linen and dusty Marian blue. Quiet warmth and human approachability, no cartoon, no anime, no vector icon, no photorealistic 3D render, no halo. Isolated half-length portrait vignette on a genuinely TRANSPARENT alpha background, no rectangular backdrop, no lettering or writing, no frame or border. Full complete organic silhouette comfortably inside the canvas with generous transparent margins, crisp and warm at 48dp.",
+  "assets": [
+    {
+      "id": "mateus",
+      "ai_model": "gpt-image-2-6-sunburst",
+      "subject": "Half-length portrait of Mateus, a warm, joyful Brazilian Catholic catechist in his late 20s with friendly dark eyes, short wavy dark-brown hair, light trim beard, and an inviting authentic smile. Wearing a soft sage-green linen shirt with a small simple wooden cross pendant, holding an open blank ivory Gospel book in one hand and a small ceramic coffee cup in the other. A delicate cluster of blush pink roses and muted sage leaves cradles the base of the vignette. No halo, no writing on book pages, natural anatomical hands.",
+      "file": "mateus.png",
+      "runtime": "catechist_mateus.webp",
+      "master_dimensions": "1024x1024",
+      "alpha_extrema": [
+        0,
+        253
+      ],
+      "sha256": "fb36a6d6b0ccec5923012d4143502ed10013725fac7596d996b92ae5637ceec3",
+      "runtime_bytes": 76352,
+      "runtime_sha256": "f494f66bf670e8a5e52c0a170dc060b7a9feb695c48573a30b04d8a4c398e5ca",
+      "runtime_dimensions": "512x512"
+    },
+    {
+      "id": "lucas",
+      "ai_model": "gpt-image-2-6-sunburst",
+      "subject": "Half-length portrait of Lucas, an approachable, empathetic Brazilian young Catholic friend and catechist in his mid-20s with warm brown eyes, tousled curly dark hair, and a kind easygoing smile. Wearing a soft dusty-blue linen overshirt over a warm ivory cotton shirt, holding a simple wooden rosary gently in his hands with a small cloth-bound blank notebook tucked under his arm. Blush pink rosebuds and sage leaves form an organic base beneath him. No halo, no lettering.",
+      "file": "lucas.png",
+      "runtime": "catechist_lucas.webp",
+      "master_dimensions": "1024x1024",
+      "alpha_extrema": [
+        0,
+        253
+      ],
+      "sha256": "8279fa3a46cdccc9ac414f0b270f8dad8a2ccb8e29865d702c3b0988c8c97ebd",
+      "runtime_bytes": 84224,
+      "runtime_sha256": "e5528786ba293a289f682a6f760f08b5186bcb54d55ace141b34a462ce81039d",
+      "runtime_dimensions": "512x512"
+    },
+    {
+      "id": "clara",
+      "ai_model": "gpt-image-2-6-sunburst",
+      "subject": "Half-length portrait of Clara, a bright, witty, warm-hearted Brazilian Catholic catechist in her early 30s with lively kind eyes, wavy chestnut-brown hair loosely gathered back, and a cheerful knowing smile. Wearing an ivory linen blouse with a soft muted-rose woven shawl, holding a closed antique cloth-bound Bible with one hand beside a small warm glowing brass oil lamp. Soft blush roses and olive-sage sprigs cradle the bottom of the vignette. No halo, no lettering.",
+      "file": "clara.png",
+      "runtime": "catechist_clara.webp",
+      "master_dimensions": "1024x1024",
+      "alpha_extrema": [
+        0,
+        253
+      ],
+      "sha256": "ad2e4d89a409e9c1529773a059923b0b7e8aba5d4ab4ebbe10b1139500c1d3ca",
+      "runtime_bytes": 92352,
+      "runtime_sha256": "0fcbba1516fc0dd16ce10bef026b309e736aee91822e4d2b5ffc3b1541f38753",
+      "runtime_dimensions": "512x512"
+    },
+    {
+      "id": "bento",
+      "ai_model": "gpt-image-2-6-sunburst",
+      "subject": "Half-length portrait of Bento, a serene, kind-hearted elder Brazilian Catholic catechist in his early 60s with silver-grey hair, gentle laugh lines, warm compassionate eyes, and a peaceful smile. Wearing a warm ivory linen shirt under a muted forest-sage knitted cardigan, holding an antique open blank prayer book gently in both hands with a sprig of olive leaves and pale blush roses resting around the lower edge of the vignette. No halo, no lettering.",
+      "file": "bento.png",
+      "runtime": "catechist_bento.webp",
+      "master_dimensions": "1024x1024",
+      "alpha_extrema": [
+        0,
+        253
+      ],
+      "sha256": "5a77ee7088b1ddd3c355d6974fa41cbb73e5447e77b40458c34982a5bea83fa6",
+      "runtime_bytes": 84882,
+      "runtime_sha256": "cfee8ea5c63687d7d8821aeae2330244f2d82dcacd28c5eb2890d362ca56b745",
+      "runtime_dimensions": "512x512"
+    }
+  ]
+}

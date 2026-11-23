@@ -1,3 +1,5 @@
+import java.util.Properties
+
 plugins {
     alias(libs.plugins.ksp)
     alias(libs.plugins.android.application)
@@ -28,6 +30,16 @@ val stageRobolectricAndroidAll by tasks.registering(Sync::class) {
     into(robolectricJarsDir)
 }
 
+val localProps = Properties().apply {
+    val file = rootProject.file("local.properties")
+    if (file.exists()) file.inputStream().use(::load)
+}
+val mistralDevApiKey = (
+    providers.environmentVariable("MISTRAL_API_KEY").orNull
+        ?: localProps.getProperty("mistral.apiKey")
+        ?: ""
+).replace("\\", "\\\\").replace("\"", "\\\"")
+
 android {
     namespace = "com.sertumrosarum"
     compileSdk = 35
@@ -40,6 +52,8 @@ android {
         versionName = providers.gradleProperty("sertum.versionName").get()
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        buildConfigField("String", "MISTRAL_API_KEY", "\"$mistralDevApiKey\"")
+        buildConfigField("String", "MISTRAL_MODEL", "\"mistral-large-4\"")
     }
 
     signingConfigs {
@@ -84,7 +98,7 @@ android {
 
     buildFeatures {
         compose = true
-        buildConfig = false
+        buildConfig = true
         resValues = false
     }
 
