@@ -497,7 +497,7 @@ class PrayerSessionViewModelTest {
         model.start(PrayerGuide.FRANCISCAN)
         model.jumpToDecade(6)
         model.jumpToBead(9)
-        assertNull(model.state.value.contemplation)
+        assertNotNull(model.state.value.contemplation)
         assertNull(model.state.value.beadMeditation)
     }
 

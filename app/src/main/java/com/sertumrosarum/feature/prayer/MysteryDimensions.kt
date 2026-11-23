@@ -62,8 +62,19 @@ import com.sertumrosarum.ui.components.SacredText
 import com.sertumrosarum.ui.components.SacredToggleRow
 import com.sertumrosarum.ui.theme.SertumTheme
 
-private val Ordinals = listOf("Primeiro", "Segundo", "Terceiro", "Quarto", "Quinto", "Sexto", "Sétimo")
+private val Ordinals = listOf(
+    "Primeiro", "Segundo", "Terceiro", "Quarto", "Quinto",
+    "Sexto", "Sétimo", "Oitavo", "Nono", "Décimo",
+    "Décimo primeiro", "Décimo segundo", "Décimo terceiro", "Décimo quarto", "Décimo quinto",
+    "Décimo sexto", "Décimo sétimo", "Décimo oitavo", "Décimo nono", "Vigésimo",
+)
 internal fun ordinal(index: Int) = Ordinals.getOrElse(index) { "${index + 1}º" }
+internal fun ordinalFor(index: Int, groupLabel: String): String {
+    val base = ordinal(index)
+    return if (groupLabel == "mistério") base else base.split(' ').joinToString(" ") { word ->
+        if (word.endsWith("o")) word.dropLast(1) + "a" else word
+    }
+}
 
 /**
  * A mystery in its dimensions: the scene, its meaning, and its fruit, joined by one stem,
@@ -226,17 +237,18 @@ private fun UnfoldedDimensionLayer(index: Int, name: String, last: Boolean, body
 
 /** During a decade, the mystery stays one touch away: this opens its contemplation sheet. */
 @Composable
-internal fun MysteryLink(decade: Int, mystery: Mystery, onOpen: () -> Unit, modifier: Modifier = Modifier) {
+internal fun MysteryLink(decade: Int, mystery: Mystery, onOpen: () -> Unit, modifier: Modifier = Modifier, groupLabel: String = "mistério") {
     val colors = SertumTheme.colors
     val ink = lerp(colors.secondary, colors.ink, .3f)
     val art = LocalBotanicalArtwork.current
+    val marker = if (groupLabel == "mistério") "${decade + 1}º $groupLabel" else "${decade + 1}ª $groupLabel"
     Row(
         modifier.clip(RoundedCornerShape(12.dp)).clickable(role = Role.Button, onClickLabel = "Contemplar este mistério", onClick = onOpen)
             .testTag("mystery-chip").heightIn(min = 48.dp).padding(horizontal = 8.dp, vertical = 6.dp),
         horizontalArrangement = Arrangement.spacedBy(6.dp), verticalAlignment = Alignment.CenterVertically,
     ) {
         Canvas(Modifier.size(18.dp)) { paintBotanical(art.ivoryRose, center, size.minDimension) }
-        SacredText("${decade + 1}º mistério · ${mystery.title}", Modifier.weight(1f, fill = false), SertumTheme.typography.micro, ink)
+        SacredText("$marker · ${mystery.title}", Modifier.weight(1f, fill = false), SertumTheme.typography.micro, ink)
         SacredIcon(SacredIcon.CHEVRON, Modifier.size(11.dp), ink)
     }
 }

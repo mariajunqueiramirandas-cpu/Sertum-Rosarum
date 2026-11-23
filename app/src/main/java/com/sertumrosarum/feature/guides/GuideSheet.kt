@@ -3,6 +3,7 @@ package com.sertumrosarum.feature.guides
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -10,8 +11,11 @@ import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -24,8 +28,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -43,6 +49,7 @@ import com.sertumrosarum.ui.canvas.FiveMysteriesArc
 import com.sertumrosarum.ui.canvas.LocalBotanicalArtwork
 import com.sertumrosarum.ui.canvas.paintBotanical
 import com.sertumrosarum.ui.canvas.DevotionalArtwork
+import com.sertumrosarum.ui.components.SacredIcon
 import com.sertumrosarum.ui.components.SacredPrimaryButton
 import com.sertumrosarum.ui.components.SacredText
 import com.sertumrosarum.ui.components.SacredToggleRow
@@ -58,6 +65,8 @@ internal fun ColumnScope.GuideSheetContent(
     onToggleMeditated: () -> Unit,
     mode: PrayerMode,
     onSelectMode: (PrayerMode) -> Unit,
+    focusMystery: Int = 0,
+    onSelectFocusMystery: (Int) -> Unit = {},
 ) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
@@ -95,10 +104,40 @@ internal fun ColumnScope.GuideSheetContent(
         }
     }
 
-    if (guide.isRosary) {
+    if (guide.usesMysterySet) {
         SheetSection("Quais mistérios?")
         MysterySelector(selectedSet, onSelectSet)
         SacredText(selectedSet.contemplation, Modifier.fillMaxWidth().padding(top = 10.dp), type.body.copy(fontSize = 14.sp, lineHeight = 21.sp), colors.secondary, TextAlign.Center)
+        if (guide == PrayerGuide.SINGLE_DECADE) {
+            SheetSection("Qual mistério deseja contemplar?")
+            Column(Modifier.fillMaxWidth().selectableGroup(), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                selectedSet.mysteries.forEachIndexed { index, mystery ->
+                    val chosen = index == focusMystery.coerceIn(0, 4)
+                    val shape = RoundedCornerShape(18.dp)
+                    Row(
+                        Modifier.fillMaxWidth().clip(shape)
+                            .background(if (chosen) colors.marian.copy(alpha = .14f) else Color.Transparent)
+                            .border(1.dp, if (chosen) colors.marian.copy(alpha = .6f) else colors.border, shape)
+                            .selectable(chosen, role = Role.RadioButton) { onSelectFocusMystery(index) }
+                            .testTag("focus-mystery-$index")
+                            .heightIn(min = 52.dp).padding(horizontal = 14.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
+                    ) {
+                        Box(Modifier.size(26.dp).background(if (chosen) colors.petal else colors.surface, CircleShape), contentAlignment = Alignment.Center) {
+                            SacredText("${index + 1}", style = type.micro, color = if (chosen) colors.onPetal else colors.accentInk)
+                        }
+                        Column(Modifier.weight(1f)) {
+                            SacredText(mystery.title, style = type.label)
+                            SacredText("${mystery.scripture} · ${mystery.fruit}", style = type.micro.copy(fontWeight = FontWeight.Normal), color = colors.secondary)
+                        }
+                        if (chosen) SacredIcon(SacredIcon.CHECK, Modifier.size(16.dp), colors.accentInk)
+                    }
+                }
+            }
+        }
+        Box(Modifier.padding(top = 16.dp, bottom = 6.dp).fillMaxWidth().height(1.dp).background(colors.border))
+        SacredToggleRow("Terço meditado conta a conta", "Uma frase para contemplar em cada Ave-Maria.", meditated, onToggleMeditated, tag = "guide-meditated")
+    } else if (guide == PrayerGuide.FULL_ROSARY) {
         Box(Modifier.padding(top = 16.dp, bottom = 6.dp).fillMaxWidth().height(1.dp).background(colors.border))
         SacredToggleRow("Terço meditado conta a conta", "Uma frase para contemplar em cada Ave-Maria.", meditated, onToggleMeditated, tag = "guide-meditated")
     }
@@ -129,16 +168,17 @@ private fun Panel(modifier: Modifier = Modifier, content: @Composable ColumnScop
 
 /**
  * The crown's own shape, drawn with the same stem and garland the prayer screen uses,
- * so seven septets or seven decades can be felt before they are prayed.
- * The beads answer to touch; nothing here counts as prayer.
+ * so seven septets, nine choirs, fourteen stations, or one decade can be felt before they are prayed.
  */
 @Composable
 private fun CrownPreview(guide: PrayerGuide, modifier: Modifier = Modifier) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     val shape = guide.shape
-    var group by rememberSaveable(guide) { mutableIntStateOf(1) }
-    var bead by rememberSaveable(guide) { mutableIntStateOf(3) }
+    val defaultGroup = if (shape.groups > 1) 1 else 0
+    val defaultBead = (shape.beads / 3).coerceIn(0, (shape.beads - 1).coerceAtLeast(0))
+    var group by rememberSaveable(guide) { mutableIntStateOf(defaultGroup) }
+    var bead by rememberSaveable(guide) { mutableIntStateOf(defaultBead) }
     val frame = RoundedCornerShape(28.dp)
     Column(
         modifier.fillMaxWidth().clip(frame)
@@ -147,9 +187,11 @@ private fun CrownPreview(guide: PrayerGuide, modifier: Modifier = Modifier) {
             .testTag("crown-preview").padding(start = 12.dp, end = 12.dp, top = 8.dp, bottom = 16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
     ) {
-        FiveMysteriesArc(group, group, { group = it; bead = 0 }, groups = shape.groups)
-        BloomingBeadsArc(shape.beads, bead, false, { bead = it }, beadLabel = "Conta")
+        FiveMysteriesArc(group, group, { group = it; bead = 0 }, groups = shape.groups, groupLabel = shape.groupLabel)
+        if (shape.beads > 1) {
+            BloomingBeadsArc(shape.beads, bead, false, { bead = it }, beadLabel = "Conta")
+        }
         SacredText(shape.summary, Modifier.padding(top = 4.dp).testTag("crown-shape"), type.label, align = TextAlign.Center)
-        SacredText("Toque nas contas para sentir o ritmo.", Modifier.padding(top = 2.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.secondary, TextAlign.Center)
+        SacredText(if (shape.beads > 1) "Toque nas contas para sentir o ritmo." else "Toque nas estações para percorrer o caminho.", Modifier.padding(top = 2.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.secondary, TextAlign.Center)
     }
 }

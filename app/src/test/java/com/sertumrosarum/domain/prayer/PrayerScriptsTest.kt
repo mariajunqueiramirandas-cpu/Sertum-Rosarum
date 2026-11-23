@@ -49,18 +49,23 @@ class PrayerScriptsTest {
     }
 
     @Test fun `thematic scripts have an offering and a specific reflection for each mystery`() {
-        val scripts = listOf(PrayerScript.FAMILY, PrayerScript.SICK, PrayerScript.PEACE)
+        val scripts = listOf(PrayerScript.FAMILY, PrayerScript.SICK, PrayerScript.PEACE, PrayerScript.DECEASED, PrayerScript.ANXIETY, PrayerScript.VOCATIONS)
         val reflections = scripts.flatMap { script ->
             MysterySet.entries.flatMap { set ->
                 val sequence = script.build(set)
-                assertEquals(81, sequence.size)
+                assertEquals(82, sequence.size)
                 assertEquals(59, sequence.count { it.isPhysicalBead })
                 assertEquals(script.offering, sequence[2].reading)
-                (0..4).map { requireNotNull(ThemedMeditations.forMystery(script, set, it)) }
+                assertEquals(script.themedClosing, sequence.last().reading)
+                (0..4).map { idx ->
+                    val detail = requireNotNull(ThemedMeditations.detailFor(script, set, idx))
+                    assertTrue(detail.reflection.length > 60 && detail.petition.isNotBlank())
+                    requireNotNull(ThemedMeditations.forMystery(script, set, idx))
+                }
             }
         }
-        assertEquals(60, reflections.distinct().size)
-        assertTrue(reflections.all { it.length > 60 })
+        assertEquals(120, reflections.distinct().size)
+        assertTrue(reflections.all { it.length > 50 })
         assertNull(ThemedMeditations.forMystery(PrayerScript.TRADITIONAL, MysterySet.JOYFUL, 0))
     }
 
@@ -69,7 +74,7 @@ class PrayerScriptsTest {
         assertEquals(listOf(FixedPrayer.SIGN_OF_CROSS, FixedPrayer.OUR_FATHER, FixedPrayer.HAIL_MARY, FixedPrayer.CREED), steps.take(4).map { it.prayer })
         assertEquals(5, steps.count { it.reading == DevotionalPrayer.ETERNAL_FATHER })
         assertEquals(50, steps.count { it.reading == DevotionalPrayer.SORROWFUL_PASSION })
-        assertEquals(List(3) { DevotionalPrayer.HOLY_GOD }, steps.takeLast(3).map { it.reading })
+        assertEquals(List(3) { DevotionalPrayer.HOLY_GOD } + DevotionalPrayer.DIVINE_MERCY_CLOSING, steps.takeLast(4).map { it.reading })
         assertTrue(steps.all { it.mystery == null })
         assertGroups(steps, 5, 10)
     }

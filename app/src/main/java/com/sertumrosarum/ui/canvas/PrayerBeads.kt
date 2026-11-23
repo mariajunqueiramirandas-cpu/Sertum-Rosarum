@@ -6,6 +6,7 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
@@ -14,11 +15,14 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.offset
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -27,6 +31,7 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.StrokeCap
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
@@ -44,23 +49,36 @@ import kotlin.math.sin
 fun CompactMysteries(completed: Int, current: Int?, onSelect: (Int) -> Unit, groups: Int = 5, groupLabel: String = "mistério") {
     val colors = SertumTheme.colors
     val art = LocalBotanicalArtwork.current
-    Row(Modifier.fillMaxWidth()) {
+    val scrollable = groups > 7
+    val scroll = rememberScrollState()
+    val density = LocalDensity.current
+    LaunchedEffect(current, scrollable) {
+        if (scrollable && current != null) {
+            val targetPx = with(density) { (current * 44.dp.toPx() - 100.dp.toPx()).toInt().coerceAtLeast(0) }
+            scroll.animateScrollTo(targetPx)
+        }
+    }
+    Row(
+        if (scrollable) Modifier.fillMaxWidth().horizontalScroll(scroll) else Modifier.fillMaxWidth(),
+        horizontalArrangement = if (scrollable) Arrangement.spacedBy(4.dp) else Arrangement.Start,
+    ) {
         repeat(groups) { index ->
             val reached = index < completed || index == current
-            Box(Modifier.weight(1f).height(48.dp).testTag("decade-$index")
+            val slotMod = if (scrollable) Modifier.width(44.dp) else Modifier.weight(1f)
+            Box(slotMod.height(48.dp).testTag("decade-$index")
                 .semantics { contentDescription = "Ir para ${groupLabel} ${index + 1} de $groups"; selected = current == index }
                 .clickable(role = Role.Button, onClick = { onSelect(index) }), contentAlignment = Alignment.Center) {
                 Row(
-                    Modifier.width(if (groups > 5) 36.dp else 48.dp).height(30.dp).clip(RoundedCornerShape(16.dp))
+                    Modifier.width(if (groups > 5) 38.dp else 48.dp).height(30.dp).clip(RoundedCornerShape(16.dp))
                         .background(if (index == current) colors.petal else if (reached) colors.marian.copy(alpha = .16f) else colors.surface)
                         .border(1.dp, if (index == current) colors.gold.copy(alpha = .55f) else colors.border, RoundedCornerShape(16.dp)),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(2.dp, Alignment.CenterHorizontally),
                 ) {
-                    Canvas(Modifier.size(20.dp)) {
+                    Canvas(Modifier.size(18.dp)) {
                         paintBotanical(if (reached) art.rose else art.bud, center, size.minDimension, if (reached) 1f else .78f)
                     }
-                    SacredText("${index + 1}", style = SertumTheme.typography.label.copy(fontSize = 13.sp), color = if (index == current) colors.onPetal else if (reached) colors.accentInk else colors.muted)
+                    SacredText("${index + 1}", style = SertumTheme.typography.label.copy(fontSize = 12.5.sp), color = if (index == current) colors.onPetal else if (reached) colors.accentInk else colors.muted)
                 }
             }
         }
@@ -68,11 +86,15 @@ fun CompactMysteries(completed: Int, current: Int?, onSelect: (Int) -> Unit, gro
 }
 
 /**
- * The mysteries of a crown along one stem: five for the rosary, seven for the crowns that have seven.
- * Mysteries already prayed are roses; those ahead are buds.
+ * The mysteries of a crown along one stem: 1 for a single decade, 5 for the rosary, 7 for sevenfold crowns,
+ * and a smoothly scrolling botanical garland for longer paths (9 choirs, 14 stations, 20-mystery full rosary).
  */
 @Composable
 fun FiveMysteriesArc(completed: Int, current: Int?, onSelect: (Int) -> Unit, modifier: Modifier = Modifier, groups: Int = 5, groupLabel: String = "mistério", compact: Boolean = false) {
+    if (groups > 7) {
+        ScrollableMysteriesGarland(completed, current, onSelect, modifier, groups, groupLabel, compact)
+        return
+    }
     val colors = SertumTheme.colors
     val art = LocalBotanicalArtwork.current
     val breath = rememberGardenBreath("mystery-stem", 5200)
@@ -85,7 +107,6 @@ fun FiveMysteriesArc(completed: Int, current: Int?, onSelect: (Int) -> Unit, mod
             current != null -> (current + .5f) / groups
             else -> completed.toFloat() / groups
         }
-        // Seven flowers share the stem that five have to themselves, so each is a little smaller.
         val scale = if (groups > 5) .86f else 1f
         val growth by animateFloatAsState(grown, spring(dampingRatio = .9f, stiffness = 40f), label = "stem-growth")
         Canvas(Modifier.fillMaxSize()) {
@@ -98,8 +119,7 @@ fun FiveMysteriesArc(completed: Int, current: Int?, onSelect: (Int) -> Unit, mod
             }
             drawPath(stem(.03f, .97f), colors.marian.copy(alpha = .26f), style = Stroke(1.6.dp.toPx(), cap = StrokeCap.Round))
             if (growth > .04f) drawPath(stem(.03f, growth.coerceAtMost(.97f)), colors.marian.copy(alpha = .8f), style = Stroke(2.dp.toPx(), cap = StrokeCap.Round))
-            // One leaf between each pair of flowers, on alternating sides of the stem.
-            repeat(groups - 1) { index ->
+            repeat((groups - 1).coerceAtLeast(0)) { index ->
                 val u = (index + 1f) / groups
                 val p = point(u)
                 val ahead = point(u + .01f) - p
@@ -136,19 +156,71 @@ fun FiveMysteriesArc(completed: Int, current: Int?, onSelect: (Int) -> Unit, mod
     }
 }
 
-/** One group of beads as a garland, whether it has three, seven, or ten. Each prayer opens its bud into a rose. */
+/** A continuous horizontal botanical stem for 9 choirs, 14 stations, or 20 full-Rosary mysteries. */
+@Composable
+private fun ScrollableMysteriesGarland(completed: Int, current: Int?, onSelect: (Int) -> Unit, modifier: Modifier, groups: Int, groupLabel: String, compact: Boolean) {
+    val colors = SertumTheme.colors
+    val art = LocalBotanicalArtwork.current
+    val scroll = rememberScrollState()
+    val density = LocalDensity.current
+    val stepWidth = 52.dp
+    LaunchedEffect(current) {
+        if (current != null) {
+            val targetPx = with(density) { (current * stepWidth.toPx() - 120.dp.toPx()).toInt().coerceAtLeast(0) }
+            scroll.animateScrollTo(targetPx)
+        }
+    }
+    Box(modifier.fillMaxWidth().height(if (compact) 62.dp else 72.dp).horizontalScroll(scroll)) {
+        val totalWidth = stepWidth * groups + 16.dp
+        Box(Modifier.width(totalWidth).fillMaxSize()) {
+            Canvas(Modifier.fillMaxSize()) {
+                val y = size.height / 2f
+                val startX = (stepWidth / 2f + 8.dp).toPx()
+                val endX = (totalWidth - stepWidth / 2f - 8.dp).toPx()
+                drawLine(colors.marian.copy(alpha = .26f), Offset(startX, y), Offset(endX, y), 1.6.dp.toPx(), StrokeCap.Round)
+                val progressIndex = (current ?: completed).coerceIn(0, groups - 1)
+                if (progressIndex > 0 || completed >= groups) {
+                    val grownEnd = if (completed >= groups) endX else startX + progressIndex * stepWidth.toPx()
+                    drawLine(colors.marian.copy(alpha = .78f), Offset(startX, y), Offset(grownEnd, y), 2.dp.toPx(), StrokeCap.Round)
+                }
+            }
+            Row(Modifier.fillMaxSize().padding(horizontal = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                repeat(groups) { index ->
+                    val opened = index < completed || index == current || completed >= groups
+                    val isCurrent = index == current
+                    Box(
+                        Modifier.width(stepWidth).height(48.dp).clip(CircleShape).testTag("decade-$index")
+                            .semantics { contentDescription = "Ir para ${groupLabel} ${index + 1} de $groups"; selected = isCurrent }
+                            .clickable(role = Role.Button) { onSelect(index) },
+                        contentAlignment = Alignment.Center,
+                    ) {
+                        Canvas(Modifier.size(36.dp)) {
+                            if (isCurrent) {
+                                drawCircle(colors.elevated, 16.dp.toPx(), center)
+                                drawCircle(colors.gold.copy(alpha = .55f), 17.dp.toPx(), center, style = Stroke(.8.dp.toPx()))
+                            }
+                            paintBotanical(if (isCurrent) art.ivoryRose else if (opened) art.rose else art.bud, center, if (isCurrent) 28.dp.toPx() else 22.dp.toPx(), if (opened) 1f else .75f)
+                        }
+                        SacredText("${index + 1}", Modifier.align(Alignment.BottomCenter), SertumTheme.typography.micro.copy(fontSize = 10.sp, lineHeight = 12.sp), if (isCurrent) colors.ink else colors.secondary)
+                    }
+                }
+            }
+        }
+    }
+}
+
+/** One group of beads as a garland, whether it has one, three, seven, or ten. Each prayer opens its bud into a rose. */
 @Composable
 fun BloomingBeadsArc(count: Int, active: Int?, complete: Boolean, onSelect: (Int) -> Unit, modifier: Modifier = Modifier, beadLabel: String = "Ave-Maria", compact: Boolean = false) {
     val colors = SertumTheme.colors
     val art = LocalBotanicalArtwork.current
     val breath = rememberGardenBreath("rose-breath", 4800)
     BoxWithConstraints(modifier.fillMaxWidth().height(if (compact) 58.dp else 96.dp)) {
-        val slot = maxWidth / count
+        val slot = maxWidth / count.coerceAtLeast(1)
         fun beadY(index: Int) = (if (compact) 34.dp else 58.dp) - (if (compact) 10.dp else 22.dp) * sin(PI * index / (count - 1).coerceAtLeast(1)).toFloat()
         Canvas(Modifier.fillMaxSize()) {
-            // The thread follows the same gentle rise as the beads it carries.
             val first = (slot * .5f).toPx()
-            val span = (slot * (count - 1)).toPx()
+            val span = (slot * (count - 1).coerceAtLeast(0)).toPx()
             val thread = Path().apply {
                 repeat(41) { step ->
                     val u = step / 40f
@@ -186,7 +258,7 @@ fun BloomingBeadsArc(count: Int, active: Int?, complete: Boolean, onSelect: (Int
 
 /**
  * A crown seen from above, small enough to sit beside its name: one dot for each small bead,
- * and a honey dot where each group begins. Five decades and seven septets look different at a glance.
+ * and a honey dot where each group begins.
  */
 @Composable
 fun CrownGlyph(groups: Int, beads: Int, modifier: Modifier = Modifier) {
@@ -194,11 +266,14 @@ fun CrownGlyph(groups: Int, beads: Int, modifier: Modifier = Modifier) {
     val art = LocalBotanicalArtwork.current
     Canvas(modifier.size(52.dp)) {
         val radius = size.minDimension * .4f
-        val slots = groups * (beads + 1)
+        val shownGroups = groups.coerceIn(1, 20)
+        val shownBeads = beads.coerceIn(1, 10)
+        val slots = (shownGroups * (shownBeads + 1)).coerceAtMost(84)
+        val groupStride = (slots / shownGroups).coerceAtLeast(1)
         repeat(slots) { slot ->
             val angle = -PI / 2 + 2 * PI * slot / slots
             val at = center + Offset(cos(angle).toFloat(), sin(angle).toFloat()) * radius
-            if (slot % (beads + 1) == 0) drawCircle(colors.gold, size.minDimension * .042f, at)
+            if (slot % groupStride == 0) drawCircle(colors.gold, size.minDimension * .042f, at)
             else drawCircle(colors.ruby.copy(alpha = if (colors.isDark) .8f else .7f), size.minDimension * (if (slots > 60) .017f else .021f), at)
         }
         paintBotanical(art.rose, center, size.minDimension * .4f)

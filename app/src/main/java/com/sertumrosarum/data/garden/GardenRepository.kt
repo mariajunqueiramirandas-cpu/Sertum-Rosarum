@@ -12,8 +12,15 @@ import java.util.UUID
 
 
 data class PersonalPreferences(
-    val theme: String = "SYSTEM", val prayerLanguage: String = "PORTUGUESE", val readingLanguage: String = "PORTUGUESE",
-    val meditated: Boolean = false, val haptics: Boolean = true, val mode: String = "SOLO", val welcomed: Boolean = false,
+    val theme: String = "SYSTEM",
+    val prayerLanguage: String = "PORTUGUESE",
+    val readingLanguage: String = "PORTUGUESE",
+    val meditated: Boolean = false,
+    val haptics: Boolean = true,
+    val mode: String = "SOLO",
+    val welcomed: Boolean = false,
+    val readingScale: String = "STANDARD",
+    val volumeKeys: Boolean = true,
 )
 
 /** One ordered writer, owned by the application rather than an activity or a disappearing screen. */
@@ -52,21 +59,52 @@ class GardenRepository(val database: SertumDatabase, private val store: androidx
     fun close() { writes.close(); scope.cancel() }
     suspend fun preferences(): PersonalPreferences {
         val p = store.data.first()
-        return PersonalPreferences(p[stringPreferencesKey("theme")] ?: "SYSTEM", p[stringPreferencesKey("prayerLanguage")] ?: "PORTUGUESE",
-            p[stringPreferencesKey("readingLanguage")] ?: "PORTUGUESE", p[booleanPreferencesKey("meditated")] ?: false,
-            p[booleanPreferencesKey("haptics")] ?: true, p[stringPreferencesKey("mode")] ?: "SOLO", p[booleanPreferencesKey("welcomed")] ?: false)
+        return PersonalPreferences(
+            theme = p[stringPreferencesKey("theme")] ?: "SYSTEM",
+            prayerLanguage = p[stringPreferencesKey("prayerLanguage")] ?: "PORTUGUESE",
+            readingLanguage = p[stringPreferencesKey("readingLanguage")] ?: "PORTUGUESE",
+            meditated = p[booleanPreferencesKey("meditated")] ?: false,
+            haptics = p[booleanPreferencesKey("haptics")] ?: true,
+            mode = p[stringPreferencesKey("mode")] ?: "SOLO",
+            welcomed = p[booleanPreferencesKey("welcomed")] ?: false,
+            readingScale = p[stringPreferencesKey("readingScale")] ?: "STANDARD",
+            volumeKeys = p[booleanPreferencesKey("volumeKeys")] ?: true,
+        )
     }
-    suspend fun storePrayerPreferences(theme: String, language: String, meditated: Boolean, haptics: Boolean, mode: String) { store.edit {
-        it[stringPreferencesKey("theme")] = theme; it[stringPreferencesKey("prayerLanguage")] = language
-        it[booleanPreferencesKey("meditated")] = meditated; it[booleanPreferencesKey("haptics")] = haptics; it[stringPreferencesKey("mode")] = mode
-    } }
+    suspend fun storePrayerPreferences(
+        theme: String,
+        language: String,
+        meditated: Boolean,
+        haptics: Boolean,
+        mode: String,
+        readingScale: String = "STANDARD",
+        volumeKeys: Boolean = true,
+    ) {
+        store.edit {
+            it[stringPreferencesKey("theme")] = theme
+            it[stringPreferencesKey("prayerLanguage")] = language
+            it[booleanPreferencesKey("meditated")] = meditated
+            it[booleanPreferencesKey("haptics")] = haptics
+            it[stringPreferencesKey("mode")] = mode
+            it[stringPreferencesKey("readingScale")] = readingScale
+            it[booleanPreferencesKey("volumeKeys")] = volumeKeys
+        }
+    }
     suspend fun storeReadingLanguage(value: String) { store.edit { it[stringPreferencesKey("readingLanguage")] = value } }
     suspend fun welcome() { store.edit { it[booleanPreferencesKey("welcomed")] = true } }
-    suspend fun savePreferences(value: PersonalPreferences) { store.edit {
-        it[stringPreferencesKey("theme")] = value.theme; it[stringPreferencesKey("prayerLanguage")] = value.prayerLanguage
-        it[stringPreferencesKey("readingLanguage")] = value.readingLanguage; it[booleanPreferencesKey("meditated")] = value.meditated
-        it[booleanPreferencesKey("haptics")] = value.haptics; it[stringPreferencesKey("mode")] = value.mode; it[booleanPreferencesKey("welcomed")] = value.welcomed
-    } }
+    suspend fun savePreferences(value: PersonalPreferences) {
+        store.edit {
+            it[stringPreferencesKey("theme")] = value.theme
+            it[stringPreferencesKey("prayerLanguage")] = value.prayerLanguage
+            it[stringPreferencesKey("readingLanguage")] = value.readingLanguage
+            it[booleanPreferencesKey("meditated")] = value.meditated
+            it[booleanPreferencesKey("haptics")] = value.haptics
+            it[stringPreferencesKey("mode")] = value.mode
+            it[booleanPreferencesKey("welcomed")] = value.welcomed
+            it[stringPreferencesKey("readingScale")] = value.readingScale
+            it[booleanPreferencesKey("volumeKeys")] = value.volumeKeys
+        }
+    }
     suspend fun saveCrown(session: PrayerSessionEntity, intentions: List<SessionIntentionEntity>) = database.withTransaction {
         dao.retireOtherSessions(session.id); dao.saveSession(session); dao.saveOfferings(intentions)
     }

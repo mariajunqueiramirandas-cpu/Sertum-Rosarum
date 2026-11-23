@@ -71,6 +71,7 @@ internal fun ColumnScope.CoursePage(
     place: FormationPlace, onPlace: (FormationPlace) -> Unit,
     query: String, onQuery: (String) -> Unit,
     openLesson: (String) -> Unit, openJourney: (String) -> Unit,
+    initialQuestion: String? = null,
 ) {
     val page = SertumTheme.spacing.page
     // One frame for every painting, so changing place never moves the words beneath it.
@@ -81,7 +82,7 @@ internal fun ColumnScope.CoursePage(
     Column(Modifier.fillMaxWidth().padding(horizontal = page).padding(top = 20.dp, bottom = 44.dp)) {
         when (place) {
             FormationPlace.LEARN -> LearnPlace(state, query, onQuery, openLesson)
-            FormationPlace.QUESTIONS -> QuestionsPlace(model, query, onQuery)
+            FormationPlace.QUESTIONS -> QuestionsPlace(state, model, query, onQuery, initialQuestion)
             FormationPlace.LIFE -> LifePlace(openJourney, openLesson)
         }
         EditorialNote("formation", "Revisão 2 · 14/11/2026", model, Modifier.padding(top = 36.dp))
@@ -230,7 +231,7 @@ private fun LessonList(lessons: List<FormationLesson>, state: GardenState, next:
 
 /** Common questions, each opening in place beneath itself. */
 @Composable
-private fun QuestionsPlace(model: GardenViewModel?, query: String, onQuery: (String) -> Unit) {
+private fun QuestionsPlace(state: GardenState, model: GardenViewModel?, query: String, onQuery: (String) -> Unit, initialQuestion: String? = null) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     SacredSearchField(query, onQuery, "Que pergunta você traz?", "formation-search")
@@ -245,8 +246,9 @@ private fun QuestionsPlace(model: GardenViewModel?, query: String, onQuery: (Str
         Column(Modifier.padding(vertical = 4.dp)) {
             answers.forEachIndexed { index, question ->
                 if (index > 0) SacredDivider(Modifier.padding(horizontal = 18.dp))
-                var open by rememberSaveable(question.id) { mutableStateOf(false) }
+                var open by rememberSaveable(question.id, initialQuestion) { mutableStateOf(question.id == initialQuestion) }
                 val turn by animateFloatAsState(if (open) 90f else 0f, label = "question-chevron")
+                val kept = state.bookmarks.any { it.kind == "question" && it.itemId == question.id }
                 Column(Modifier.fillMaxWidth()) {
                     Row(
                         Modifier.fillMaxWidth().clickable(role = Role.Button, onClickLabel = if (open) "Recolher a resposta" else "Ler a resposta") { open = !open }
@@ -261,6 +263,14 @@ private fun QuestionsPlace(model: GardenViewModel?, query: String, onQuery: (Str
                         Column(Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, bottom = 16.dp)) {
                             SacredText(question.answer, style = type.body.copy(fontSize = 16.sp, lineHeight = 26.sp))
                             SacredText(question.references, Modifier.padding(top = 12.dp), type.micro.copy(fontWeight = FontWeight.Medium), colors.marian)
+                            if (model != null) {
+                                SacredTextLink(
+                                    if (kept) "✓ Resposta guardada" else "Guardar esta resposta",
+                                    { model.bookmark("question", question.id) },
+                                    "bookmark-question-${question.id}",
+                                    Modifier.padding(top = 6.dp),
+                                )
+                            }
                             EditorialNote("question-${question.id}", "Revisão 1 · 13/11/2026", model, Modifier.padding(top = 4.dp), credit = false)
                         }
                     }

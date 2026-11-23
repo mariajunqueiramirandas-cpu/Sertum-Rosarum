@@ -48,12 +48,15 @@ import com.sertumrosarum.domain.treasury.TreasuryCatalog
 import com.sertumrosarum.feature.formation.chapterOf
 import com.sertumrosarum.feature.formation.numberOf
 import com.sertumrosarum.feature.guides.PrayerGuide
+import com.sertumrosarum.feature.treasury.parseMysteryBookmark
 import com.sertumrosarum.ui.canvas.DevotionalArtwork
 import com.sertumrosarum.ui.canvas.DevotionalIllustration
 import com.sertumrosarum.ui.canvas.FormationPainting
 import com.sertumrosarum.ui.canvas.LocalBotanicalArtwork
+import com.sertumrosarum.ui.canvas.journeyIllustration
 import com.sertumrosarum.ui.canvas.lessonIllustration
 import com.sertumrosarum.ui.canvas.paintBotanical
+import com.sertumrosarum.ui.canvas.questionIllustration
 import com.sertumrosarum.ui.components.PageWelcome
 import com.sertumrosarum.ui.components.SacredBottomSheet
 import com.sertumrosarum.ui.components.SacredCard
@@ -90,7 +93,16 @@ private enum class GardenPlace(val label: String) { INTENTIONS("Intenções"), C
 private const val NEW = ""
 
 @Composable
-fun GardenScreen(model: GardenViewModel? = null, state: GardenState = GardenState(), onPrayer: (String) -> Unit = {}, onLesson: (String?) -> Unit = {}, onResume: () -> Unit = {}) {
+fun GardenScreen(
+    model: GardenViewModel? = null,
+    state: GardenState = GardenState(),
+    onPrayer: (String) -> Unit = {},
+    onLesson: (String?) -> Unit = {},
+    onMystery: (MysterySet, Int) -> Unit = { _, _ -> },
+    onQuestion: (String) -> Unit = {},
+    onJourney: (String) -> Unit = {},
+    onResume: () -> Unit = {},
+) {
     var place by rememberSaveable { mutableStateOf(GardenPlace.INTENTIONS) }
     var intentionSheet by rememberSaveable { mutableStateOf<String?>(null) }
     var noteSheet by rememberSaveable { mutableStateOf<String?>(null) }
@@ -106,7 +118,7 @@ fun GardenScreen(model: GardenViewModel? = null, state: GardenState = GardenStat
                     GardenPlace.INTENTIONS -> IntentionsPlace(state) { intentionSheet = it }
                     GardenPlace.CROWNS -> CrownsPlace(state, onResume) { sessionId = it }
                     GardenPlace.JOURNAL -> JournalPlace(state, onLesson, { noteSession = null; noteSheet = NEW }) { noteSession = it.sessionId; noteSheet = it.id }
-                    GardenPlace.KEPT -> KeptPlace(state, model, onPrayer, onLesson)
+                    GardenPlace.KEPT -> KeptPlace(state, model, onPrayer, onLesson, onMystery, onQuestion, onJourney)
                 }
                 SacredText("Guardado neste aparelho. Sem pontuações nem sequências de dias.", Modifier.fillMaxWidth().padding(top = 36.dp), SertumTheme.typography.micro.copy(fontWeight = FontWeight.Normal), SertumTheme.colors.muted, TextAlign.Center)
             }
@@ -430,18 +442,55 @@ private fun ColumnScope.JournalEditor(existing: JournalEntry?, session: PrayerSe
 /* ---------- Guardados ---------- */
 
 @Composable
-private fun KeptPlace(state: GardenState, model: GardenViewModel?, onPrayer: (String) -> Unit, onLesson: (String?) -> Unit) {
+private fun KeptPlace(
+    state: GardenState,
+    model: GardenViewModel?,
+    onPrayer: (String) -> Unit,
+    onLesson: (String?) -> Unit,
+    onMystery: (MysterySet, Int) -> Unit,
+    onQuestion: (String) -> Unit,
+    onJourney: (String) -> Unit,
+) {
     val prayers = state.bookmarks.filter { it.kind == "prayer" }.mapNotNull { item -> TreasuryCatalog.find(item.itemId)?.let { item.itemId to it.title } }
+    val mysteries = state.bookmarks.filter { it.kind == "mystery" }.mapNotNull { item -> parseMysteryBookmark(item.itemId)?.let { (set, idx) -> Triple(item.itemId, set, idx) } }
     val lessons = state.bookmarks.filter { it.kind == "lesson" }.mapNotNull { item -> FormationCatalog.lesson(item.itemId) }
-    if (prayers.isEmpty() && lessons.isEmpty()) {
-        GardenEmpty(DevotionalIllustration.BOOKMARKS, "Volte ao que tocou seu coração.", "Guarde uma oração no Tesouro ou uma lição da Catequese, e ela esperará por você aqui.")
+    val questions = state.bookmarks.filter { it.kind == "question" }.mapNotNull { item -> FormationCatalog.questions.find { it.id == item.itemId } }
+    val journeys = state.bookmarks.filter { it.kind == "journey" }.mapNotNull { item -> FormationCatalog.journeys.find { it.id == item.itemId } }
+    if (prayers.isEmpty() && mysteries.isEmpty() && lessons.isEmpty() && questions.isEmpty() && journeys.isEmpty()) {
+        GardenEmpty(DevotionalIllustration.BOOKMARKS, "Volte ao que tocou seu coração.", "Guarde uma oração, um mistério do rosário, uma lição, uma resposta ou um caminho prático, e ele esperará por você aqui.")
         return
     }
-    if (prayers.isNotEmpty()) KeptShelf("Orações", prayers.map { (id, title) -> Kept(id, title, "Do Tesouro", DevotionalIllustration.BOOKMARKS) { onPrayer(id) } }) { model?.bookmark("prayer", it) }
-    if (lessons.isNotEmpty()) KeptShelf("Lições", lessons.map { lesson ->
-        val chapter = chapterOf(lesson)
-        Kept(lesson.id, lesson.title, "Lição ${numberOf(lesson)} · ${chapter.verb}", lessonIllustration(lesson.id)) { onLesson(lesson.id) }
-    }, Modifier.padding(top = if (prayers.isEmpty()) 0.dp else 26.dp)) { model?.bookmark("lesson", it) }
+    var hasAbove = false
+    fun shelfGap() = if (hasAbove) Modifier.padding(top = 26.dp) else Modifier
+    if (prayers.isNotEmpty()) {
+        KeptShelf("Orações", prayers.map { (id, title) -> Kept(id, title, "Do Tesouro", DevotionalIllustration.BOOKMARKS) { onPrayer(id) } }, shelfGap()) { model?.bookmark("prayer", it) }
+        hasAbove = true
+    }
+    if (mysteries.isNotEmpty()) {
+        KeptShelf("Mistérios do Rosário", mysteries.map { (key, set, idx) ->
+            val mystery = set.mysteries[idx]
+            Kept(key, mystery.title, "${idx + 1}º ${set.singular.lowercase()} · ${mystery.scripture}", DevotionalIllustration.CONTEMPLATIVE_PRAYER) { onMystery(set, idx) }
+        }, shelfGap()) { model?.bookmark("mystery", it) }
+        hasAbove = true
+    }
+    if (lessons.isNotEmpty()) {
+        KeptShelf("Lições", lessons.map { lesson ->
+            val chapter = chapterOf(lesson)
+            Kept(lesson.id, lesson.title, "Lição ${numberOf(lesson)} · ${chapter.verb}", lessonIllustration(lesson.id)) { onLesson(lesson.id) }
+        }, shelfGap()) { model?.bookmark("lesson", it) }
+        hasAbove = true
+    }
+    if (questions.isNotEmpty()) {
+        KeptShelf("Perguntas da fé", questions.map { q ->
+            Kept(q.id, q.question, q.references, questionIllustration(q.id)) { onQuestion(q.id) }
+        }, shelfGap()) { model?.bookmark("question", it) }
+        hasAbove = true
+    }
+    if (journeys.isNotEmpty()) {
+        KeptShelf("Caminhos práticos", journeys.map { j ->
+            Kept(j.id, j.title, "${j.steps.size} passos · Catequese", journeyIllustration(j.id)) { onJourney(j.id) }
+        }, shelfGap()) { model?.bookmark("journey", it) }
+    }
 }
 
 private class Kept(val id: String, val title: String, val detail: String, val illustration: DevotionalIllustration, val open: () -> Unit)
