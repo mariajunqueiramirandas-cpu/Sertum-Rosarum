@@ -61,7 +61,6 @@ import com.sertumrosarum.domain.lumen.CustomRosarySupplement
 import com.sertumrosarum.domain.lumen.LumenMood
 import com.sertumrosarum.domain.prayer.MysterySet
 import com.sertumrosarum.feature.garden.GardenField
-import com.sertumrosarum.feature.garden.QuietAction
 import com.sertumrosarum.ui.canvas.DevotionalArtwork
 import com.sertumrosarum.ui.components.SacredBottomSheet
 import com.sertumrosarum.ui.components.SacredCard
@@ -74,6 +73,15 @@ import com.sertumrosarum.ui.components.SacredPrimaryButton
 import com.sertumrosarum.ui.components.SacredText
 import com.sertumrosarum.ui.components.SacredTextLink
 import com.sertumrosarum.ui.components.SacredToggleRow
+import androidx.compose.animation.animateColorAsState
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsFocusedAsState
+import androidx.compose.runtime.remember
+import androidx.compose.ui.draw.shadow
+import com.sertumrosarum.feature.sanctuary.MysterySelector
+import com.sertumrosarum.ui.components.SacredSecondaryButton
+import com.sertumrosarum.ui.components.ScrollHeaderShadow
+import com.sertumrosarum.ui.components.softScrollTop
 import com.sertumrosarum.ui.theme.SertumTheme
 
 private val StarterPrompts = listOf(
@@ -147,7 +155,7 @@ fun CatechistScreen(
         Column(Modifier.fillMaxSize()) {
             // Top bar: Back · Active Catechist Medallion (tap to switch) · Prepare Rosary
             Row(
-                Modifier.fillMaxWidth().padding(horizontal = page - 4.dp, vertical = 10.dp),
+                Modifier.fillMaxWidth().padding(horizontal = page, vertical = 10.dp),
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(10.dp),
             ) {
@@ -185,73 +193,83 @@ fun CatechistScreen(
 
             SacredDivider(Modifier.padding(horizontal = page))
 
-            // Main scrollable area: Welcome state or Correspondence thread
-            Column(
-                Modifier.weight(1f)
-                    .verticalScroll(scroll)
-                    .padding(horizontal = page)
-                    .padding(top = 14.dp, bottom = 18.dp)
-                    .testTag("catechist-thread"),
-                verticalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                if (state.notice != null) {
-                    SacredCard(Modifier.fillMaxWidth()) {
-                        Row(
-                            Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(10.dp),
-                        ) {
-                            SacredText(state.notice, Modifier.weight(1f), type.micro, colors.accentInk)
-                            SacredTextLink("Ok", onClearNotice, "dismiss-notice")
-                        }
-                    }
-                }
-
-                if (state.messages.isEmpty()) {
-                    CatechistWelcome(
-                        persona = state.persona,
-                        onPickStarter = { prompt ->
-                            if (prompt.contains("montar o terço", ignoreCase = true)) {
-                                prepareSheetOpen = true
-                            } else {
-                                onSend(prompt)
+            // Main scrollable area: Welcome state or Correspondence thread, with soft top & bottom edge fades
+            Box(Modifier.weight(1f).fillMaxWidth()) {
+                Column(
+                    Modifier.fillMaxSize()
+                        .softScrollTop(scroll)
+                        .verticalScroll(scroll)
+                        .padding(horizontal = page)
+                        .padding(top = 14.dp, bottom = 36.dp)
+                        .testTag("catechist-thread"),
+                    verticalArrangement = Arrangement.spacedBy(16.dp),
+                ) {
+                    if (state.notice != null) {
+                        SacredCard(Modifier.fillMaxWidth()) {
+                            Row(
+                                Modifier.fillMaxWidth().padding(horizontal = 16.dp, vertical = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(10.dp),
+                            ) {
+                                SacredText(state.notice, Modifier.weight(1f), type.micro, colors.accentInk)
+                                SacredTextLink("Ok", onClearNotice, "dismiss-notice")
                             }
-                        },
-                        onSwitchPersona = { personaSheetOpen = true },
-                        onPrepareRosary = { prepareSheetOpen = true },
-                    )
-                } else {
-                    state.messages.forEachIndexed { index, msg ->
-                        if (index > 0 && msg.fromUser) {
-                            SacredFlourish(Modifier.align(Alignment.CenterHorizontally).padding(vertical = 2.dp))
-                        }
-                        if (msg.fromUser) {
-                            UserNoteTurn(msg)
-                        } else {
-                            CatechistReplyTurn(
-                                message = msg,
-                                fallbackPersona = state.persona,
-                                onAction = onExecuteAction,
-                                onFollowUp = onSend,
-                            )
                         }
                     }
-                    if (state.isThinking) {
-                        ThinkingIndicator(state.persona, state.thinkingStatus)
-                    }
-                    if (!state.isThinking && state.messages.isNotEmpty()) {
-                        Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.Center) {
-                            SacredTextLink("Começar nova conversa", onNewConversation, "catechist-new-chat")
+
+                    if (state.messages.isEmpty()) {
+                        CatechistWelcome(
+                            persona = state.persona,
+                            onPickStarter = { prompt ->
+                                if (prompt.contains("montar o terço", ignoreCase = true)) {
+                                    prepareSheetOpen = true
+                                } else {
+                                    onSend(prompt)
+                                }
+                            },
+                            onSwitchPersona = { personaSheetOpen = true },
+                            onPrepareRosary = { prepareSheetOpen = true },
+                        )
+                    } else {
+                        state.messages.forEachIndexed { index, msg ->
+                            if (index > 0 && msg.fromUser) {
+                                SacredFlourish(Modifier.align(Alignment.CenterHorizontally).padding(vertical = 2.dp))
+                            }
+                            if (msg.fromUser) {
+                                UserNoteTurn(msg)
+                            } else {
+                                CatechistReplyTurn(
+                                    message = msg,
+                                    fallbackPersona = state.persona,
+                                    onAction = onExecuteAction,
+                                    onFollowUp = onSend,
+                                )
+                            }
+                        }
+                        if (state.isThinking) {
+                            ThinkingIndicator(state.persona, state.thinkingStatus)
+                        }
+                        if (!state.isThinking && state.messages.isNotEmpty()) {
+                            Row(Modifier.fillMaxWidth().padding(top = 4.dp), horizontalArrangement = Arrangement.Center) {
+                                SacredTextLink("Começar nova conversa", onNewConversation, "catechist-new-chat")
+                            }
                         }
                     }
                 }
+                ScrollHeaderShadow(scroll, Modifier.align(Alignment.TopCenter))
+                Box(Modifier.align(Alignment.BottomCenter).fillMaxWidth().height(28.dp).background(Brush.verticalGradient(listOf(colors.background.copy(alpha = 0f), colors.background))))
             }
 
             // Quiet floating composer with Voice ("Falar") + Blush Petal Send
+            val composerInteraction = remember { MutableInteractionSource() }
+            val composerFocused by composerInteraction.collectIsFocusedAsState()
+            val composerBorder by animateColorAsState(if (composerFocused) colors.marian else colors.border, label = "composer-border")
+            val composerShape = RoundedCornerShape(28.dp)
             Column(
                 Modifier.fillMaxWidth()
-                    .background(Brush.verticalGradient(listOf(colors.background.copy(alpha = 0f), colors.background)))
-                    .padding(horizontal = page, vertical = 10.dp),
+                    .background(colors.background)
+                    .padding(horizontal = page)
+                    .padding(top = 4.dp, bottom = 12.dp),
             ) {
                 if (voiceUnavailable) {
                     SacredText(
@@ -263,16 +281,17 @@ fun CatechistScreen(
                 }
                 Row(
                     Modifier.fillMaxWidth()
-                        .clip(RoundedCornerShape(28.dp))
+                        .shadow(if (colors.isDark) 0.dp else 8.dp, composerShape, ambientColor = colors.marian.copy(alpha = .14f), spotColor = colors.marian.copy(alpha = .18f))
+                        .clip(composerShape)
                         .background(colors.elevated)
-                        .border(1.dp, colors.border, RoundedCornerShape(28.dp))
-                        .padding(start = 16.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
+                        .border(if (composerFocused) 1.5.dp else 1.dp, composerBorder, composerShape)
+                        .padding(start = 18.dp, end = 6.dp, top = 6.dp, bottom = 6.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.spacedBy(8.dp),
                 ) {
                     Box(Modifier.weight(1f).padding(vertical = 6.dp), contentAlignment = Alignment.CenterStart) {
                         if (draft.isEmpty()) {
-                            SacredText("Escreva ou fale com ${state.persona.displayName}…", style = type.body, color = colors.muted, maxLines = 1)
+                            SacredText("Escreva ou fale com ${state.persona.displayName}…", style = type.body, color = colors.muted.copy(alpha = .8f), maxLines = 1)
                         }
                         BasicTextField(
                             value = draft,
@@ -282,6 +301,7 @@ fun CatechistScreen(
                             },
                             textStyle = type.body.copy(color = colors.ink),
                             cursorBrush = SolidColor(colors.marian),
+                            interactionSource = composerInteraction,
                             maxLines = 4,
                             keyboardOptions = KeyboardOptions(imeAction = ImeAction.Send),
                             keyboardActions = KeyboardActions(
@@ -297,7 +317,7 @@ fun CatechistScreen(
                     }
                     // Voice button
                     Box(
-                        Modifier.size(42.dp).clip(CircleShape)
+                        Modifier.size(44.dp).clip(CircleShape)
                             .background(colors.surface)
                             .clickable(role = Role.Button) { launchVoiceInput() }
                             .semantics { contentDescription = "Falar por voz" }
@@ -309,7 +329,7 @@ fun CatechistScreen(
                     // Blush petal send button
                     val canSend = draft.isNotBlank() && !state.isThinking
                     Box(
-                        Modifier.size(42.dp).clip(CircleShape)
+                        Modifier.size(44.dp).clip(CircleShape)
                             .background(
                                 if (canSend) Brush.verticalGradient(listOf(colors.petal, colors.petalDeep))
                                 else Brush.verticalGradient(listOf(colors.surface, colors.surface)),
@@ -380,15 +400,15 @@ private fun CatechistWelcome(
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     Column(
-        Modifier.fillMaxWidth().padding(top = 6.dp),
+        Modifier.fillMaxWidth().padding(top = 2.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+        verticalArrangement = Arrangement.spacedBy(10.dp),
     ) {
-        DevotionalArtwork(persona.portrait(), Modifier.size(124.dp))
+        DevotionalArtwork(persona.portrait(), Modifier.size(108.dp))
         SacredText("${persona.displayName} · ${persona.styleTitle}", style = type.micro, color = colors.accentInk, align = TextAlign.Center)
-        SacredText(persona.welcomeHeading, Modifier.padding(horizontal = 4.dp), type.heading.copy(fontSize = 24.sp, lineHeight = 31.sp), align = TextAlign.Center)
+        SacredText(persona.welcomeHeading, Modifier.padding(horizontal = 4.dp), type.heading.copy(fontSize = 23.sp, lineHeight = 30.sp), align = TextAlign.Center)
         SacredText(persona.welcomeSubtitle, Modifier.padding(horizontal = 6.dp), type.body, colors.secondary, TextAlign.Center)
-        SacredFlourish(Modifier.padding(vertical = 2.dp))
+        SacredFlourish(Modifier.padding(vertical = 1.dp))
 
         // Starters in one clean card separated by hairlines (matches Roteiros)
         SacredCard(Modifier.fillMaxWidth()) {
@@ -639,7 +659,7 @@ private fun PersonaPickerSheetContent(
         }
 
         SacredCard(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(16.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 SacredEyebrow("Motor contemplativo · Mistral Large 4")
                 SacredToggleRow(
                     title = "Usar Mistral Large 4 quando online",
@@ -652,10 +672,24 @@ private fun PersonaPickerSheetContent(
                     if (showApiSettings) "Ocultar chave Mistral" else "Configurar chave Mistral própria",
                     { showApiSettings = !showApiSettings },
                     "toggle-mistral-key",
+                    align = TextAlign.Start,
+                    flush = true,
                 )
                 if (showApiSettings) {
-                    GardenField("Chave da API Mistral (opcional)", apiKeyDraft, { apiKeyDraft = it }, "mistral-api-key-input", limit = 256)
-                    QuietAction("Salvar chave neste aparelho", { onSaveApiKey(apiKeyDraft); showApiSettings = false }, "save-mistral-key")
+                    GardenField(
+                        label = "Chave da API Mistral (opcional)",
+                        value = apiKeyDraft,
+                        onChange = { apiKeyDraft = it },
+                        tag = "mistral-api-key-input",
+                        limit = 256,
+                        placeholder = "Cole aqui sua chave da API Mistral…",
+                    )
+                    SacredSecondaryButton(
+                        text = "Salvar chave neste aparelho",
+                        onClick = { onSaveApiKey(apiKeyDraft); showApiSettings = false },
+                        modifier = Modifier.fillMaxWidth(),
+                        tag = "save-mistral-key",
+                    )
                 }
             }
         }
@@ -710,30 +744,16 @@ private fun PrepareCustomRosarySheetContent(
             tag = "custom-rosary-intention",
             multiline = true,
             limit = 600,
+            placeholder = "Ex.: Pela saúde da minha mãe, por paz nas decisões desta semana…",
         )
 
-        // Mystery set selector
-        SacredText("Mistérios a contemplar", style = type.micro, color = colors.accentInk)
-        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
-            MysterySet.entries.forEach { set ->
-                val active = set == chosenSet
-                Box(
-                    Modifier.weight(1f)
-                        .clip(RoundedCornerShape(16.dp))
-                        .background(if (active) colors.marian.copy(alpha = .18f) else colors.surface)
-                        .border(1.dp, if (active) colors.marian.copy(alpha = .4f) else colors.border, RoundedCornerShape(16.dp))
-                        .clickable(role = Role.Button) { chosenSet = set }
-                        .padding(vertical = 10.dp, horizontal = 4.dp),
-                    contentAlignment = Alignment.Center,
-                ) {
-                    SacredText(set.label, style = type.micro, color = if (active) colors.ink else colors.secondary, maxLines = 1)
-                }
-            }
-        }
+        // Mystery set selector (reuses adaptive single/multi-row sanctuary selector)
+        SacredText("Mistérios a contemplar", Modifier.padding(start = 4.dp), type.micro, colors.accentInk)
+        MysterySelector(chosenSet) { chosenSet = it }
 
         // Interior state rows (quiet list with honey checkmark, no pill clutter)
         SacredCard(Modifier.fillMaxWidth()) {
-            Column(Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
+            Column(Modifier.padding(horizontal = 18.dp, vertical = 14.dp)) {
                 SacredText("Como está seu espírito agora? (opcional)", style = type.label.copy(fontWeight = FontWeight.SemiBold))
                 Spacer(Modifier.height(6.dp))
                 LumenMood.entries.forEachIndexed { idx, mood ->

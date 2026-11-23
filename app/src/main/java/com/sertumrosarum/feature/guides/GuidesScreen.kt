@@ -52,8 +52,8 @@ fun GuidesScreen(onSetup: () -> Unit = {}, onOpen: (PrayerGuide) -> Unit) {
         DevotionalArtwork(DevotionalIllustration.PRAYER_BOOK, Modifier.align(Alignment.CenterHorizontally).padding(top = 12.dp).size(width = 144.dp, height = 88.dp))
         PageWelcome("Um caminho para cada oração.", "Escolha o jeito de rezar que cabe no seu dia.", Modifier.padding(top = 14.dp))
 
-        com.sertumrosarum.ui.components.SacredPrimaryButton("Preparar o terço de hoje", onSetup, Modifier.padding(horizontal = SertumTheme.spacing.page, vertical = 18.dp), tag = "rosary-setup-open")
-        ShelfHeading(GuideShelf.ROSARY, Modifier.padding(top = 30.dp))
+        com.sertumrosarum.ui.components.SacredPrimaryButton("Preparar o terço de hoje", onSetup, Modifier.padding(start = SertumTheme.spacing.page, end = SertumTheme.spacing.page, top = 20.dp), tag = "rosary-setup-open")
+        ShelfHeading(GuideShelf.ROSARY, Modifier.padding(top = 26.dp))
         GuideList(GuideShelf.ROSARY, onOpen)
 
         ShelfHeading(GuideShelf.THEMED, Modifier.padding(top = 34.dp))

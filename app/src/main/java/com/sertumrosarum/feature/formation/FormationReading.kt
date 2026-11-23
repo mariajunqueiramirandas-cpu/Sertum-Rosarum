@@ -89,8 +89,8 @@ internal fun ColumnScope.LessonPage(lesson: FormationLesson, state: GardenState,
         PauseCard(lesson, answer, { answer = it }, Modifier.padding(top = 30.dp))
 
         SacredCard(Modifier.padding(top = 16.dp).fillMaxWidth()) {
-            Column(Modifier.padding(start = 20.dp, end = 14.dp, top = 20.dp, bottom = 8.dp)) {
-                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            Column(Modifier.padding(20.dp)) {
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
                     Column(Modifier.weight(1f)) {
                         SacredEyebrow("Levar à vida")
                         SacredText(lesson.practice, Modifier.padding(top = 8.dp), type.whisper)
@@ -98,7 +98,7 @@ internal fun ColumnScope.LessonPage(lesson: FormationLesson, state: GardenState,
                     DevotionalArtwork(DevotionalIllustration.CHARITY, Modifier.size(64.dp))
                 }
                 SacredToggleRow("Vivi este gesto", "Marque quando o tiver vivido, sem pressa.", progress?.practiceDone == true,
-                    { model?.lesson(lesson.id, practice = progress?.practiceDone != true) }, Modifier.padding(top = 8.dp), "lesson-practice")
+                    { model?.lesson(lesson.id, practice = progress?.practiceDone != true) }, Modifier.padding(top = 10.dp), "lesson-practice")
             }
         }
 
@@ -109,11 +109,23 @@ internal fun ColumnScope.LessonPage(lesson: FormationLesson, state: GardenState,
 
         var reflection by rememberSaveable(lesson.id) { mutableStateOf(progress?.reflection.orEmpty()) }
         var saved by rememberSaveable(lesson.id) { mutableStateOf(false) }
-        Column(Modifier.padding(top = 28.dp)) {
-            GardenField("Uma descoberta para guardar (opcional)", reflection, { reflection = it; saved = false }, "lesson-reflection", multiline = true, limit = 8000)
-            SacredText("Fica no seu Diário, neste aparelho.", style = type.micro.copy(fontWeight = FontWeight.Normal), color = colors.muted)
-            if (reflection.isNotBlank()) SacredSecondaryButton(if (saved) "Reflexão guardada" else "Guardar reflexão",
-                { model?.lesson(lesson.id, reflection = reflection); saved = true }, Modifier.padding(top = 10.dp).align(Alignment.End), "save-lesson-reflection", enabled = !saved)
+        SacredCard(Modifier.padding(top = 28.dp).fillMaxWidth()) {
+            Column(Modifier.padding(20.dp)) {
+                SacredEyebrow("Seu caderno de estudo")
+                GardenField(
+                    label = "Uma descoberta para guardar (opcional)",
+                    value = reflection,
+                    onChange = { reflection = it; saved = false },
+                    tag = "lesson-reflection",
+                    multiline = true,
+                    limit = 8000,
+                    placeholder = "Anote o que falou ao seu coração nesta lição…",
+                    modifier = Modifier.padding(top = 6.dp),
+                )
+                SacredText("Fica no seu Diário, neste aparelho.", Modifier.padding(start = 4.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.muted)
+                if (reflection.isNotBlank()) SacredSecondaryButton(if (saved) "Reflexão guardada" else "Guardar reflexão",
+                    { model?.lesson(lesson.id, reflection = reflection); saved = true }, Modifier.padding(top = 12.dp).fillMaxWidth(), "save-lesson-reflection", enabled = !saved)
+            }
         }
 
         val next = FormationCatalog.lessons.getOrNull(FormationCatalog.lessons.indexOf(lesson) + 1)

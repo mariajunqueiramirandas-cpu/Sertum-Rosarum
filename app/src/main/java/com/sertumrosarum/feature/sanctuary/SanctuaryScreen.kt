@@ -214,15 +214,15 @@ internal fun SanctuaryHeader(
             Box {
                 SacredIconButton(if (colors.isDark) SacredIcon.MOON else SacredIcon.SUN, "Aparência: ${mode.label}", { menuOpen = !menuOpen }, Modifier.testTag("theme-menu"))
                 if (menuOpen) {
-                    Popup(alignment = Alignment.TopEnd, offset = IntOffset(0, with(density) { 58.dp.roundToPx() }), onDismissRequest = { menuOpen = false }, properties = PopupProperties(focusable = true)) {
-                        SacredCard(Modifier.padding(start = 20.dp, bottom = 24.dp).width(256.dp), lifted = true) {
-                            Column(Modifier.padding(horizontal = 10.dp, vertical = 14.dp)) {
-                                SacredText("Uma luz que acolhe você", Modifier.padding(start = 10.dp, bottom = 6.dp), type.micro, colors.secondary)
+                    Popup(alignment = Alignment.TopEnd, offset = IntOffset(0, with(density) { 56.dp.roundToPx() }), onDismissRequest = { menuOpen = false }, properties = PopupProperties(focusable = true)) {
+                        SacredCard(Modifier.padding(start = 20.dp, end = page, bottom = 24.dp).width(276.dp), lifted = true) {
+                            Column(Modifier.padding(horizontal = 14.dp, vertical = 14.dp)) {
+                                SacredText("Uma luz que acolhe você", Modifier.padding(start = 6.dp, bottom = 6.dp), type.micro, colors.secondary)
                                 ThemeMode.entries.forEach { option ->
                                     val chosen = option == mode
                                     Row(
-                                        Modifier.fillMaxWidth().clip(RoundedCornerShape(18.dp)).background(if (chosen) colors.marian.copy(alpha = .12f) else Color.Transparent)
-                                            .selectable(chosen, role = Role.RadioButton, onClick = { onTheme(option); menuOpen = false }).testTag("theme-${option.name}").heightIn(min = 48.dp).padding(horizontal = 12.dp),
+                                        Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp)).background(if (chosen) colors.marian.copy(alpha = .12f) else Color.Transparent)
+                                            .selectable(chosen, role = Role.RadioButton, onClick = { onTheme(option); menuOpen = false }).testTag("theme-${option.name}").heightIn(min = 48.dp).padding(horizontal = 10.dp),
                                         verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp),
                                     ) {
                                         SacredIcon(when (option) { ThemeMode.DAY -> SacredIcon.SUN; ThemeMode.VIGIL -> SacredIcon.MOON; ThemeMode.SYSTEM -> SacredIcon.SYSTEM }, Modifier.size(19.dp), colors.marian)
@@ -231,32 +231,32 @@ internal fun SanctuaryHeader(
                                     }
                                 }
                                 if (onReadingScale != null) {
-                                    Box(Modifier.padding(vertical = 8.dp, horizontal = 8.dp).fillMaxWidth().height(1.dp).background(colors.border))
-                                    SacredText("Tamanho da leitura", Modifier.padding(start = 10.dp, bottom = 6.dp), type.micro, colors.secondary)
-                                    Row(Modifier.fillMaxWidth().padding(horizontal = 4.dp), horizontalArrangement = Arrangement.spacedBy(4.dp)) {
+                                    Box(Modifier.padding(vertical = 10.dp).fillMaxWidth().height(1.dp).background(colors.border))
+                                    SacredText("Tamanho da leitura", Modifier.padding(start = 6.dp, bottom = 8.dp), type.micro, colors.secondary)
+                                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(6.dp)) {
                                         com.sertumrosarum.ui.theme.ReadingScale.entries.forEach { scale ->
                                             val active = scale == readingScale
                                             Box(
-                                                Modifier.weight(1f).clip(RoundedCornerShape(14.dp))
+                                                Modifier.weight(1f).clip(RoundedCornerShape(16.dp))
                                                     .background(if (active) colors.marian.copy(alpha = .16f) else Color.Transparent)
-                                                    .border(1.dp, if (active) colors.marian.copy(alpha = .6f) else colors.border, RoundedCornerShape(14.dp))
+                                                    .border(1.dp, if (active) colors.marian.copy(alpha = .6f) else colors.border, RoundedCornerShape(16.dp))
                                                     .selectable(active, role = Role.RadioButton) { onReadingScale(scale) }
                                                     .testTag("reading-scale-${scale.name}")
-                                                    .heightIn(min = 42.dp),
+                                                    .heightIn(min = 48.dp).padding(horizontal = 4.dp),
                                                 contentAlignment = Alignment.Center,
                                             ) {
-                                                SacredText(scale.label, style = type.micro, color = if (active) colors.accentInk else colors.secondary)
+                                                SacredText(scale.label, style = type.micro, color = if (active) colors.accentInk else colors.secondary, align = TextAlign.Center)
                                             }
                                         }
                                     }
                                 }
                                 if (onToggleVolumeKeys != null) {
-                                    Box(Modifier.padding(vertical = 8.dp, horizontal = 8.dp).fillMaxWidth().height(1.dp).background(colors.border))
+                                    Box(Modifier.padding(vertical = 10.dp).fillMaxWidth().height(1.dp).background(colors.border))
                                     Row(
                                         Modifier.fillMaxWidth().clip(RoundedCornerShape(16.dp))
                                             .clickable(role = Role.Switch) { onToggleVolumeKeys() }
                                             .testTag("volume-keys-toggle")
-                                            .heightIn(min = 48.dp).padding(horizontal = 10.dp, vertical = 6.dp),
+                                            .heightIn(min = 48.dp).padding(horizontal = 6.dp, vertical = 6.dp),
                                         verticalAlignment = Alignment.CenterVertically,
                                         horizontalArrangement = Arrangement.spacedBy(10.dp),
                                     ) {
@@ -264,7 +264,7 @@ internal fun SanctuaryHeader(
                                             SacredText("Botões de volume", style = type.label.copy(fontSize = 14.sp))
                                             SacredText("Avançar contas na oração", style = type.micro.copy(fontSize = 11.5.sp, fontWeight = FontWeight.Normal), color = colors.secondary)
                                         }
-                                        SacredText(if (volumeKeysEnabled) "Ativo" else "Desativado", style = type.micro, color = if (volumeKeysEnabled) colors.accentInk else colors.muted)
+                                        com.sertumrosarum.ui.components.SacredSwitch(volumeKeysEnabled)
                                     }
                                 }
                             }

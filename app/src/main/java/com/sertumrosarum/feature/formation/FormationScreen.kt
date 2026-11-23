@@ -97,28 +97,41 @@ fun FormationScreen(
  * A suggestion stays on the device unless the reader chooses to share it.
  */
 @Composable
-internal fun EditorialNote(id: String, revision: String, model: GardenViewModel?, modifier: Modifier = Modifier, credit: Boolean = true) {
+internal fun EditorialNote(id: String, revision: String, model: GardenViewModel?, modifier: Modifier = Modifier, credit: Boolean = true, alignStart: Boolean = false) {
     var open by rememberSaveable(id) { mutableStateOf(false) }
     var text by rememberSaveable(id) { mutableStateOf("") }
     var saved by rememberSaveable(id) { mutableStateOf(false) }
     val context = LocalContext.current
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
-    Column(modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally) {
+    Column(modifier.fillMaxWidth(), horizontalAlignment = if (alignStart) Alignment.Start else Alignment.CenterHorizontally) {
         if (credit) {
             SacredText("Conteúdo catequético editorial · $revision", style = type.micro, color = colors.muted, align = TextAlign.Center)
             SacredText("As referências indicam apoio, não citações literais. Revisão teológica independente pendente.", Modifier.padding(top = 4.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.muted, TextAlign.Center)
         }
-        SacredTextLink(if (open) "Fechar sugestão" else "Sugerir uma correção", { open = !open }, "feedback-$id")
-        if (open) Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
-            GardenField("Sua observação", text, { text = it; saved = false }, "feedback-text", multiline = true)
+        SacredTextLink(
+            if (open) "Fechar sugestão" else "Sugerir uma correção",
+            { open = !open },
+            "feedback-$id",
+            align = if (alignStart) TextAlign.Start else TextAlign.Center,
+            flush = alignStart,
+        )
+        if (open) Column(Modifier.fillMaxWidth().padding(top = 4.dp), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            GardenField(
+                label = "Sua observação",
+                value = text,
+                onChange = { text = it; saved = false },
+                tag = "feedback-text",
+                multiline = true,
+                placeholder = "Compartilhe uma sugestão ou correção…",
+            )
             SacredSecondaryButton(if (saved) "Observação guardada neste aparelho" else "Guardar neste aparelho", {
                 if (text.isNotBlank() && !saved) { model?.repository?.feedback(id, text); saved = true }
             }, Modifier.fillMaxWidth(), "save-feedback", enabled = text.isNotBlank() && !saved)
             if (text.isNotBlank()) SacredTextLink("Compartilhar observação…", {
                 val intent = android.content.Intent(android.content.Intent.ACTION_SEND).setType("text/plain").putExtra(android.content.Intent.EXTRA_TEXT, "Sertum · $id · $revision\n\n$text")
                 context.startActivity(android.content.Intent.createChooser(intent, "Compartilhar observação"))
-            }, "share-feedback")
+            }, "share-feedback", align = if (alignStart) TextAlign.Start else TextAlign.Center, flush = alignStart)
         }
     }
 }

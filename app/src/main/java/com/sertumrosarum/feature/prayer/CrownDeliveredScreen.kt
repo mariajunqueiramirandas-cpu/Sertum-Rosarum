@@ -1,20 +1,23 @@
 package com.sertumrosarum.feature.prayer
 
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
-import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import com.sertumrosarum.feature.garden.GardenField
-import com.sertumrosarum.feature.garden.QuietAction
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.testTag
@@ -23,12 +26,17 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sertumrosarum.domain.prayer.PrayerMode
+import com.sertumrosarum.feature.garden.GardenField
+import com.sertumrosarum.feature.guides.offeringIllustration
 import com.sertumrosarum.ui.canvas.RoseCrownEmblem
 import com.sertumrosarum.ui.canvas.RoseMark
-import com.sertumrosarum.feature.guides.offeringIllustration
+import com.sertumrosarum.ui.components.SacredCard
 import com.sertumrosarum.ui.components.SacredFlourish
+import com.sertumrosarum.ui.components.SacredIcon
 import com.sertumrosarum.ui.components.SacredPrimaryButton
+import com.sertumrosarum.ui.components.SacredSecondaryButton
 import com.sertumrosarum.ui.components.SacredText
+import com.sertumrosarum.ui.components.softScrollTop
 import com.sertumrosarum.ui.theme.SertumTheme
 import java.util.Locale
 
@@ -36,35 +44,74 @@ import java.util.Locale
 fun CrownDeliveredScreen(state: PrayerUiState, onReturn: () -> Unit, onReflect: ((String) -> Unit)? = null) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
-    Column(Modifier.fillMaxSize().testTag("crown-delivered").padding(horizontal = SertumTheme.spacing.page), horizontalAlignment = Alignment.CenterHorizontally) {
+    val scroll = rememberScrollState()
+    Column(
+        Modifier.fillMaxSize().imePadding().testTag("crown-delivered").padding(horizontal = SertumTheme.spacing.page),
+        horizontalAlignment = Alignment.CenterHorizontally,
+    ) {
         Row(Modifier.padding(top = 19.dp, bottom = 8.dp), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(9.dp)) {
             RoseMark(Modifier.size(26.dp))
             SacredText("sertum", style = type.brand)
         }
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
-            RoseCrownEmblem(Modifier.widthIn(max = 286.dp).fillMaxWidth().aspectRatio(1f), state.groupCount, state.crownBeadCount, state.sessionGuide.offeringIllustration)
+        Column(
+            Modifier.weight(1f).fillMaxWidth().softScrollTop(scroll).verticalScroll(scroll).padding(bottom = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center,
+        ) {
+            RoseCrownEmblem(Modifier.widthIn(max = 264.dp).fillMaxWidth().aspectRatio(1f), state.groupCount, state.crownBeadCount, state.sessionGuide.offeringIllustration)
             SacredText(state.sessionGuide.title, Modifier.padding(top = 10.dp).testTag("delivered-guide"), type.micro, colors.accentInk, TextAlign.Center)
             SacredText(if (state.sessionMode == PrayerMode.SOLO) "Sua Coroa de Rosas\nfoi entregue" else "Nossa Coroa de Rosas\nfoi entregue", Modifier.padding(top = 12.dp), type.display, align = TextAlign.Center)
-            SacredText("Que a paz desta oração\nacompanhe o seu dia.", Modifier.padding(top = 14.dp), type.whisper, colors.secondary, TextAlign.Center)
+            SacredText("Que a paz desta oração\nacompanhe o seu dia.", Modifier.padding(top = 12.dp), type.whisper, colors.secondary, TextAlign.Center)
             state.offeredIntentions.forEach { intention ->
-                SacredText((if (intention.thanksgiving) "Em ação de graças: " else "Por ") + intention.title, Modifier.padding(top = 12.dp), type.body, colors.accentInk, TextAlign.Center)
+                SacredText((if (intention.thanksgiving) "Em ação de graças: " else "Por ") + intention.title, Modifier.padding(top = 10.dp), type.body, colors.accentInk, TextAlign.Center)
             }
-            if (onReflect != null) {
-                var reflection by rememberSaveable(state.sessionId) { mutableStateOf("") }
-                var saved by rememberSaveable(state.sessionId) { mutableStateOf(false) }
-                GardenField("Uma palavra para guardar (opcional)", reflection, { reflection = it; saved = false }, "delivered-reflection", multiline = true)
-                if (reflection.isNotBlank()) QuietAction(if (saved) "Reflexão guardada no Jardim" else "Guardar no Jardim", { if (!saved) { onReflect(reflection); saved = true } }, "save-delivered-reflection")
-            }
-            SacredFlourish(Modifier.padding(top = 24.dp, bottom = 20.dp))
+            SacredFlourish(Modifier.padding(top = 22.dp, bottom = 14.dp))
             // A quiet record of the time given, with no score to keep.
             Column(
-                Modifier.padding(vertical = 10.dp),
+                Modifier.padding(vertical = 4.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
             ) {
                 SacredText("${state.groupCount} ${if (state.script.isRosary) "mistérios" else if (state.groupLabel == "setena") "setenas" else "dezenas"}", style = type.body.copy(fontSize = 14.sp), color = colors.secondary, align = TextAlign.Center)
                 Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
                     SacredText(String.format(Locale.ROOT, "%02d:%02d", state.durationSeconds / 60, state.durationSeconds % 60), Modifier.testTag("prayer-duration"), type.body.copy(fontSize = 14.sp, fontWeight = FontWeight.Bold), colors.ink)
                     SacredText(" em oração", style = type.body.copy(fontSize = 14.sp), color = colors.secondary)
+                }
+            }
+            if (onReflect != null) {
+                var openReflection by rememberSaveable(state.sessionId) { mutableStateOf(false) }
+                var reflection by rememberSaveable(state.sessionId) { mutableStateOf("") }
+                var saved by rememberSaveable(state.sessionId) { mutableStateOf(false) }
+                if (!openReflection) {
+                    SacredSecondaryButton(
+                        text = if (saved) "Reflexão guardada no Jardim" else "Guardar uma reflexão no Diário",
+                        onClick = { openReflection = true },
+                        modifier = Modifier.padding(top = 18.dp),
+                        tag = "open-delivered-reflection",
+                        icon = SacredIcon.PEN,
+                    )
+                }
+                AnimatedVisibility(openReflection) {
+                    SacredCard(Modifier.fillMaxWidth().padding(top = 18.dp)) {
+                        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                            GardenField(
+                                label = "Uma palavra para guardar",
+                                value = reflection,
+                                onChange = { reflection = it; saved = false },
+                                tag = "delivered-reflection",
+                                multiline = true,
+                                placeholder = "O que tocou seu coração durante esta oração…",
+                            )
+                            if (reflection.isNotBlank()) {
+                                SacredSecondaryButton(
+                                    text = if (saved) "Reflexão guardada no Jardim" else "Guardar no Jardim",
+                                    onClick = { if (!saved) { onReflect(reflection); saved = true } },
+                                    modifier = Modifier.fillMaxWidth(),
+                                    tag = "save-delivered-reflection",
+                                    enabled = !saved,
+                                )
+                            }
+                        }
+                    }
                 }
             }
         }

@@ -184,7 +184,7 @@ private fun ContinueCard(lesson: FormationLesson, state: GardenState, modifier: 
 private fun ChapterHeading(chapter: Chapter, done: Int, total: Int, modifier: Modifier = Modifier) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
-    Row(modifier.fillMaxWidth().semantics(mergeDescendants = true) { heading() }, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
+    Row(modifier.fillMaxWidth().semantics(mergeDescendants = true) { heading() }, verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(14.dp)) {
         DevotionalArtwork(pillarIllustration(chapters.indexOf(chapter)), Modifier.size(68.dp))
         Column(Modifier.weight(1f)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
@@ -279,15 +279,17 @@ private fun QuestionsPlace(
                         Column(Modifier.fillMaxWidth().padding(start = 18.dp, end = 18.dp, bottom = 16.dp)) {
                             SacredText(question.answer, style = type.body.copy(fontSize = 16.sp, lineHeight = 26.sp))
                             SacredText(question.references, Modifier.padding(top = 12.dp), type.micro.copy(fontWeight = FontWeight.Medium), colors.marian)
+                            SacredDivider(Modifier.padding(top = 14.dp, bottom = 10.dp))
                             if (model != null) {
-                                SacredTextLink(
-                                    if (kept) "✓ Resposta guardada" else "Guardar esta resposta",
-                                    { model.bookmark("question", question.id) },
-                                    "bookmark-question-${question.id}",
-                                    Modifier.padding(top = 6.dp),
+                                com.sertumrosarum.ui.components.SacredKeepToggle(
+                                    kept = kept,
+                                    tag = "bookmark-question-${question.id}",
+                                    onToggle = { model.bookmark("question", question.id) },
+                                    keptLabel = "Resposta guardada",
+                                    unkeptLabel = "Guardar esta resposta",
                                 )
                             }
-                            EditorialNote("question-${question.id}", "Revisão 1 · 13/11/2026", model, Modifier.padding(top = 4.dp), credit = false)
+                            EditorialNote("question-${question.id}", "Revisão 1 · 13/11/2026", model, Modifier.padding(top = 4.dp), credit = false, alignStart = true)
                         }
                     }
                 }

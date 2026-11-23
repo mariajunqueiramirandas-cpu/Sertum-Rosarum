@@ -151,7 +151,7 @@ internal fun GuideSheetFooter(onStart: () -> Unit) {
 
 @Composable
 private fun SheetSection(title: String) {
-    SacredText(title, Modifier.padding(start = 4.dp, top = 28.dp, bottom = 12.dp).semantics { heading() }, SertumTheme.typography.section)
+    SacredText(title, Modifier.padding(top = 26.dp, bottom = 12.dp).semantics { heading() }, SertumTheme.typography.section)
 }
 
 @Composable

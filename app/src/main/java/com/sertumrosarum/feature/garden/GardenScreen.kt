@@ -87,10 +87,22 @@ private fun PrayerSessionEntity.day() = date(finishedAt ?: startedAt)
 private fun PrayerSessionEntity.title() = PrayerGuide.entries.find { it.name == guide }?.title ?: "Coroa oferecida"
 private fun crowns(count: Int) = "$count ${if (count == 1) "coroa" else "coroas"}"
 
-private enum class GardenPlace(val label: String) { INTENTIONS("Intenções"), CROWNS("Coroas"), JOURNAL("Diário"), KEPT("Guardados") }
+internal enum class GardenPlace(val label: String) { INTENTIONS("Intenções"), CROWNS("Coroas"), JOURNAL("Diário"), KEPT("Guardados") }
 
 /** Sentinel for a sheet that writes something new rather than tending what exists. */
 private const val NEW = ""
+
+/** Holds active bottom sheet state for Meu Jardim so SertumApp can raise them above the bottom bar. */
+class GardenSheetHost {
+    internal var place by mutableStateOf(GardenPlace.INTENTIONS)
+    internal var intentionSheet by mutableStateOf<String?>(null)
+    internal var noteSheet by mutableStateOf<String?>(null)
+    internal var noteSession by mutableStateOf<String?>(null)
+    internal var sessionId by mutableStateOf<String?>(null)
+}
+
+@Composable
+fun rememberGardenSheetHost(): GardenSheetHost = androidx.compose.runtime.remember { GardenSheetHost() }
 
 @Composable
 fun GardenScreen(
@@ -102,49 +114,54 @@ fun GardenScreen(
     onQuestion: (String) -> Unit = {},
     onJourney: (String) -> Unit = {},
     onResume: () -> Unit = {},
+    sheetHost: GardenSheetHost? = null,
 ) {
-    var place by rememberSaveable { mutableStateOf(GardenPlace.INTENTIONS) }
-    var intentionSheet by rememberSaveable { mutableStateOf<String?>(null) }
-    var noteSheet by rememberSaveable { mutableStateOf<String?>(null) }
-    var noteSession by rememberSaveable { mutableStateOf<String?>(null) }
-    var sessionId by rememberSaveable { mutableStateOf<String?>(null) }
+    val localHost = rememberGardenSheetHost()
+    val host = sheetHost ?: localHost
     Box(Modifier.fillMaxSize()) {
         SanctuaryPage("Meu Jardim", "garden") {
             FormationPainting(DevotionalIllustration.PERSONAL_GARDEN, "garden-hero", compact = true)
             PageWelcome("O que cria raízes em você.", "Suas intenções, suas coroas e o que você descobre pelo caminho.", Modifier.padding(top = 6.dp))
-            SacredTabs(GardenPlace.entries, place, { it.label }, { place = it }, Modifier.padding(top = 22.dp), tag = { "garden-${it.label}" })
+            SacredTabs(GardenPlace.entries, host.place, { it.label }, { host.place = it }, Modifier.padding(top = 22.dp), tag = { "garden-${it.label}" })
             Column(Modifier.fillMaxWidth().padding(horizontal = SertumTheme.spacing.page).padding(top = 22.dp, bottom = 44.dp)) {
-                when (place) {
-                    GardenPlace.INTENTIONS -> IntentionsPlace(state) { intentionSheet = it }
-                    GardenPlace.CROWNS -> CrownsPlace(state, onResume) { sessionId = it }
-                    GardenPlace.JOURNAL -> JournalPlace(state, onLesson, { noteSession = null; noteSheet = NEW }) { noteSession = it.sessionId; noteSheet = it.id }
+                when (host.place) {
+                    GardenPlace.INTENTIONS -> IntentionsPlace(state) { host.intentionSheet = it }
+                    GardenPlace.CROWNS -> CrownsPlace(state, onResume) { host.sessionId = it }
+                    GardenPlace.JOURNAL -> JournalPlace(state, onLesson, { host.noteSession = null; host.noteSheet = NEW }) { host.noteSession = it.sessionId; host.noteSheet = it.id }
                     GardenPlace.KEPT -> KeptPlace(state, model, onPrayer, onLesson, onMystery, onQuestion, onJourney)
                 }
                 SacredText("Guardado neste aparelho. Sem pontuações nem sequências de dias.", Modifier.fillMaxWidth().padding(top = 36.dp), SertumTheme.typography.micro.copy(fontWeight = FontWeight.Normal), SertumTheme.colors.muted, TextAlign.Center)
             }
         }
-
-        val tending = state.intentions.find { it.id == intentionSheet }
-        SacredBottomSheet(intentionSheet != null, { intentionSheet = null }, if (tending == null) "Nova intenção" else "Cuidar desta intenção", tag = "intention-sheet") {
-            IntentionEditor(tending,
-                onSave = { title, detail, cat, thanks, answer -> model?.saveIntention(title, detail, cat, tending, thanks, answer); intentionSheet = null },
-                onCancel = { intentionSheet = null },
-                onArchive = tending?.let { { model?.archive(it); intentionSheet = null } })
+        if (sheetHost == null) {
+            GardenSheets(host = host, model = model, state = state, visible = true)
         }
+    }
+}
 
-        val note = state.journal.find { it.id == noteSheet }
-        SacredBottomSheet(noteSheet != null, { noteSheet = null }, if (note == null) "Nova reflexão" else "Sua reflexão", tag = "journal-sheet") {
-            JournalEditor(note, noteSession?.let { id -> state.sessions.find { it.id == id } },
-                save = { text -> model?.journal(text, noteSession, note); noteSheet = null },
-                delete = note?.let { { model?.deleteJournal(it.id); noteSheet = null } },
-                cancel = { noteSheet = null })
-        }
+/** Raises Meu Jardim's three bottom sheets over the full sanctuary, including the bottom bar. */
+@Composable
+fun GardenSheets(host: GardenSheetHost, model: GardenViewModel?, state: GardenState, visible: Boolean) {
+    val tending = state.intentions.find { it.id == host.intentionSheet }
+    SacredBottomSheet(visible && host.intentionSheet != null, { host.intentionSheet = null }, if (tending == null) "Nova intenção" else "Cuidar desta intenção", tag = "intention-sheet") {
+        IntentionEditor(tending,
+            onSave = { title, detail, cat, thanks, answer -> model?.saveIntention(title, detail, cat, tending, thanks, answer); host.intentionSheet = null },
+            onCancel = { host.intentionSheet = null },
+            onArchive = tending?.let { { model?.archive(it); host.intentionSheet = null } })
+    }
 
-        val session = state.sessions.find { it.id == sessionId }
-        SacredBottomSheet(session != null, { sessionId = null }, "Coroa oferecida", tag = "crown-detail") {
-            if (session != null) CrownDetail(session, state) {
-                noteSession = session.id; sessionId = null; place = GardenPlace.JOURNAL; noteSheet = NEW
-            }
+    val note = state.journal.find { it.id == host.noteSheet }
+    SacredBottomSheet(visible && host.noteSheet != null, { host.noteSheet = null }, if (note == null) "Nova reflexão" else "Sua reflexão", tag = "journal-sheet") {
+        JournalEditor(note, host.noteSession?.let { id -> state.sessions.find { it.id == id } },
+            save = { text -> model?.journal(text, host.noteSession, note); host.noteSheet = null },
+            delete = note?.let { { model?.deleteJournal(it.id); host.noteSheet = null } },
+            cancel = { host.noteSheet = null })
+    }
+
+    val session = state.sessions.find { it.id == host.sessionId }
+    SacredBottomSheet(visible && session != null, { host.sessionId = null }, "Coroa oferecida", tag = "crown-detail") {
+        if (session != null) CrownDetail(session, state) {
+            host.noteSession = session.id; host.sessionId = null; host.place = GardenPlace.JOURNAL; host.noteSheet = NEW
         }
     }
 }
@@ -214,13 +231,13 @@ fun IntentionEditor(existing: IntentionEntity?, onSave: (String, String, String,
     Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(6.dp)) {
         FormationPainting(if (thanks) DevotionalIllustration.TREASURY_THANKSGIVING else DevotionalIllustration.INTENTIONS, "intention-editor-artwork", compact = true)
         SacredText(if (existing == null) "Uma intenção para confiar" else "Cuidar desta intenção", Modifier.semantics { heading() }, SertumTheme.typography.section)
-        GardenField("Por quem ou pelo que você reza?", title, { title = it }, "intention-title", limit = 120)
+        GardenField("Por quem ou pelo que você reza?", title, { title = it }, "intention-title", limit = 120, placeholder = "Ex.: Pela saúde da minha mãe")
         if (attempted && title.isBlank()) SacredText("Escreva um título para guardar a intenção.", style = SertumTheme.typography.micro, color = colors.ruby)
-        GardenField("O que deseja guardar (opcional)", detail, { detail = it }, "intention-description", multiline = true)
-        SacredText("Categoria", Modifier.padding(top = 6.dp), SertumTheme.typography.label, colors.secondary)
+        GardenField("O que deseja guardar (opcional)", detail, { detail = it }, "intention-description", multiline = true, placeholder = "Detalhes, nomes ou uma breve oração…")
+        SacredText("Categoria", Modifier.padding(start = 4.dp, top = 6.dp), SertumTheme.typography.micro, colors.secondary)
         SacredChips(intentionCategories, category, { it }, { category = it }, tag = { "edit-category-$it" }, bleed = SertumTheme.spacing.page)
         SacredToggleRow("Em ação de graças", "Para agradecer uma graça já recebida.", thanks, { thanks = !thanks }, tag = "intention-thanksgiving")
-        if (thanks) GardenField("Uma graça ou agradecimento (opcional)", answer, { answer = it }, "intention-answer", multiline = true)
+        if (thanks) GardenField("Uma graça ou agradecimento (opcional)", answer, { answer = it }, "intention-answer", multiline = true, placeholder = "Como Deus cuidou desta intenção…")
         SacredPrimaryButton("Guardar intenção", { attempted = true; if (title.isNotBlank()) onSave(title, detail, category, thanks, answer) }, Modifier.padding(top = 10.dp), tag = "save-intention")
         if (existing != null && onArchive != null) SacredSecondaryButton(if (existing.archived) "Restaurar intenção" else "Arquivar intenção", onArchive, Modifier.fillMaxWidth(), "archive-${existing.id}")
         SacredTextLink("Cancelar", onCancel, "cancel-intention", Modifier.align(Alignment.CenterHorizontally))
@@ -398,7 +415,7 @@ private fun JournalPlace(state: GardenState, onLesson: (String?) -> Unit, write:
             is JournalItem.Discovery -> JournalCard("Da lição · ${entry.lesson.title}", entry.text, "journal-lesson-${entry.lesson.id}", Modifier.padding(top = 12.dp), colors.gold) { onLesson(entry.lesson.id) }
         }
     }
-    SacredText("As descobertas das lições também aparecem aqui.", Modifier.padding(top = 14.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.muted)
+    SacredText("As descobertas das lições também aparecem aqui.", Modifier.fillMaxWidth().padding(top = 18.dp), type.micro.copy(fontWeight = FontWeight.Normal), colors.muted, TextAlign.Center)
 }
 
 /** What the Diário shows: notes written here, and discoveries kept at the end of a lesson. */
@@ -427,7 +444,15 @@ private fun ColumnScope.JournalEditor(existing: JournalEntry?, session: PrayerSe
     FormationPainting(DevotionalIllustration.JOURNAL, "journal-editor-artwork", compact = true)
     SacredText(if (existing == null) "O que deseja levar consigo?" else "Sua reflexão", Modifier.semantics { heading() }, SertumTheme.typography.section)
     if (session != null) SacredText("Sobre a coroa de ${session.day().format(DateTimeFormatter.ofPattern("d 'de' MMMM", pt))}", Modifier.padding(top = 4.dp), SertumTheme.typography.micro, colors.accentInk)
-    GardenField(if (existing == null) "Uma descoberta, um agradecimento, um pedido" else stamp(existing.createdAt), text, { text = it }, "journal-text", multiline = true, limit = 8000)
+    GardenField(
+        label = if (existing == null) "Uma descoberta, um agradecimento, um pedido" else stamp(existing.createdAt),
+        value = text,
+        onChange = { text = it },
+        tag = "journal-text",
+        multiline = true,
+        limit = 8000,
+        placeholder = "Escreva o que tocou seu coração…",
+    )
     if (attempted && text.isBlank()) SacredText("Escreva uma palavra antes de guardar.", style = SertumTheme.typography.micro, color = colors.ruby)
     SacredPrimaryButton("Guardar reflexão", { attempted = true; if (text.isNotBlank()) save(text) }, Modifier.padding(top = 10.dp), tag = "save-reflection")
     if (existing != null && delete != null) {
@@ -540,14 +565,46 @@ private fun GardenEmpty(illustration: DevotionalIllustration, title: String, det
 }
 
 @Composable
-fun IntentionPicker(model: GardenViewModel, state: GardenState, selected: Set<String>, close: () -> Unit) {
+fun IntentionPicker(model: GardenViewModel, state: GardenState, selected: Set<String>, inline: Boolean = false, close: () -> Unit) {
     var create by rememberSaveable { mutableStateOf(false) }
-    if (create) IntentionEditor(null, { title, detail, category, thanks, answer -> model.saveIntention(title, detail, category, thanksgiving = thanks, answer = answer, select = true); create = false }, { create = false })
-    else {
-        FormationPainting(DevotionalIllustration.INTENTIONS, "intention-picker-artwork", compact = true)
-        SacredText("Escolha intenções ou comece no silêncio do coração. A escolha vale para a próxima coroa.", style = SertumTheme.typography.body)
-        state.intentions.filter { !it.archived }.forEach { intention -> QuietAction((if (intention.id in selected) "✓ " else "") + intention.title + if (intention.thanksgiving) " · Ação de graças" else "", { model.toggleIntention(intention.id) }, "pick-${intention.id}", intention.id in selected) }
-        QuietAction("Escrever uma nova intenção", { create = true }, "picker-new")
-        SacredPrimaryButton("Pronto", close, tag = "picker-done")
+    val activeIntentions = state.intentions.filter { !it.archived }
+    if (create) {
+        IntentionEditor(
+            null,
+            { title, detail, category, thanks, answer -> model.saveIntention(title, detail, category, thanksgiving = thanks, answer = answer, select = true); create = false },
+            { create = false },
+        )
+    } else {
+        Column(Modifier.fillMaxWidth(), verticalArrangement = Arrangement.spacedBy(10.dp)) {
+            if (!inline) {
+                FormationPainting(DevotionalIllustration.INTENTIONS, "intention-picker-artwork", compact = true)
+            }
+            SacredText(
+                "Escolha intenções ou comece no silêncio do coração. A escolha vale para a próxima coroa.",
+                style = SertumTheme.typography.body,
+                color = SertumTheme.colors.secondary,
+            )
+            if (activeIntentions.isNotEmpty()) {
+                SacredCard(Modifier.fillMaxWidth()) {
+                    Column(Modifier.padding(horizontal = 12.dp, vertical = 6.dp), verticalArrangement = Arrangement.spacedBy(2.dp)) {
+                        activeIntentions.forEachIndexed { idx, intention ->
+                            if (idx > 0) SacredDivider(Modifier.padding(horizontal = 6.dp))
+                            QuietAction(
+                                label = intention.title + if (intention.thanksgiving) " · Ação de graças" else "",
+                                onClick = { model.toggleIntention(intention.id) },
+                                tag = "pick-${intention.id}",
+                                selected = intention.id in selected,
+                            )
+                        }
+                    }
+                }
+            }
+            SacredSecondaryButton("Escrever uma nova intenção", { create = true }, Modifier.fillMaxWidth(), "picker-new", icon = SacredIcon.PEN)
+            if (inline) {
+                SacredTextLink("Concluir escolha", close, "picker-done", Modifier.align(Alignment.CenterHorizontally))
+            } else {
+                SacredPrimaryButton("Pronto", close, Modifier.padding(top = 4.dp), tag = "picker-done")
+            }
+        }
     }
 }

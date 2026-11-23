@@ -46,7 +46,7 @@ fun SertumBottomBar(selected: SanctuaryTab, onSelect: (SanctuaryTab) -> Unit, mo
     BoxWithConstraints(modifier.fillMaxWidth().padding(start = 12.dp, end = 12.dp, top = 6.dp, bottom = 8.dp)) {
         val showLabels = maxWidth / 5 >= labelWidth
         Column(Modifier.fillMaxWidth().shadow(if (colors.isDark) 0.dp else 12.dp, shape, ambientColor = colors.marian.copy(alpha = .2f))
-            .clip(shape).background(colors.elevated).border(1.dp, colors.border, shape).selectableGroup().testTag("bottom-bar").padding(horizontal = 4.dp, vertical = 7.dp),
+            .clip(shape).background(colors.elevated).border(1.dp, colors.border, shape).selectableGroup().testTag("bottom-bar").padding(horizontal = 6.dp, vertical = 6.dp),
             horizontalAlignment = Alignment.CenterHorizontally) {
             Row(Modifier.fillMaxWidth().height(IntrinsicSize.Min), verticalAlignment = Alignment.CenterVertically) {
                 destinations.forEach { tab ->
@@ -55,11 +55,17 @@ fun SertumBottomBar(selected: SanctuaryTab, onSelect: (SanctuaryTab) -> Unit, mo
                     Column(Modifier.weight(1f).fillMaxHeight().clip(RoundedCornerShape(22.dp)).background(fill)
                         .selectable(active, role = Role.Tab, onClick = { onSelect(tab) })
                         .semantics { contentDescription = "${tab.label}: ${tab.caption}" }
-                        .testTag("tab-${tab.name}").heightIn(min = 58.dp).padding(horizontal = 2.dp, vertical = 4.dp),
-                        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(4.dp, Alignment.CenterVertically)) {
-                        if (tab == SanctuaryTab.HOME) Box(Modifier.size(48.dp).shadow(3.dp, CircleShape).clip(CircleShape).background(colors.petal).border(1.dp, colors.ruby.copy(alpha = .35f), CircleShape), contentAlignment = Alignment.Center) {
-                            RoseMark(Modifier.size(35.dp))
-                        } else SacredIcon(tab.icon, Modifier.padding(vertical = 5.dp).size(23.dp), if (active) colors.accentInk else colors.secondary)
+                        .testTag("tab-${tab.name}").heightIn(min = 58.dp).padding(horizontal = 2.dp, vertical = 5.dp),
+                        horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(3.dp, Alignment.CenterVertically)) {
+                        Box(Modifier.height(38.dp), contentAlignment = Alignment.Center) {
+                            if (tab == SanctuaryTab.HOME) {
+                                Box(Modifier.size(38.dp).shadow(if (colors.isDark) 0.dp else 3.dp, CircleShape).clip(CircleShape).background(colors.petal).border(1.dp, colors.ruby.copy(alpha = .35f), CircleShape), contentAlignment = Alignment.Center) {
+                                    RoseMark(Modifier.size(28.dp))
+                                }
+                            } else {
+                                SacredIcon(tab.icon, Modifier.size(22.dp), if (active) colors.accentInk else colors.secondary)
+                            }
+                        }
                         if (showLabels) SacredText(tab.label, Modifier.fillMaxWidth().testTag("tab-label-${tab.name}"), style.copy(fontWeight = if (active) FontWeight.Bold else FontWeight.SemiBold), if (active) colors.ink else colors.secondary, TextAlign.Center)
                     }
                 }

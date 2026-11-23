@@ -46,12 +46,22 @@ import com.sertumrosarum.domain.treasury.TreasuryCatalog
 import com.sertumrosarum.feature.catechist.CatechistScreen
 import com.sertumrosarum.feature.catechist.CatechistViewModel
 import com.sertumrosarum.feature.formation.FormationScreen
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.size
+import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.unit.sp
 import com.sertumrosarum.feature.garden.GardenScreen
+import com.sertumrosarum.feature.garden.GardenSheets
 import com.sertumrosarum.feature.garden.GardenState
 import com.sertumrosarum.feature.garden.GardenViewModel
 import com.sertumrosarum.feature.garden.IntentionPicker
-import com.sertumrosarum.feature.garden.PersonalCard
 import com.sertumrosarum.feature.garden.QuietAction
+import com.sertumrosarum.feature.garden.rememberGardenSheetHost
 import com.sertumrosarum.feature.guides.GuideSheetContent
 import com.sertumrosarum.feature.guides.GuideSheetFooter
 import com.sertumrosarum.feature.guides.GuidesScreen
@@ -67,8 +77,14 @@ import com.sertumrosarum.feature.sanctuary.UnifiedSearchSheetContent
 import com.sertumrosarum.feature.treasury.TreasuryScreen
 import com.sertumrosarum.feature.treasury.TreasurySheets
 import com.sertumrosarum.feature.treasury.TreasuryViewModel
+import com.sertumrosarum.ui.canvas.DevotionalArtwork
+import com.sertumrosarum.ui.canvas.DevotionalIllustration
 import com.sertumrosarum.ui.components.SacredBottomSheet
+import com.sertumrosarum.ui.components.SacredDivider
+import com.sertumrosarum.ui.components.SacredIcon
+import com.sertumrosarum.ui.components.SacredKeepToggle
 import com.sertumrosarum.ui.components.SacredPrimaryButton
+import com.sertumrosarum.ui.components.SacredSecondaryButton
 import com.sertumrosarum.ui.components.SacredText
 import com.sertumrosarum.ui.components.SertumBottomBar
 import com.sertumrosarum.ui.components.SertumScaffold
@@ -137,6 +153,7 @@ fun SertumApp(
         // The sheet keeps its guide while it slides away, so its words do not vanish mid-air.
         var openGuide by rememberSaveable { mutableStateOf<PrayerGuide?>(null) }
         var shownGuide by rememberSaveable { mutableStateOf(PrayerGuide.TRADITIONAL) }
+        val gardenSheetHost = rememberGardenSheetHost()
         val treasuryState by treasury.state.collectAsStateWithLifecycle()
         val bookmarkedMysteries = remember(personal.bookmarks) {
             personal.bookmarks.filter { it.kind == "mystery" }.map { it.itemId }.toSet()
@@ -244,14 +261,56 @@ fun SertumApp(
                                     SanctuaryTab.GUIDES -> if (rosarySetup) SanctuaryHome(
                                         state, model,
                                         onStart = { model.start(PrayerGuide.TRADITIONAL, garden?.selected().orEmpty()) },
-                                        personal = { if (garden != null) QuietAction(if (selected.isEmpty()) "Oferecer por uma intenção (opcional)" else "${garden.selected().size} intenções para a próxima coroa", { picker = true }, "choose-intentions") },
+                                        personal = {
+                                            if (garden != null) {
+                                                SacredSecondaryButton(
+                                                    text = if (selected.isEmpty()) "Oferecer por uma intenção (opcional)" else "${garden.selected().size} ${if (garden.selected().size == 1) "intenção" else "intenções"} para a próxima coroa",
+                                                    onClick = { picker = true },
+                                                    modifier = Modifier.fillMaxWidth().padding(top = 18.dp),
+                                                    tag = "choose-intentions",
+                                                    icon = SacredIcon.PEN,
+                                                )
+                                            }
+                                        },
                                         onOtherGuides = { rosarySetup = false },
                                     ) else GuidesScreen(onSetup = { rosarySetup = true }) { shownGuide = it; openGuide = it }
                                     SanctuaryTab.TREASURY -> TreasuryScreen(
                                         state = treasuryState,
                                         actions = treasury,
-                                        formation = { Column(Modifier.padding(horizontal = 22.dp)) { PersonalCard("Centro de catequese", "Aprender, perguntar e levar à vida.", { openFormation() }, "open-formation") } },
-                                        bookmark = { treasuryState.reading?.let { prayer -> if (garden != null) QuietAction(if (personal.bookmarks.any { it.kind == "prayer" && it.itemId == prayer.id }) "✓ Oração guardada" else "Guardar esta oração", { garden.bookmark("prayer", prayer.id) }, "bookmark-prayer") } },
+                                        formation = {
+                                            SacredDivider(Modifier.padding(start = 80.dp, end = 16.dp))
+                                            Row(
+                                                Modifier.fillMaxWidth()
+                                                    .clickable(role = Role.Button, onClickLabel = "Abrir a Catequese") { openFormation() }
+                                                    .testTag("open-formation")
+                                                    .heightIn(min = 80.dp)
+                                                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                                                verticalAlignment = Alignment.CenterVertically,
+                                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                            ) {
+                                                DevotionalArtwork(DevotionalIllustration.CATECHESIS, Modifier.size(48.dp))
+                                                Column(Modifier.weight(1f)) {
+                                                    SacredText("Centro de catequese", style = SertumTheme.typography.label.copy(fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold))
+                                                    SacredText("Aprender, perguntar e levar à vida.", Modifier.padding(top = 3.dp), SertumTheme.typography.body.copy(fontSize = 14.sp, lineHeight = 20.sp), SertumTheme.colors.secondary)
+                                                }
+                                                SacredIcon(SacredIcon.CHEVRON, Modifier.size(13.dp), SertumTheme.colors.muted)
+                                            }
+                                        },
+                                        bookmark = {
+                                            treasuryState.reading?.let { prayer ->
+                                                if (garden != null) {
+                                                    val kept = personal.bookmarks.any { it.kind == "prayer" && it.itemId == prayer.id }
+                                                    SacredKeepToggle(
+                                                        kept = kept,
+                                                        tag = "bookmark-prayer",
+                                                        onToggle = { garden.bookmark("prayer", prayer.id) },
+                                                        modifier = Modifier.padding(top = 10.dp),
+                                                        keptLabel = "Oração guardada",
+                                                        unkeptLabel = "Guardar esta oração",
+                                                    )
+                                                }
+                                            }
+                                        },
                                         bookmarkedMysteries = bookmarkedMysteries,
                                         onPraySet = { set -> model.startRosarySet(set, garden?.selected().orEmpty()) },
                                     )
@@ -264,6 +323,7 @@ fun SertumApp(
                                         onQuestion = { id -> openFormation(question = id) },
                                         onJourney = { id -> openFormation(journey = id) },
                                         onResume = model::resume,
+                                        sheetHost = gardenSheetHost,
                                     )
                                 }
                             }
@@ -477,11 +537,16 @@ fun SertumApp(
                     )
                     if (garden != null) {
                         var inlinePicker by rememberSaveable { mutableStateOf(false) }
-                        QuietAction(if (selected.isEmpty()) "Oferecer por uma intenção (opcional)" else "${garden.selected().size} intenções escolhidas", { inlinePicker = !inlinePicker }, "guide-intentions")
-                        if (inlinePicker) IntentionPicker(garden, personal, selected) { inlinePicker = false }
+                        SacredDivider(Modifier.padding(top = 12.dp, bottom = 6.dp))
+                        QuietAction(
+                            if (selected.isEmpty()) "Oferecer por uma intenção (opcional)" else "${garden.selected().size} ${if (garden.selected().size == 1) "intenção escolhida" else "intenções escolhidas"}",
+                            { inlinePicker = !inlinePicker },
+                            "guide-intentions",
+                        )
+                        if (inlinePicker) IntentionPicker(garden, personal, selected, inline = true) { inlinePicker = false }
                     }
                 }
-                if (saveError != null) Column(Modifier.align(Alignment.TopCenter).fillMaxWidth().background(SertumTheme.colors.background).padding(12.dp)) {
+                if (saveError != null) Column(Modifier.align(Alignment.TopCenter).fillMaxWidth().background(SertumTheme.colors.background).padding(horizontal = SertumTheme.spacing.page, vertical = 12.dp)) {
                     SacredText(saveError, style = SertumTheme.typography.micro)
                     QuietAction("Tentar guardar novamente", { repository?.retry() }, "retry-garden-save")
                 }
@@ -493,6 +558,12 @@ fun SertumApp(
                     onToggleMysteryBookmark = garden?.let { g -> { key -> g.bookmark("mystery", key) } },
                     onPraySingleDecade = { set, index -> model.startSingleDecade(set, index, garden?.selected().orEmpty()) },
                     onPraySet = { set -> model.startRosarySet(set, garden?.selected().orEmpty()) },
+                )
+                GardenSheets(
+                    host = gardenSheetHost,
+                    model = garden,
+                    state = personal,
+                    visible = tabbed && !catechistOpen && state.tab == SanctuaryTab.GARDEN,
                 )
                 SacredBottomSheet(picker && tabbed && !catechistOpen, { picker = false }, "Intenções para esta coroa", tag = "intention-picker") {
                     if (garden != null) IntentionPicker(garden, personal, selected) { picker = false }
