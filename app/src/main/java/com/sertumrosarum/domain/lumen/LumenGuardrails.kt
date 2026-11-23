@@ -3,14 +3,14 @@ package com.sertumrosarum.domain.lumen
 import com.sertumrosarum.domain.prayer.MysterySet
 
 /**
- * Doctrinal guardrails, input sanitization, and system prompts for Mistral Large 4.
+ * Doctrinal guardrails, input sanitization, and system prompts for Lumen.
  *
  * Fixed Catholic liturgical prayers are architecturally isolated from LLM output:
  * the model only supplies conversational catechesis, personal offerings, and
  * contemplative reflections — and invokes verified local app tools.
  */
 object LumenGuardrails {
-    const val MISTRAL_MODEL = "mistral-large-4"
+    const val DEEPSEEK_FLASH_MODEL = "deepseek-v4-1-flash-1017"
     private const val MAX_USER_INPUT_LENGTH = 4000
 
     fun sanitizeInput(raw: String): String =

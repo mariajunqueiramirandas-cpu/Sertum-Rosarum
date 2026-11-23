@@ -23,7 +23,7 @@ data class MistralStepResponse(
 )
 
 /**
- * Pure-Kotlin JSON helper for Mistral Large 4 agentic payloads (with native function calling)
+ * Pure-Kotlin JSON helper for Mistral API payloads with native function calling
  * and strict Lumen schemas. Never sets `max_tokens` so responses are never artificially truncated.
  */
 object LumenJsonParser {
@@ -102,14 +102,15 @@ object LumenJsonParser {
         return if (summary.isNotEmpty() && sources.isNotEmpty()) LumenWebSearchResult(summary, sources) else null
     }
 
-    /** Multi-step agentic request with Mistral Large 4 native Function Calling (`tools`) and NO token limit. */
+    /** Multi-step request with native function calling (`tools`) and no client-side token cap. */
     fun buildMistralAgentRequest(
         model: String,
         systemPrompt: String,
         messages: List<MistralWireMessage>,
         toolsJson: String = LumenTools.mistralToolsJson,
         temperature: Double = 0.72,
-        reasoningEffort: String = "low",
+        // Lumen replays tool calls and results without DeepSeek's reasoning trace.
+        reasoningEffort: String = if (model == LumenGuardrails.DEEPSEEK_FLASH_MODEL) "none" else "low",
         stream: Boolean = false,
     ): String = buildString {
         append("{")

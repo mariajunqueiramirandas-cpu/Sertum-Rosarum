@@ -24,13 +24,13 @@ import kotlinx.coroutines.async
 import kotlinx.coroutines.coroutineScope
 
 /**
- * Coordinates Mistral Large 4's multi-step native Function Calling agent loop with
+ * Coordinates Lumen's multi-step function calling loop with
  * automatic, reverent fallback to [OfflineCatechistEngine] whenever offline or unconfigured.
  */
 class LumenRepository(
     private val client: LumenApiClient = MistralLumenClient(),
     private val defaultApiKeyProvider: () -> String = { BuildConfig.MISTRAL_API_KEY },
-    private val modelName: String = BuildConfig.MISTRAL_MODEL.ifBlank { LumenGuardrails.MISTRAL_MODEL },
+    private val modelName: String = LumenGuardrails.DEEPSEEK_FLASH_MODEL,
 ) {
     fun resolveApiKey(userOverrideKey: String): String =
         userOverrideKey.trim().ifBlank { defaultApiKeyProvider().trim() }
