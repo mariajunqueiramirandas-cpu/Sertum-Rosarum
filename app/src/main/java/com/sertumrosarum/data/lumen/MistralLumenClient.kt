@@ -22,7 +22,7 @@ interface LumenApiClient {
         apiKey: String,
         systemPrompt: String,
         messages: List<Pair<String, String>>,
-        model: String = LumenGuardrails.MISTRAL_MODEL,
+        model: String = LumenGuardrails.DEEPSEEK_FLASH_MODEL,
         temperature: Double = 0.7,
     ): Result<String>
 
@@ -31,7 +31,7 @@ interface LumenApiClient {
         systemPrompt: String,
         messages: List<MistralWireMessage>,
         toolsJson: String = LumenTools.mistralToolsJson,
-        model: String = LumenGuardrails.MISTRAL_MODEL,
+        model: String = LumenGuardrails.DEEPSEEK_FLASH_MODEL,
         temperature: Double = 0.72,
         onUpdate: (MistralStepUpdate) -> Unit = {},
     ): Result<MistralStepResponse> = Result.failure(UnsupportedOperationException("Agent tool loop not implemented"))
@@ -41,9 +41,7 @@ interface LumenApiClient {
 }
 
 /**
- * Lightweight zero-dependency HTTPS client for Mistral's Chat Completions API
- * targeting [LumenGuardrails.MISTRAL_MODEL] (`mistral-large-4`) with native Function Calling
- * and NO artificial `max_tokens` limits.
+ * HTTPS client for Mistral's Chat Completions API with streaming and function calling.
  */
 class MistralLumenClient(
     private val endpointUrl: String = DEFAULT_ENDPOINT,

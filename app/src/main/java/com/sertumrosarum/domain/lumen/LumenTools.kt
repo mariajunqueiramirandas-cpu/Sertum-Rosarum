@@ -88,7 +88,7 @@ data class ToolExecutionOutput(
 )
 
 /**
- * The native Mistral Large 4 function-calling tools that give the Catechist full
+ * The function-calling tools that give the Catechist full
  * read/write grounding across Sertum Rosarum while keeping fixed Church prayers immutable.
  */
 object LumenTools {

@@ -1,6 +1,7 @@
 # ✨ Lumen — Contemplative AI & Conversational Catechist Specification
 
-> **Engine Name:** `Lumen` (*Luz para contemplação*) — powered by **Mistral Large 4** (`mistral-large-4`) with full offline fallback.  
+> **Engine Name** — `Lumen` (*Luz para contemplação*) uses **DeepSeek V4.1 Flash 1017** (`deepseek-v4-1-flash-1017`) hosted by Mistral, with full offline fallback.
+>
 > **Core Principle:** Reverent, correspondence-style integration into **O Jardim de Maria** — Fraunces & Nunito typography, soft sage note-cards, open parchment replies, watercolor portraits (**MeshyAI `gpt-image-2-6-sunburst`**), and embedded native prayer actions — never generic chat bubbles.
 
 ---
@@ -19,7 +20,7 @@ Users can talk directly with their companion (by typing or voice input) and swit
 ### Why Correspondence Layout Instead of Generic Chat Bubbles?
 Traditional chat bubbles feel noisy and pull users out of stillness. Instead:
 * User notes sit right-aligned on soft sage surface cards; the catechist writes openly on the warm parchment canvas in **Fraunces**, headed by their watercolor portrait medallion ([catechists artwork](artwork/catechists/README.md)) and separated by botanical sprigs.
-* **Lumen** runs a **multi-step native Mistral Large 4 Function Calling loop** (`mistral-large-4`, `reasoning_effort: low`, **no `max_tokens` cap**, up to 6 parallel tool rounds) that grounds every answer in the app's real catalogs and `Meu Jardim` database and attaches up to multiple **embedded native action cards** (`Rezar este terço agora`, `Rezar esta dezena agora`, `Iniciar roteiro`, `Guardar no Meu Jardim`, `Abrir no Tesouro`, `Abrir na Catequese`, `Abrir dúvida`, `Abrir caminho prático`, `Estudar mistério`).
+* **Lumen** runs a **multi-step function calling loop** with DeepSeek V4.1 Flash (`reasoning_effort: none`, up to 6 rounds with parallel tool calls). It grounds replies in the app's catalogs and `Meu Jardim` database and attaches **native action cards** (`Rezar este terço agora`, `Rezar esta dezena agora`, `Iniciar roteiro`, `Guardar no Meu Jardim`, `Abrir no Tesouro`, `Abrir na Catequese`, `Abrir dúvida`, `Abrir caminho prático`, `Estudar mistério`).
 
 ---
 
@@ -60,7 +61,7 @@ Lumen uses **16 Mistral function-calling tools** declared in `LumenTools.mistral
 flowchart LR
     Input["User Note / Voice"] --> Sanitizer["Input Sanitizer"]
     Sanitizer --> Prompt["Persona + Doctrinal System Prompt\n(CIC + Scripture + Rosarium Virginis Mariae)"]
-    Prompt --> Loop["Mistral Large 4 Agent Loop\n(No max_tokens · Up to 6 Parallel Tool Rounds)"]
+    Prompt --> Loop["DeepSeek V4.1 Flash Agent Loop\n(Up to 6 Rounds with Parallel Tool Calls)"]
     Loop <--> Tools["16 Agent Tools\n(Catalogs + Liturgy + Meu Jardim + Web Search + Interim Replies)"]
     Loop --> Parser["Structured Reply + Action Cards"]
     Parser --> Guard["Immutable Prayer Guardrail\n(Fixed Prayers Loaded from Local Binary Only)"]

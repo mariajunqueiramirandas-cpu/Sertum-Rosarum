@@ -31,13 +31,13 @@ class LumenAgentTest {
     }
 
     @Test
-    fun mistralRequestTargetsMistralLarge4WithJsonFormat() {
+    fun mistralRequestTargetsDeepSeekFlashWithJsonFormat() {
         val req = LumenJsonParser.buildMistralChatRequest(
-            model = LumenGuardrails.MISTRAL_MODEL,
+            model = LumenGuardrails.DEEPSEEK_FLASH_MODEL,
             systemPrompt = "Sistema",
             messages = listOf("user" to "Olá, Mateus!"),
         )
-        assertTrue(req.contains("\"model\":\"mistral-large-4\""))
+        assertTrue(req.contains("\"model\":\"deepseek-v4-1-flash-1017\""))
         assertTrue(req.contains("\"reasoning_effort\":\"low\""))
         assertTrue(req.contains("\"response_format\":{\"type\":\"json_object\"}"))
         assertFalse(req.contains("max_tokens"))
@@ -244,11 +244,12 @@ class LumenAgentTest {
         assertEquals(16, parsed!!.size)
 
         val agentReq = LumenJsonParser.buildMistralAgentRequest(
-            model = LumenGuardrails.MISTRAL_MODEL,
+            model = LumenGuardrails.DEEPSEEK_FLASH_MODEL,
             systemPrompt = "Sistema",
             messages = listOf(MistralWireMessage.Text("user", "Quero rezar agora")),
         )
-        assertTrue(agentReq.contains("\"model\":\"mistral-large-4\""))
+        assertTrue(agentReq.contains("\"model\":\"deepseek-v4-1-flash-1017\""))
+        assertTrue(agentReq.contains("\"reasoning_effort\":\"none\""))
         assertTrue(agentReq.contains("\"tool_choice\":\"auto\""))
         assertTrue(agentReq.contains("build_custom_rosary"))
         assertTrue(agentReq.contains("read_my_garden"))
@@ -376,6 +377,7 @@ class LumenAgentTest {
                 temperature: Double,
                 onUpdate: (MistralStepUpdate) -> Unit,
             ): Result<MistralStepResponse> {
+                assertEquals("deepseek-v4-1-flash-1017", model)
                 stepCount++
                 return when (stepCount) {
                     1 -> Result.success(

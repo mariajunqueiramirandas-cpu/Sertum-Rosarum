@@ -53,7 +53,6 @@ android {
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         buildConfigField("String", "MISTRAL_API_KEY", "\"$mistralDevApiKey\"")
-        buildConfigField("String", "MISTRAL_MODEL", "\"mistral-large-4\"")
     }
 
     signingConfigs {

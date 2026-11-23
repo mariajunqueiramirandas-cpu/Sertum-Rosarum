@@ -374,7 +374,7 @@ fun CatechistScreen(
             }
         }
 
-        // Sheet 1: Choose Catechist Persona + Mistral Large 4 settings
+        // Sheet 1: Choose Catechist Persona and configure online access.
         SacredBottomSheet(
             visible = personaSheetOpen,
             onDismiss = { personaSheetOpen = false },
@@ -744,9 +744,9 @@ private fun PersonaPickerSheetContent(
 
         SacredCard(Modifier.fillMaxWidth()) {
             Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(8.dp)) {
-                SacredEyebrow("Motor contemplativo · Mistral Large 4")
+                SacredEyebrow("Motor contemplativo")
                 SacredToggleRow(
-                    title = "Usar Mistral Large 4 quando online",
+                    title = "Usar DeepSeek V4.1 Flash online",
                     caption = if (state.hasEffectiveApiKey) "Conversas ao vivo e roteiros sob medida; cai para o modo offline automaticamente sem internet." else "Sem chave configurada — usando respostas offline.",
                     checked = state.onlineEnabled,
                     onToggle = { onToggleOnline(!state.onlineEnabled) },
