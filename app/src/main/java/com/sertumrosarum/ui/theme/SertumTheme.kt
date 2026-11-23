@@ -36,6 +36,12 @@ import com.sertumrosarum.ui.canvas.rememberBotanicalArtwork
 import com.sertumrosarum.ui.canvas.LocalDevotionalArtwork
 import com.sertumrosarum.ui.canvas.rememberDevotionalArtwork
 
+enum class ReadingScale(val label: String, val factor: Float) {
+    STANDARD("Padrão", 1f),
+    COMFORT("Maior", 1.12f),
+    LARGE("Grande", 1.24f),
+}
+
 /**
  * [ruby] is the rose of the flowers and small accents. Actions are petals:
  * a pale [petal] fill carrying a deep [onPetal] label, so nothing on screen shouts.
@@ -91,6 +97,9 @@ private val GardenText = TextStyle(
     lineBreak = LineBreak.Paragraph,
 )
 
+private fun TextStyle.scaledBy(factor: Float): TextStyle =
+    if (factor == 1f) this else copy(fontSize = fontSize * factor, lineHeight = lineHeight * factor)
+
 @Immutable
 data class SertumTypography(
     val brand: TextStyle = GardenText.copy(fontFamily = VoiceDisplay, fontSize = 24.sp, lineHeight = 30.sp, fontWeight = FontWeight.Medium, lineBreak = LineBreak.Heading),
@@ -102,7 +111,16 @@ data class SertumTypography(
     val body: TextStyle = GardenText.copy(fontFamily = SanctuaryFont, fontSize = 15.sp, lineHeight = 23.sp),
     val label: TextStyle = GardenText.copy(fontFamily = SanctuaryFont, fontSize = 15.sp, lineHeight = 21.sp, fontWeight = FontWeight.SemiBold, lineBreak = LineBreak.Simple),
     val micro: TextStyle = GardenText.copy(fontFamily = SanctuaryFont, fontSize = 13.sp, lineHeight = 18.sp, fontWeight = FontWeight.SemiBold, lineBreak = LineBreak.Simple),
-)
+) {
+    /** Enlarges reading text comfortably while preserving navigation labels and compact chrome. */
+    fun forReadingScale(scale: ReadingScale): SertumTypography =
+        if (scale == ReadingScale.STANDARD) this
+        else copy(
+            prayer = prayer.scaledBy(scale.factor),
+            whisper = whisper.scaledBy(scale.factor),
+            body = body.scaledBy(scale.factor),
+        )
+}
 
 @Immutable
 data class SertumSpacing(val small: Dp = 8.dp, val medium: Dp = 16.dp, val page: Dp = 24.dp, val large: Dp = 32.dp)
@@ -136,7 +154,12 @@ object SertumTheme {
 }
 
 @Composable
-fun SertumTheme(mode: ThemeMode, mysterySet: MysterySet, content: @Composable () -> Unit) {
+fun SertumTheme(
+    mode: ThemeMode,
+    mysterySet: MysterySet,
+    readingScale: ReadingScale = ReadingScale.STANDARD,
+    content: @Composable () -> Unit,
+) {
     val dark = when (mode) {
         ThemeMode.SYSTEM -> isSystemInDarkTheme()
         ThemeMode.DAY -> false
@@ -160,7 +183,7 @@ fun SertumTheme(mode: ThemeMode, mysterySet: MysterySet, content: @Composable ()
         LocalDevotionalArtwork provides rememberDevotionalArtwork(),
         LocalSertumColors provides colors,
         LocalIndication provides remember(colors.marian) { SacredIndication(colors.marian) },
-        LocalSertumTypography provides SertumTypography(),
+        LocalSertumTypography provides remember(readingScale) { SertumTypography().forReadingScale(readingScale) },
         LocalSertumSpacing provides SertumSpacing(page = if (LocalConfiguration.current.screenWidthDp < 380) 20.dp else 24.dp),
         LocalSertumShapes provides SertumShapes(),
         LocalMysteryAtmosphere provides atmosphere(mysterySet, dark),

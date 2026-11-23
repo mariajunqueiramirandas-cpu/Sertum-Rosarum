@@ -27,8 +27,6 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.semantics.heading
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -106,9 +104,8 @@ private fun GuideRow(guide: PrayerGuide, onOpen: (PrayerGuide) -> Unit) {
         Column(Modifier.weight(1f)) {
             SacredText(guide.title, style = type.label.copy(fontSize = 16.sp, lineHeight = 22.sp, fontWeight = FontWeight.SemiBold))
             SacredText(guide.summary, Modifier.padding(top = 2.dp), type.body.copy(fontSize = 14.sp, lineHeight = 20.sp), colors.secondary)
-            // Metadata stays typographic; the whole row already provides the action surface.
             val details = buildList {
-                if (guide.shelf == GuideShelf.CROWN) add(guide.shape.badge)
+                if (guide.shelf == GuideShelf.CROWN || guide == PrayerGuide.SINGLE_DECADE || guide == PrayerGuide.FULL_ROSARY) add(guide.shape.badge)
                 if (guide.catechetical) add("Iniciante")
                 if (guide.litany) add("Ladainha")
             }
@@ -128,17 +125,21 @@ private fun ThemedGuideCard(guide: PrayerGuide, onOpen: (PrayerGuide) -> Unit) {
     val wash = when (guide) {
         PrayerGuide.FAMILY -> Color(0xFFE0AFA3)
         PrayerGuide.SICK -> Color(0xFFA6CBD0)
+        PrayerGuide.PEACE -> Color(0xFFE2CA8E)
+        PrayerGuide.DECEASED -> Color(0xFFBFADC6)
+        PrayerGuide.ANXIETY -> Color(0xFFA3C4B0)
+        PrayerGuide.VOCATIONS -> Color(0xFFDAB98E)
         else -> Color(0xFFE2CA8E)
     }
     val shape = RoundedCornerShape(28.dp)
     Column(
-        Modifier.width(158.dp).fillMaxHeight()
+        Modifier.width(164.dp).fillMaxHeight()
             .shadow(if (colors.isDark) 0.dp else 8.dp, shape, ambientColor = colors.marian.copy(alpha = .16f), spotColor = colors.marian.copy(alpha = .22f))
             .clip(shape).background(colors.elevated)
             .background(Brush.verticalGradient(listOf(wash.copy(alpha = if (colors.isDark) .22f else .34f), wash.copy(alpha = 0f))))
             .border(1.dp, colors.border.copy(alpha = if (colors.isDark) .9f else .7f), shape)
             .clickable(role = Role.Button, onClickLabel = "Ver este roteiro") { onOpen(guide) }.testTag("guide-${guide.name}")
-            .heightIn(min = 208.dp).padding(start = 16.dp, end = 14.dp, top = 14.dp, bottom = 16.dp),
+            .heightIn(min = 212.dp).padding(start = 16.dp, end = 14.dp, top = 14.dp, bottom = 16.dp),
     ) {
         DevotionalArtwork(guide.illustration, Modifier.fillMaxWidth().height(104.dp))
         SacredText(guide.title, Modifier.padding(top = 12.dp), type.section.copy(fontSize = 19.sp, lineHeight = 25.sp))

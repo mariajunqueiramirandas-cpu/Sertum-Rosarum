@@ -169,7 +169,11 @@ private fun Sources(lesson: FormationLesson, modifier: Modifier = Modifier) {
 private fun PauseCard(lesson: FormationLesson, answer: Int?, onAnswer: (Int) -> Unit, modifier: Modifier = Modifier) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
-    val order = if (lesson.id.hashCode() % 2 == 0) lesson.choices.indices.toList() else lesson.choices.indices.reversed().toList()
+    val order = when (Math.floorMod(lesson.id.hashCode(), 3)) {
+        0 -> listOf(0, 1, 2)
+        1 -> listOf(1, 0, 2)
+        else -> listOf(2, 1, 0)
+    }.filter { it in lesson.choices.indices }
     SacredCard(modifier.fillMaxWidth()) {
         Column(Modifier.padding(20.dp)) {
             SacredEyebrow("Uma pausa para lembrar")
@@ -209,12 +213,16 @@ private fun PauseCard(lesson: FormationLesson, answer: Int?, onAnswer: (Int) -> 
 
 /** A practice for ordinary life, its steps joined by one stem like the beads of a decade. */
 @Composable
-internal fun ColumnScope.JourneyPage(journey: PracticeJourney, model: GardenViewModel?, onPray: () -> Unit) {
+internal fun ColumnScope.JourneyPage(journey: PracticeJourney, state: GardenState, model: GardenViewModel?, onPray: () -> Unit) {
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
+    val kept = state.bookmarks.any { it.kind == "journey" && it.itemId == journey.id }
     Column(Modifier.fillMaxWidth().padding(horizontal = SertumTheme.spacing.page).padding(top = 8.dp, bottom = 44.dp)) {
         FormationPainting(journeyIllustration(journey.id), "journey-artwork", compact = true)
-        SacredEyebrow("Na vida · ${journey.steps.size} passos")
+        Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
+            SacredEyebrow("Na vida · ${journey.steps.size} passos", Modifier.weight(1f))
+            if (model != null) KeepToggle(kept) { model.bookmark("journey", journey.id) }
+        }
         SacredText(journey.title, Modifier.padding(top = 10.dp).semantics { heading() }, type.display)
         SacredText(journey.introduction, Modifier.padding(top = 10.dp), type.whisper, colors.secondary)
         SacredFlourish(Modifier.align(Alignment.CenterHorizontally).padding(vertical = 22.dp))

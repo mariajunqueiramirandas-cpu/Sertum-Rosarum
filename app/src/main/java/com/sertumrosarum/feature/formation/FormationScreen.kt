@@ -51,11 +51,26 @@ internal fun nextLesson(state: GardenState) = state.learning.firstOrNull { it.co
 internal fun GardenState.completed(id: String) = learning.any { it.lessonId == id && it.completedAt != null }
 
 @Composable
-fun FormationScreen(model: GardenViewModel?, state: GardenState, initialLesson: String?, onPray: () -> Unit) {
-    var place by rememberSaveable { mutableStateOf(FormationPlace.LEARN) }
+fun FormationScreen(
+    model: GardenViewModel?,
+    state: GardenState,
+    initialLesson: String?,
+    initialQuestion: String? = null,
+    initialJourney: String? = null,
+    onPray: () -> Unit,
+) {
+    var place by rememberSaveable(initialQuestion, initialJourney) {
+        mutableStateOf(
+            when {
+                initialQuestion != null -> FormationPlace.QUESTIONS
+                initialJourney != null -> FormationPlace.LIFE
+                else -> FormationPlace.LEARN
+            },
+        )
+    }
     var lessonId by rememberSaveable(initialLesson) { mutableStateOf(initialLesson) }
     var query by rememberSaveable { mutableStateOf("") }
-    var journeyId by rememberSaveable { mutableStateOf<String?>(null) }
+    var journeyId by rememberSaveable(initialJourney) { mutableStateOf(initialJourney) }
     val lesson = FormationCatalog.lesson(lessonId)
     val journey = FormationCatalog.journeys.find { it.id == journeyId }
     // Catequese is a tab of its own: only a lesson or a journey opened within it has a way back.
@@ -69,8 +84,8 @@ fun FormationScreen(model: GardenViewModel?, state: GardenState, initialLesson: 
     SanctuaryPage("Catequese", "formation", if (inside) readingScroll else courseScroll, onBack = if (inside) back else null) {
         when {
             lesson != null -> LessonPage(lesson, state, model, onPray) { lessonId = it }
-            journey != null -> JourneyPage(journey, model, onPray)
-            else -> CoursePage(state, model, place, { place = it }, query, { query = it }, { lessonId = it }, { journeyId = it })
+            journey != null -> JourneyPage(journey, state, model, onPray)
+            else -> CoursePage(state, model, place, { place = it }, query, { query = it }, { lessonId = it }, { journeyId = it }, initialQuestion)
         }
     }
 }

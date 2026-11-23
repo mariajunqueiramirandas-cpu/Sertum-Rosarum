@@ -1,8 +1,12 @@
 package com.sertumrosarum.feature.prayer
 
+import android.app.Activity
+import android.view.WindowManager
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
@@ -21,13 +25,14 @@ import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.key
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
-import androidx.compose.runtime.key
-import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -35,10 +40,11 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.input.pointer.pointerInput
-import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
-import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.LiveRegionMode
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.liveRegion
 import androidx.compose.ui.semantics.onClick
@@ -48,21 +54,26 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.sertumrosarum.domain.prayer.FixedPrayer
-import com.sertumrosarum.domain.treasury.PrayerLanguage
-import com.sertumrosarum.domain.treasury.TreasuryPrayer
-import com.sertumrosarum.feature.treasury.inLatin
 import com.sertumrosarum.domain.prayer.PrayerMode
 import com.sertumrosarum.domain.prayer.PrayerPhase
+import com.sertumrosarum.domain.treasury.PrayerLanguage
+import com.sertumrosarum.domain.treasury.TreasuryPrayer
 import com.sertumrosarum.feature.guides.PrayerGuide
+import com.sertumrosarum.feature.treasury.MysteryDeepStudySections
+import com.sertumrosarum.feature.treasury.inLatin
 import com.sertumrosarum.ui.canvas.BloomingBeadsArc
 import com.sertumrosarum.ui.canvas.CompactMysteries
+import com.sertumrosarum.ui.canvas.FineArt
 import com.sertumrosarum.ui.canvas.FiveMysteriesArc
 import com.sertumrosarum.ui.canvas.RoseMark
 import com.sertumrosarum.ui.canvas.rememberGardenBreath
 import com.sertumrosarum.ui.components.SacredBottomSheet
+import com.sertumrosarum.ui.components.SacredCard
+import com.sertumrosarum.ui.components.SacredEyebrow
 import com.sertumrosarum.ui.components.SacredFlourish
 import com.sertumrosarum.ui.components.SacredIcon
 import com.sertumrosarum.ui.components.SacredIconButton
+import com.sertumrosarum.ui.components.SacredPainting
 import com.sertumrosarum.ui.components.SacredPrimaryButton
 import com.sertumrosarum.ui.components.SacredText
 import com.sertumrosarum.ui.theme.SertumTheme
@@ -79,23 +90,35 @@ fun ImmersivePrayerScreen(
     latin: TreasuryPrayer? = null,
     onNext: () -> Unit,
 ) {
+    val context = LocalContext.current
+    // Keep the screen gently awake during prayer so eyes-closed or slow meditation is never interrupted.
+    DisposableEffect(context) {
+        val window = (context as? Activity)?.window
+        window?.addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON)
+        onDispose { window?.clearFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON) }
+    }
+
     val colors = SertumTheme.colors
     val type = SertumTheme.typography
     val page = SertumTheme.spacing.page
     val largeText = LocalDensity.current.fontScale > 1.3f
     val step = state.step
+    val activeMystery = state.activeMystery
     val chapter = when (step.phase) {
         PrayerPhase.INTRODUCTION -> "Para aquietar o coração"
-        PrayerPhase.DECADE -> "${ordinal(requireNotNull(step.decadeIndex)).let { if (state.groupLabel == "mistério") it else it.removeSuffix("o") + "a" }} ${state.groupLabel}"
+        PrayerPhase.DECADE -> "${ordinalFor(requireNotNull(step.decadeIndex), state.groupLabel)} ${state.groupLabel}"
         PrayerPhase.CLOSING -> "Sua coroa está florescendo"
     }
     val beadLabel = if (step.isSmallBead) "${state.beadLabel} ${requireNotNull(step.beadIndex) + 1} de ${step.beadCount}" else "Passo ${state.stepIndex + 1} de ${state.sequence.size}"
     val groups = state.groupCount
     val announcing = step.isAnnouncement
-    val latinText = if (state.sessionMode == com.sertumrosarum.domain.prayer.PrayerMode.SOLO) latin?.latinSolo ?: latin?.latin else latin?.latin
+    val latinText = if (state.sessionMode == PrayerMode.SOLO) latin?.latinSolo ?: latin?.latin else latin?.latin
     val inLatin = language == PrayerLanguage.LATIN && latinText != null
     var contemplating by rememberSaveable(state.stepIndex) { mutableStateOf(false) }
     var readingSection by rememberSaveable(state.stepIndex) { mutableIntStateOf(0) }
+    val showOfferedOnStep = state.offeredIntentions.isNotEmpty() &&
+        (step.prayer == FixedPrayer.OFFERING || (step.reading != null && step.reading == state.script.offering))
+
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val shortScreen = maxHeight < 430.dp
         val touchZoneHeight = maxHeight * if (shortScreen) .32f else .5f
@@ -104,8 +127,6 @@ fun ImmersivePrayerScreen(
                 SacredIconButton(SacredIcon.CLOSE, "Voltar ao santuário e pausar", model::returnHome, Modifier.testTag("pause-prayer"))
                 Column(Modifier.weight(1f).padding(horizontal = 8.dp), horizontalAlignment = Alignment.CenterHorizontally) {
                     SacredText(state.sessionTitle, Modifier.fillMaxWidth().testTag("prayer-session-title"), style = type.section.copy(fontSize = 17.sp, lineHeight = 23.sp), color = colors.ink, align = TextAlign.Center)
-                    // A generic "Minha oração" repeats the screen's purpose. Keep
-                    // meaningful guide names on their own line so large type can wrap.
                     if (state.sessionGuide.prayerLabel != PrayerGuide.TRADITIONAL.prayerLabel) {
                         SacredText(state.sessionGuide.prayerLabel, Modifier.fillMaxWidth().testTag("prayer-guide"), type.micro.copy(fontSize = 12.sp, lineHeight = 16.sp), colors.secondary, TextAlign.Center)
                     }
@@ -120,8 +141,6 @@ fun ImmersivePrayerScreen(
             key(state.stepIndex, state.eyesClosed, language) {
                 PrayerTextReader(
                     Modifier.weight(1f).fillMaxWidth().padding(horizontal = page - 6.dp),
-                    // A scroll cue must not recenter the heading or first line.
-                    // Only the concise eyes-closed introduction is centered vertically.
                     centerContent = state.eyesClosed,
                     readingKey = readingSection,
                 ) {
@@ -133,13 +152,11 @@ fun ImmersivePrayerScreen(
                         }
                     } else {
                         val meditation = state.beadMeditation
-                        if (meditation != null && step.mystery != null) {
-                            // In the bead-by-bead rosary the line to contemplate leads, and the prayer follows it.
-                            MeditatedBead(requireNotNull(step.decadeIndex), step.mystery, meditation, { contemplating = true }, Modifier.padding(bottom = 12.dp))
+                        if (meditation != null && activeMystery != null) {
+                            MeditatedBead(requireNotNull(step.decadeIndex), activeMystery, meditation, { contemplating = true }, Modifier.padding(bottom = 12.dp))
                         } else {
-                            // Within a decade the chapter line becomes the way back into its mystery.
-                            if (step.mystery != null && state.contemplation != null && !announcing) {
-                                MysteryLink(requireNotNull(step.decadeIndex), step.mystery, { contemplating = true })
+                            if (activeMystery != null && state.contemplation != null && !announcing) {
+                                MysteryLink(requireNotNull(step.decadeIndex), activeMystery, { contemplating = true }, groupLabel = state.groupLabel)
                                 Spacer(Modifier.height(if (shortScreen) 0.dp else 2.dp))
                             } else {
                                 SacredText(chapter, style = type.micro, color = colors.accentInk, align = TextAlign.Center)
@@ -153,16 +170,32 @@ fun ImmersivePrayerScreen(
                         }
                         state.catecheticalNote?.let { CatecheticalNote(it, Modifier.padding(bottom = 16.dp)) }
                         val contemplation = state.contemplation
-                        if (announcing) state.themedMeditation?.let {
-                            SacredText(it, Modifier.padding(bottom = 16.dp).testTag("themed-meditation"), type.whisper, colors.accentInk, TextAlign.Center)
+                        val themedDetail = state.themedDetail
+                        if (announcing && themedDetail != null) {
+                            SacredText(themedDetail.intention, Modifier.padding(bottom = 12.dp).testTag("themed-meditation"), type.whisper, colors.accentInk, TextAlign.Center)
                         }
-                        if (step.mystery != null && announcing && contemplation != null) {
-                            // The announcement is the mystery itself, layer by layer, before the Pai-Nosso.
-                            MysteryDimensions(step.mystery, contemplation, state.meditated, model::toggleMeditated, onLayerSelected = { readingSection = it })
+                        if (activeMystery != null && announcing && contemplation != null) {
+                            MysteryDimensions(
+                                activeMystery,
+                                contemplation,
+                                state.meditated,
+                                model::toggleMeditated,
+                                showMeditatedToggle = state.script.isRosary,
+                                onLayerSelected = { readingSection = it },
+                            )
+                            if (themedDetail != null) {
+                                SacredText(
+                                    themedDetail.petition,
+                                    Modifier.padding(top = 12.dp).testTag("themed-petition"),
+                                    type.micro.copy(fontWeight = FontWeight.Medium),
+                                    colors.accentInk,
+                                    TextAlign.Center,
+                                )
+                            }
                         } else if (step.reading?.response != null) {
                             LitanyVerses(listOf(state.prayerText to step.reading.response))
                         } else {
-                            if (announcing) SacredText(requireNotNull(step.mystery).scripture, Modifier.padding(bottom = 10.dp), type.micro, colors.accentInk, TextAlign.Center)
+                            if (announcing && activeMystery != null) SacredText(activeMystery.scripture, Modifier.padding(bottom = 10.dp), type.micro, colors.accentInk, TextAlign.Center)
                             val alignment = when (step.prayer) {
                                 FixedPrayer.SIGN_OF_CROSS, FixedPrayer.GLORY_BE -> TextAlign.Center
                                 else -> TextAlign.Start
@@ -177,6 +210,9 @@ fun ImmersivePrayerScreen(
                                 }
                             } else SacredText(if (inLatin) latinText.orEmpty() else state.prayerText, Modifier.widthIn(max = 480.dp).fillMaxWidth().testTag("prayer-text"), if (inLatin) type.prayer.inLatin else type.prayer, colors.ink, alignment)
                         }
+                        if (showOfferedOnStep) {
+                            OfferedIntentionsBanner(state.offeredIntentions, Modifier.padding(top = 16.dp))
+                        }
                         if (step.intention != null) {
                             SacredText(step.intention, Modifier.padding(top = 16.dp), type.whisper, colors.gold, TextAlign.Center)
                         }
@@ -184,9 +220,16 @@ fun ImmersivePrayerScreen(
                 }
             }
             if (state.eyesClosed) {
-                EyesClosedZone(beadLabel, onNext, model::previous, Modifier.padding(horizontal = page).height(touchZoneHeight).padding(top = 14.dp, bottom = 12.dp), compact = shortScreen)
+                EyesClosedZone(
+                    beadLabel,
+                    onNext,
+                    model::previous,
+                    Modifier.padding(horizontal = page).height(touchZoneHeight).padding(top = 14.dp, bottom = 12.dp),
+                    compact = shortScreen,
+                    volumeKeysEnabled = state.volumeKeysEnabled,
+                )
             } else {
-                if (!shortScreen && state.groupBeads.isNotEmpty()) {
+                if (!shortScreen && state.groupBeads.size > 1) {
                     BloomingBeadsArc(state.groupBeads.size, step.beadIndex, state.beadsComplete, model::jumpToBead, Modifier.padding(horizontal = 14.dp), beadLabel = state.beadLabel, compact = true)
                 }
             }
@@ -222,16 +265,65 @@ fun ImmersivePrayerScreen(
                 }
             }
         }
-        val mystery = step.mystery
+        val mystery = activeMystery
         val contemplation = state.contemplation
-        SacredBottomSheet(contemplating && mystery != null, { contemplating = false }, "Contemplar o mistério", tag = "mystery-sheet") {
+        SacredBottomSheet(contemplating && mystery != null && contemplation != null, { contemplating = false }, "Contemplar o mistério", tag = "mystery-sheet") {
             if (mystery != null && contemplation != null) {
-                SacredText("${ordinal(requireNotNull(step.decadeIndex))} mistério ${state.sessionSet.singular.lowercase()}", Modifier.fillMaxWidth(), type.micro, colors.accentInk, TextAlign.Center)
+                val effIndex = state.effectiveMysteryIndex
+                val headerLine = if (state.script.isRosary && effIndex != null) {
+                    "${ordinal(effIndex)} mistério ${state.activeMysterySet.singular.lowercase()}"
+                } else {
+                    "${ordinalFor(step.decadeIndex ?: 0, state.groupLabel)} ${state.groupLabel}"
+                }
+                SacredText(headerLine, Modifier.fillMaxWidth(), type.micro, colors.accentInk, TextAlign.Center)
                 SacredText(mystery.title, Modifier.fillMaxWidth().padding(top = 6.dp).testTag("mystery-sheet-title"), type.heading, align = TextAlign.Center)
+                if (state.script.isRosary && effIndex != null) {
+                    SacredPainting(FineArt.forMystery(state.activeMysterySet, effIndex), Modifier.padding(top = 16.dp), "prayer-mystery-painting")
+                }
                 SacredFlourish(Modifier.align(Alignment.CenterHorizontally).padding(top = 14.dp, bottom = 18.dp))
-                state.themedMeditation?.let { SacredText(it, Modifier.padding(bottom = 16.dp).testTag("themed-meditation"), type.whisper, colors.accentInk) }
-                MysteryDimensions(mystery, contemplation, state.meditated, model::toggleMeditated, unfolded = true)
-                if (state.meditated && contemplation.beads.isNotEmpty()) {
+                state.themedDetail?.let { detail ->
+                    SacredCard(Modifier.fillMaxWidth().padding(bottom = 16.dp)) {
+                        Column(Modifier.padding(18.dp), verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                            SacredEyebrow(state.sessionGuide.title)
+                            SacredText(detail.intention, Modifier.testTag("themed-meditation"), type.whisper, colors.accentInk)
+                            SacredText(detail.reflection, style = type.body, color = colors.secondary)
+                            SacredText(detail.petition, Modifier.padding(top = 2.dp), type.micro, colors.gold)
+                        }
+                    }
+                }
+                if (state.offeredIntentions.isNotEmpty()) {
+                    OfferedIntentionsBanner(state.offeredIntentions, Modifier.padding(bottom = 16.dp))
+                }
+                MysteryDimensions(
+                    mystery,
+                    contemplation,
+                    state.meditated,
+                    model::toggleMeditated,
+                    unfolded = true,
+                    showMeditatedToggle = state.script.isRosary,
+                )
+                state.mysteryStudy?.let { study ->
+                    var showDeepStudy by rememberSaveable(state.stepIndex) { mutableStateOf(false) }
+                    Row(
+                        Modifier.fillMaxWidth().padding(top = 18.dp).clip(RoundedCornerShape(18.dp))
+                            .background(colors.marian.copy(alpha = .12f))
+                            .clickable(role = Role.Button) { showDeepStudy = !showDeepStudy }
+                            .testTag("deep-study-toggle")
+                            .heightIn(min = 48.dp).padding(horizontal = 16.dp, vertical = 10.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                    ) {
+                        Column(Modifier.weight(1f)) {
+                            SacredText(if (showDeepStudy) "Recolher estudo aprofundado" else "Aprofundar este mistério", style = type.label, color = colors.accentInk)
+                            SacredText("Contexto histórico, santos e símbolos · ${study.catechismRefs}", style = type.micro.copy(fontWeight = FontWeight.Normal), color = colors.secondary)
+                        }
+                        SacredIcon(SacredIcon.CHEVRON, Modifier.size(13.dp), colors.accentInk)
+                    }
+                    AnimatedVisibility(showDeepStudy) {
+                        MysteryDeepStudySections(study, Modifier.padding(top = 14.dp))
+                    }
+                }
+                if (state.script.isRosary && state.meditated && contemplation.beads.isNotEmpty()) {
                     SacredText("Conta a conta", Modifier.padding(start = 6.dp, top = 24.dp, bottom = 8.dp), type.section)
                     BeadByBeadList(contemplation.beads, step.beadIndex.takeIf { step.prayer == FixedPrayer.HAIL_MARY })
                 }
@@ -240,8 +332,40 @@ fun ImmersivePrayerScreen(
     }
 }
 
+/** Displays the user's chosen intentions gently during the Offering step and inside the contemplation sheet. */
 @Composable
-private fun EyesClosedZone(label: String, onNext: () -> Unit, onPrevious: () -> Unit, modifier: Modifier = Modifier, compact: Boolean = false) {
+private fun OfferedIntentionsBanner(intentions: List<OfferedIntention>, modifier: Modifier = Modifier) {
+    val colors = SertumTheme.colors
+    val type = SertumTheme.typography
+    val shape = RoundedCornerShape(22.dp)
+    Column(
+        modifier.widthIn(max = 480.dp).fillMaxWidth().clip(shape)
+            .background(colors.petal.copy(alpha = if (colors.isDark) .14f else .45f))
+            .border(1.dp, colors.gold.copy(alpha = .35f), shape)
+            .testTag("offered-intentions-card")
+            .padding(horizontal = 16.dp, vertical = 14.dp),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+    ) {
+        SacredEyebrow(if (intentions.size == 1) "Intenção desta coroa" else "Intenções desta coroa", color = colors.accentInk)
+        intentions.forEach { item ->
+            SacredText(
+                (if (item.thanksgiving) "Em ação de graças: " else "Por ") + item.title,
+                style = type.whisper,
+                color = colors.ink,
+            )
+        }
+    }
+}
+
+@Composable
+private fun EyesClosedZone(
+    label: String,
+    onNext: () -> Unit,
+    onPrevious: () -> Unit,
+    modifier: Modifier = Modifier,
+    compact: Boolean = false,
+    volumeKeysEnabled: Boolean = true,
+) {
     val colors = SertumTheme.colors
     val breath = rememberGardenBreath("eyes-closed-breath", 6400)
     val largeText = LocalDensity.current.fontScale > 1.3f
@@ -274,7 +398,6 @@ private fun EyesClosedZone(label: String, onNext: () -> Unit, onPrevious: () -> 
     ) {
         Box(contentAlignment = Alignment.Center) {
             Canvas(Modifier.size(if (compact) 40.dp else if (largeText) 88.dp else 132.dp)) {
-                // Slow rings open from the rose, like breath, to rest the eyes on.
                 val swell = .5f + .5f * sin(breath.value)
                 drawCircle(colors.ruby.copy(alpha = .05f + .04f * swell), size.minDimension * (.4f + .1f * swell))
                 drawCircle(colors.ruby.copy(alpha = .08f), size.minDimension * .3f)
@@ -286,6 +409,9 @@ private fun EyesClosedZone(label: String, onNext: () -> Unit, onPrevious: () -> 
             SacredText("Seu toque acompanha a oração.", style = SertumTheme.typography.section, align = TextAlign.Center)
         }
         SacredText(label, Modifier.padding(top = 6.dp).testTag("bead-counter"), SertumTheme.typography.micro, colors.accentInk)
-        if (!compact) SacredText("Toque para seguir. Deslize para voltar.", Modifier.fillMaxWidth().padding(top = 14.dp), SertumTheme.typography.micro.copy(fontWeight = FontWeight.Normal), colors.secondary, TextAlign.Center)
+        if (!compact) {
+            val hint = if (volumeKeysEnabled) "Toque ou use o botão de volume para seguir. Deslize para voltar." else "Toque para seguir. Deslize para voltar."
+            SacredText(hint, Modifier.fillMaxWidth().padding(top = 14.dp), SertumTheme.typography.micro.copy(fontWeight = FontWeight.Normal), colors.secondary, TextAlign.Center)
+        }
     }
 }

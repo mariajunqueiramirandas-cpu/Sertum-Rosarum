@@ -1,40 +1,98 @@
 package com.sertumrosarum.feature.sanctuary
 
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.testTag
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import com.sertumrosarum.domain.formation.FormationCatalog
+import com.sertumrosarum.domain.liturgy.LiturgicalColor
 import com.sertumrosarum.feature.garden.*
+import com.sertumrosarum.feature.guides.PrayerGuide
 import com.sertumrosarum.feature.prayer.*
 import com.sertumrosarum.ui.canvas.*
 import com.sertumrosarum.ui.components.*
+import com.sertumrosarum.ui.theme.ReadingScale
 import com.sertumrosarum.ui.theme.SertumTheme
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-/** The whole garden has its home here: faith, prayer, a treasury and personal continuity. */
+private fun LiturgicalColor.gardenTint(dark: Boolean): Color = when (this) {
+    LiturgicalColor.GREEN -> if (dark) Color(0xFF9DBE9D) else Color(0xFF5D8066)
+    LiturgicalColor.PURPLE -> if (dark) Color(0xFFC5B1D6) else Color(0xFF7B5E8B)
+    LiturgicalColor.WHITE -> if (dark) Color(0xFFE5D29A) else Color(0xFFB8935A)
+    LiturgicalColor.RED -> if (dark) Color(0xFFE0A098) else Color(0xFFAB524C)
+    LiturgicalColor.ROSE -> if (dark) Color(0xFFE6B5BC) else Color(0xFFC47986)
+}
+
+/** The whole garden has its home here: liturgy of the day, faith, prayer, a treasury and personal continuity. */
 @Composable
-fun HomeDashboard(state: PrayerUiState, personal: GardenState, welcomed: Boolean,
-    onTheme: (ThemeMode) -> Unit, onTab: (SanctuaryTab) -> Unit, onLesson: (String?) -> Unit,
-    onPray: () -> Unit, onResume: () -> Unit, onIntentions: () -> Unit, onWelcome: () -> Unit) {
+fun HomeDashboard(
+    state: PrayerUiState,
+    personal: GardenState,
+    welcomed: Boolean,
+    onTheme: (ThemeMode) -> Unit,
+    onReadingScale: (ReadingScale) -> Unit = {},
+    onToggleVolumeKeys: () -> Unit = {},
+    onSearch: () -> Unit = {},
+    onTab: (SanctuaryTab) -> Unit,
+    onLesson: (String?) -> Unit,
+    onPray: () -> Unit,
+    onPrayNow: () -> Unit = onPray,
+    onPraySingleDecade: () -> Unit = onPray,
+    onOpenMysteries: () -> Unit = { onTab(SanctuaryTab.TREASURY) },
+    onOpenPrayer: (String) -> Unit = { onTab(SanctuaryTab.TREASURY) },
+    onOpenGuide: (PrayerGuide) -> Unit = { onTab(SanctuaryTab.GUIDES) },
+    onResume: () -> Unit,
+    onIntentions: () -> Unit,
+    onWelcome: () -> Unit,
+) {
     val type = SertumTheme.typography
     val colors = SertumTheme.colors
+    val liturgy = state.liturgicalDay
     val next = personal.learning.firstOrNull { it.completedAt == null }?.lessonId?.let(FormationCatalog::lesson)
         ?: FormationCatalog.lessons.firstOrNull { lesson -> personal.learning.none { it.lessonId == lesson.id && it.completedAt != null } }
     Column(Modifier.fillMaxSize().testTag("sanctuary")) {
-        SanctuaryHeader(state.themeMode, onTheme)
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).testTag("home-scroll").padding(horizontal = SertumTheme.spacing.page).padding(bottom = 32.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+        SanctuaryHeader(
+            mode = state.themeMode,
+            onTheme = onTheme,
+            readingScale = state.readingScale,
+            onReadingScale = onReadingScale,
+            volumeKeysEnabled = state.volumeKeysEnabled,
+            onToggleVolumeKeys = onToggleVolumeKeys,
+            onSearch = onSearch,
+        )
+        Column(
+            Modifier.weight(1f).verticalScroll(rememberScrollState()).testTag("home-scroll")
+                .padding(horizontal = SertumTheme.spacing.page).padding(bottom = 32.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
             SanctuaryGarden(Modifier.align(Alignment.CenterHorizontally).fillMaxWidth().height(88.dp))
-            SacredText(state.today.format(DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM", Locale.forLanguageTag("pt-BR"))).replaceFirstChar { it.uppercaseChar() }, style = type.micro, color = colors.accentInk)
+            SacredText(
+                state.today.format(DateTimeFormatter.ofPattern("EEEE, d 'de' MMMM", Locale.forLanguageTag("pt-BR"))).replaceFirstChar { it.uppercaseChar() },
+                style = type.micro,
+                color = colors.accentInk,
+            )
+            // Quiet liturgical awareness badge: season, color, and celebration.
+            Row(
+                Modifier.testTag("liturgical-day-badge"),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Box(Modifier.size(8.dp).background(liturgy.color.gardenTint(colors.isDark), CircleShape))
+                SacredText(liturgy.headerLabel, style = type.micro, color = colors.secondary)
+            }
             SacredText("Que bom ter você aqui.", Modifier.testTag("sanctuary-greeting"), type.display)
             SacredText("Aprender a fé, rezar e cultivar a vida com Deus.", style = type.body, color = colors.secondary)
             if (state.hasSession) PersonalCard("Sua oração espera por você", state.resumeDescription, onResume, "resume", illustration = DevotionalIllustration.CONTEMPLATIVE_PRAYER)
+
             SacredText("Por onde quer caminhar?", style = type.section)
             val links = listOf(
                 Triple(SanctuaryTab.CATECHISM, "Catequese", "Aprender, perguntar e viver."),
@@ -45,25 +103,66 @@ fun HomeDashboard(state: PrayerUiState, personal: GardenState, welcomed: Boolean
             BoxWithConstraints {
                 val columns = if (maxWidth >= 260.dp && LocalDensity.current.fontScale <= 1.3f) 2 else 1
                 Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                    links.chunked(columns).forEach { row -> Row(Modifier.fillMaxWidth().height(IntrinsicSize.Max), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                        row.forEach { (tab, title, detail) ->
-                            val illustration = when (tab) { SanctuaryTab.CATECHISM -> DevotionalIllustration.CATECHESIS; SanctuaryTab.GUIDES -> DevotionalIllustration.CONTEMPLATIVE_PRAYER; SanctuaryTab.TREASURY -> DevotionalIllustration.BOOKMARKS; else -> DevotionalIllustration.PERSONAL_GARDEN }
-                            val tag = when (tab) { SanctuaryTab.CATECHISM -> "home-catechism"; SanctuaryTab.GUIDES -> "other-guides"; SanctuaryTab.TREASURY -> "home-treasury"; else -> "home-garden" }
-                            DashboardLink(illustration, title, detail, { onTab(tab) }, tag, Modifier.weight(1f).fillMaxHeight())
+                    links.chunked(columns).forEach { row ->
+                        Row(Modifier.fillMaxWidth().height(IntrinsicSize.Max), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                            row.forEach { (tab, title, detail) ->
+                                val illustration = when (tab) {
+                                    SanctuaryTab.CATECHISM -> DevotionalIllustration.CATECHESIS
+                                    SanctuaryTab.GUIDES -> DevotionalIllustration.CONTEMPLATIVE_PRAYER
+                                    SanctuaryTab.TREASURY -> DevotionalIllustration.BOOKMARKS
+                                    else -> DevotionalIllustration.PERSONAL_GARDEN
+                                }
+                                val tag = when (tab) {
+                                    SanctuaryTab.CATECHISM -> "home-catechism"
+                                    SanctuaryTab.GUIDES -> "other-guides"
+                                    SanctuaryTab.TREASURY -> "home-treasury"
+                                    else -> "home-garden"
+                                }
+                                DashboardLink(illustration, title, detail, { onTab(tab) }, tag, Modifier.weight(1f).fillMaxHeight())
+                            }
                         }
-                    } }
+                    }
                 }
             }
             if (!welcomed) PersonalCard("Comece por onde seu coração está.", "Você pode aprender do início, buscar uma resposta ou simplesmente rezar.") {
                 QuietAction("Quero aprender a rezar", { onWelcome(); onLesson("prayer") }, "welcome-learn")
                 QuietAction("Já conheço · seguir pelo jardim", onWelcome, "welcome-dismiss")
             }
+
+            // Today's Rosary card with 1-tap start, customization, single decade, and deep Mystery study.
+            PersonalCard(
+                "Uma oração para hoje",
+                "Mistérios ${state.selectedSet.label.lowercase()} · ${state.selectedSet.invitation}",
+                illustration = DevotionalIllustration.CONTEMPLATIVE_PRAYER,
+            ) {
+                SacredPrimaryButton("Rezar o terço agora", onPrayNow, Modifier.padding(top = 12.dp), tag = "home-pray-now", compact = true)
+                QuietAction("Preparar o terço de hoje", onPray, "home-pray")
+                QuietAction("Rezar apenas uma dezena", onPraySingleDecade, "home-single-decade")
+                QuietAction("Estudar os vinte mistérios", onOpenMysteries, "home-mysteries")
+            }
+
+            // Liturgical time card: seasonal Marian antiphon (Angelus vs Regina Caeli) & feast devotion.
+            val suggestedGuide = PrayerGuide.byNameOrNull(liturgy.recommendedGuideName)
+            PersonalCard(
+                liturgy.celebration ?: liturgy.season.label,
+                liturgy.invitation,
+                tag = "home-liturgy-card",
+                illustration = DevotionalIllustration.LITURGICAL_YEAR,
+            ) {
+                QuietAction(
+                    if (liturgy.isEastertide) "Rezar o ${liturgy.marianAntiphonTitle} (Tempo Pascal)" else "Rezar o ${liturgy.marianAntiphonTitle}",
+                    { onOpenPrayer(liturgy.marianAntiphonId) },
+                    "home-marian-antiphon",
+                )
+                if (suggestedGuide != null) {
+                    QuietAction("Abrir: ${suggestedGuide.title}", { onOpenGuide(suggestedGuide) }, "home-liturgical-guide")
+                }
+            }
+
             if (next != null) PersonalCard(if (personal.learning.isEmpty()) "Um primeiro passo na fé" else "Continuar aprendendo", next.title, { onLesson(next.id) }, "home-learning", illustration = lessonIllustration(next.id)) {
                 SacredText(next.objective, Modifier.padding(top = 8.dp), type.body, colors.secondary)
             }
-            PersonalCard("Uma oração para hoje", "Mistérios ${state.selectedSet.label.lowercase()} · ${state.selectedSet.invitation}", illustration = DevotionalIllustration.CONTEMPLATIVE_PRAYER) {
-                QuietAction("Preparar o terço de hoje", onPray, "home-pray")
-            }
+
             val intentions = personal.intentions.filter { !it.archived }.take(2)
             PersonalCard("O que você traz no coração?", if (intentions.isEmpty()) "Uma intenção pode ser o início de uma oração." else intentions.joinToString("\n") { (if (it.thanksgiving) "Em ação de graças: " else "Por ") + it.title }, illustration = DevotionalIllustration.INTENTIONS) {
                 QuietAction("Cuidar das minhas intenções", onIntentions, "home-intentions")

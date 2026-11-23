@@ -33,9 +33,11 @@ fun RoseCrownEmblem(modifier: Modifier = Modifier, groups: Int = 5, beads: Int =
     val offeredImage = centerIllustration?.let { devotionalArt.image(it) }
     val breath = rememberGardenBreath("rose-crown", 7000)
     Canvas(modifier.semantics { contentDescription = "Coroa de $beads rosas em $groups grupos" }) {
+        val visualBeads = beads.coerceIn(10, 72)
+        val safeGroups = groups.coerceIn(1, visualBeads)
         val radius = size.minDimension * .405f
-        val blossom = minOf(radius * .125f, 2f * PI.toFloat() * radius / beads.coerceAtLeast(1) * .94f)
-        val foliageScale = (50f / beads.coerceAtLeast(1)).coerceAtMost(1f)
+        val blossom = minOf(radius * .125f, 2f * PI.toFloat() * radius / visualBeads * .94f)
+        val foliageScale = (50f / visualBeads).coerceAtMost(1f)
         val warmth = .5f + .5f * sin(breath.value)
         fun onRing(degrees: Float, distance: Float): Offset {
             val angle = degrees * PI / 180
@@ -55,17 +57,18 @@ fun RoseCrownEmblem(modifier: Modifier = Modifier, groups: Int = 5, beads: Int =
             }
             drawPath(vine, colors.marian.copy(alpha = if (strand == 0) .65f else .3f), style = Stroke(radius * .009f, cap = StrokeCap.Round))
         }
-        repeat(beads) { index ->
-            val degrees = -90f + index * 360f / beads + 2f
+        repeat(visualBeads) { index ->
+            val degrees = -90f + index * 360f / visualBeads + 2f
             val reach = 1f + (if (index % 2 == 0) .14f else -.12f) * foliageScale
             val sway = .3f * sin(breath.value + index * .7f)
             paintLeaf(art.leaf, onRing(degrees, radius), onRing(degrees + 5f * foliageScale + sway, radius * reach), if (colors.isDark) .82f else .9f)
         }
-        repeat(beads) { index ->
-            val mystery = (0 until groups).any { index == it * (beads / groups) }
+        repeat(visualBeads) { index ->
+            val stride = (visualBeads / safeGroups).coerceAtLeast(1)
+            val mystery = (0 until safeGroups).any { index == it * stride }
             paintBotanical(
                 if (mystery) art.ivoryRose else art.rose,
-                onRing(-90f + index * 360f / beads, radius * (1f + .008f * sin(index * 1.7f))),
+                onRing(-90f + index * 360f / visualBeads, radius * (1f + .008f * sin(index * 1.7f))),
                 if (mystery) minOf(radius * .195f, blossom * 1.55f) else blossom,
                 alpha = if (index % 3 == 0 || mystery) 1f else .88f,
                 turn = index * 137.5f % 50f - 25f,

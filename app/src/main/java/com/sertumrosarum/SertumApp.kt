@@ -8,22 +8,15 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.padding
-import androidx.compose.runtime.LaunchedEffect
-import com.sertumrosarum.data.garden.GardenRepository
-import com.sertumrosarum.feature.garden.*
-import com.sertumrosarum.feature.sanctuary.HomeDashboard
-import com.sertumrosarum.feature.formation.FormationScreen
-import com.sertumrosarum.domain.formation.FormationCatalog
-import com.sertumrosarum.ui.components.SacredText
-import com.sertumrosarum.ui.components.SacredPrimaryButton
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.SideEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -34,12 +27,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.compose.LifecycleEventEffect
 import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.compose.LifecycleEventEffect
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.sertumrosarum.core.haptics.HapticFeedbackController
+import com.sertumrosarum.data.garden.GardenRepository
+import com.sertumrosarum.domain.treasury.TreasuryCatalog
+import com.sertumrosarum.feature.formation.FormationScreen
 import com.sertumrosarum.feature.garden.GardenScreen
+import com.sertumrosarum.feature.garden.GardenState
+import com.sertumrosarum.feature.garden.GardenViewModel
+import com.sertumrosarum.feature.garden.IntentionPicker
+import com.sertumrosarum.feature.garden.PersonalCard
+import com.sertumrosarum.feature.garden.QuietAction
 import com.sertumrosarum.feature.guides.GuideSheetContent
 import com.sertumrosarum.feature.guides.GuideSheetFooter
 import com.sertumrosarum.feature.guides.GuidesScreen
@@ -49,12 +50,15 @@ import com.sertumrosarum.feature.prayer.ImmersivePrayerScreen
 import com.sertumrosarum.feature.prayer.PrayerSessionViewModel
 import com.sertumrosarum.feature.prayer.SanctuaryScreen
 import com.sertumrosarum.feature.prayer.SanctuaryTab
+import com.sertumrosarum.feature.sanctuary.HomeDashboard
 import com.sertumrosarum.feature.sanctuary.SanctuaryScreen as SanctuaryHome
-import com.sertumrosarum.domain.treasury.TreasuryCatalog
+import com.sertumrosarum.feature.sanctuary.UnifiedSearchSheetContent
 import com.sertumrosarum.feature.treasury.TreasuryScreen
 import com.sertumrosarum.feature.treasury.TreasurySheets
 import com.sertumrosarum.feature.treasury.TreasuryViewModel
 import com.sertumrosarum.ui.components.SacredBottomSheet
+import com.sertumrosarum.ui.components.SacredPrimaryButton
+import com.sertumrosarum.ui.components.SacredText
 import com.sertumrosarum.ui.components.SertumBottomBar
 import com.sertumrosarum.ui.components.SertumScaffold
 import com.sertumrosarum.ui.theme.SertumTheme
@@ -71,14 +75,17 @@ fun SertumApp(model: PrayerSessionViewModel = viewModel(), repository: GardenRep
     var welcomed by remember { mutableStateOf(true) }
     var picker by rememberSaveable { mutableStateOf(false) }
     var rosarySetup by rememberSaveable { mutableStateOf(false) }
+    var searchOpen by rememberSaveable { mutableStateOf(false) }
     var formationLesson by rememberSaveable { mutableStateOf<String?>(null) }
+    var formationQuestion by rememberSaveable { mutableStateOf<String?>(null) }
+    var formationJourney by rememberSaveable { mutableStateOf<String?>(null) }
 
     val state by model.state.collectAsStateWithLifecycle()
     val context = LocalContext.current
     val haptics = remember(context) { HapticFeedbackController(context) }
     LifecycleEventEffect(Lifecycle.Event.ON_RESUME) { model.refreshDay() }
-    val activeSet = if (state.screen == SanctuaryScreen.HOME) state.selectedSet else state.sessionSet
-    SertumTheme(state.themeMode, activeSet) {
+    val activeSet = if (state.screen == SanctuaryScreen.HOME) state.selectedSet else state.activeMysterySet
+    SertumTheme(state.themeMode, activeSet, state.readingScale) {
         val treasury: TreasuryViewModel = viewModel()
         LaunchedEffect(repository, retry) {
             if (repository != null) {
@@ -111,6 +118,31 @@ fun SertumApp(model: PrayerSessionViewModel = viewModel(), repository: GardenRep
         var openGuide by rememberSaveable { mutableStateOf<PrayerGuide?>(null) }
         var shownGuide by rememberSaveable { mutableStateOf(PrayerGuide.TRADITIONAL) }
         val treasuryState by treasury.state.collectAsStateWithLifecycle()
+        val bookmarkedMysteries = remember(personal.bookmarks) {
+            personal.bookmarks.filter { it.kind == "mystery" }.map { it.itemId }.toSet()
+        }
+
+        fun openMysteryStudy(set: com.sertumrosarum.domain.prayer.MysterySet, index: Int) {
+            treasury.openMysteries()
+            treasury.selectStudySet(set)
+            treasury.openStudyMystery(index)
+            model.selectTab(SanctuaryTab.TREASURY)
+        }
+
+        fun openTreasuryPrayer(id: String) {
+            TreasuryCatalog.find(id)?.let {
+                treasury.openPrayer(it)
+                model.selectTab(SanctuaryTab.TREASURY)
+            }
+        }
+
+        fun openFormation(lesson: String? = null, question: String? = null, journey: String? = null) {
+            formationLesson = lesson
+            formationQuestion = question
+            formationJourney = journey
+            model.selectTab(SanctuaryTab.CATECHISM)
+        }
+
         BackHandler(!tabbed) { model.returnHome() }
         BackHandler(tabbed && state.tab != SanctuaryTab.HOME) { model.selectTab(SanctuaryTab.HOME) }
         BackHandler(tabbed && state.tab == SanctuaryTab.GUIDES && rosarySetup) { rosarySetup = false }
@@ -121,30 +153,76 @@ fun SertumApp(model: PrayerSessionViewModel = viewModel(), repository: GardenRep
                         SanctuaryScreen.HOME -> Column(Modifier.fillMaxSize()) {
                             Crossfade(state.tab, Modifier.weight(1f), tween(320), label = "tab-transition") { tab ->
                                 when (tab) {
-                                    SanctuaryTab.HOME -> HomeDashboard(state, personal, welcomed, model::setTheme,
-                                        onTab = { tab -> if (tab == SanctuaryTab.GUIDES) rosarySetup = false; if (tab == SanctuaryTab.CATECHISM) formationLesson = null; model.selectTab(tab) },
-                                        onLesson = { id -> formationLesson = id; model.selectTab(SanctuaryTab.CATECHISM) },
-                                        onPray = { rosarySetup = true; model.selectTab(SanctuaryTab.GUIDES) }, onResume = model::resume,
+                                    SanctuaryTab.HOME -> HomeDashboard(
+                                        state = state,
+                                        personal = personal,
+                                        welcomed = welcomed,
+                                        onTheme = model::setTheme,
+                                        onReadingScale = model::setReadingScale,
+                                        onToggleVolumeKeys = model::toggleVolumeKeys,
+                                        onSearch = { searchOpen = true },
+                                        onTab = { nextTab ->
+                                            if (nextTab == SanctuaryTab.GUIDES) rosarySetup = false
+                                            if (nextTab == SanctuaryTab.CATECHISM) {
+                                                formationLesson = null; formationQuestion = null; formationJourney = null
+                                            }
+                                            model.selectTab(nextTab)
+                                        },
+                                        onLesson = { id -> openFormation(lesson = id) },
+                                        onPray = { rosarySetup = true; model.selectTab(SanctuaryTab.GUIDES) },
+                                        onPrayNow = { model.start(PrayerGuide.TRADITIONAL, garden?.selected().orEmpty()) },
+                                        onPraySingleDecade = { shownGuide = PrayerGuide.SINGLE_DECADE; openGuide = PrayerGuide.SINGLE_DECADE },
+                                        onOpenMysteries = {
+                                            treasury.openMysteries()
+                                            treasury.selectStudySet(state.selectedSet)
+                                            model.selectTab(SanctuaryTab.TREASURY)
+                                        },
+                                        onOpenPrayer = ::openTreasuryPrayer,
+                                        onOpenGuide = { guide -> shownGuide = guide; openGuide = guide },
+                                        onResume = model::resume,
                                         onIntentions = { model.selectTab(SanctuaryTab.GARDEN) },
-                                        onWelcome = { welcomed = true; repository?.enqueue { repository.welcome() } })
-                                    SanctuaryTab.CATECHISM -> FormationScreen(garden, personal, formationLesson) { rosarySetup = true; model.selectTab(SanctuaryTab.GUIDES) }
-                                    SanctuaryTab.GUIDES -> if (rosarySetup) SanctuaryHome(state, model,
+                                        onWelcome = { welcomed = true; repository?.enqueue { repository.welcome() } },
+                                    )
+                                    SanctuaryTab.CATECHISM -> FormationScreen(
+                                        model = garden,
+                                        state = personal,
+                                        initialLesson = formationLesson,
+                                        initialQuestion = formationQuestion,
+                                        initialJourney = formationJourney,
+                                    ) { rosarySetup = true; model.selectTab(SanctuaryTab.GUIDES) }
+                                    SanctuaryTab.GUIDES -> if (rosarySetup) SanctuaryHome(
+                                        state, model,
                                         onStart = { model.start(PrayerGuide.TRADITIONAL, garden?.selected().orEmpty()) },
                                         personal = { if (garden != null) QuietAction(if (selected.isEmpty()) "Oferecer por uma intenção (opcional)" else "${garden.selected().size} intenções para a próxima coroa", { picker = true }, "choose-intentions") },
-                                        onOtherGuides = { rosarySetup = false })
-                                    else GuidesScreen(onSetup = { rosarySetup = true }) { shownGuide = it; openGuide = it }
-                                    SanctuaryTab.TREASURY -> TreasuryScreen(treasuryState, treasury,
-                                        formation = { Column(Modifier.padding(horizontal = 22.dp)) { PersonalCard("Centro de catequese", "Aprender, perguntar e levar à vida.", { formationLesson = null; model.selectTab(SanctuaryTab.CATECHISM) }, "open-formation") } },
-                                        bookmark = { treasuryState.reading?.let { prayer -> if (garden != null) QuietAction(if (personal.bookmarks.any { it.kind == "prayer" && it.itemId == prayer.id }) "✓ Oração guardada" else "Guardar esta oração", { garden.bookmark("prayer", prayer.id) }, "bookmark-prayer") } })
-                                    SanctuaryTab.GARDEN -> GardenScreen(garden, personal,
-                                        onPrayer = { id -> TreasuryCatalog.find(id)?.let { treasury.openPrayer(it); model.selectTab(SanctuaryTab.TREASURY) } },
-                                        onLesson = { id -> formationLesson = id; model.selectTab(SanctuaryTab.CATECHISM) },
-                                        onResume = model::resume)
+                                        onOtherGuides = { rosarySetup = false },
+                                    ) else GuidesScreen(onSetup = { rosarySetup = true }) { shownGuide = it; openGuide = it }
+                                    SanctuaryTab.TREASURY -> TreasuryScreen(
+                                        state = treasuryState,
+                                        actions = treasury,
+                                        formation = { Column(Modifier.padding(horizontal = 22.dp)) { PersonalCard("Centro de catequese", "Aprender, perguntar e levar à vida.", { openFormation() }, "open-formation") } },
+                                        bookmark = { treasuryState.reading?.let { prayer -> if (garden != null) QuietAction(if (personal.bookmarks.any { it.kind == "prayer" && it.itemId == prayer.id }) "✓ Oração guardada" else "Guardar esta oração", { garden.bookmark("prayer", prayer.id) }, "bookmark-prayer") } },
+                                        bookmarkedMysteries = bookmarkedMysteries,
+                                        onPraySet = { set -> model.startRosarySet(set, garden?.selected().orEmpty()) },
+                                    )
+                                    SanctuaryTab.GARDEN -> GardenScreen(
+                                        model = garden,
+                                        state = personal,
+                                        onPrayer = ::openTreasuryPrayer,
+                                        onLesson = { id -> openFormation(lesson = id) },
+                                        onMystery = ::openMysteryStudy,
+                                        onQuestion = { id -> openFormation(question = id) },
+                                        onJourney = { id -> openFormation(journey = id) },
+                                        onResume = model::resume,
+                                    )
                                 }
                             }
-                            // Measure the shelf with the page: wrapped labels at larger
-                            // font sizes reserve their actual height above the system bar.
-                            SertumBottomBar(state.tab, onSelect = { tab -> if (tab == SanctuaryTab.GUIDES) rosarySetup = false; if (tab == SanctuaryTab.CATECHISM) formationLesson = null; model.selectTab(tab) })
+                            SertumBottomBar(state.tab, onSelect = { tab ->
+                                if (tab == SanctuaryTab.GUIDES) rosarySetup = false
+                                if (tab == SanctuaryTab.CATECHISM) {
+                                    formationLesson = null; formationQuestion = null; formationJourney = null
+                                }
+                                model.selectTab(tab)
+                            })
                         }
                         SanctuaryScreen.PRAYER -> ImmersivePrayerScreen(state, model, state.language, model::selectLanguage, TreasuryCatalog.latinFor(state.step.prayer)) {
                             model.next()?.let { if (state.hapticsEnabled) haptics.play(it) }
@@ -156,7 +234,17 @@ fun SertumApp(model: PrayerSessionViewModel = viewModel(), repository: GardenRep
                     openGuide != null && tabbed, { openGuide = null }, shownGuide.title, tag = "guide-sheet",
                     footer = { GuideSheetFooter { openGuide = null; model.start(shownGuide, garden?.selected().orEmpty()) } },
                 ) {
-                    GuideSheetContent(shownGuide, state.selectedSet, model::selectMystery, state.meditated, model::toggleMeditated, state.selectedMode, model::selectPrayerMode)
+                    GuideSheetContent(
+                        guide = shownGuide,
+                        selectedSet = state.selectedSet,
+                        onSelectSet = model::selectMystery,
+                        meditated = state.meditated,
+                        onToggleMeditated = model::toggleMeditated,
+                        mode = state.selectedMode,
+                        onSelectMode = model::selectPrayerMode,
+                        focusMystery = state.selectedFocusMystery,
+                        onSelectFocusMystery = model::selectFocusMystery,
+                    )
                     if (garden != null) {
                         var inlinePicker by rememberSaveable { mutableStateOf(false) }
                         QuietAction(if (selected.isEmpty()) "Oferecer por uma intenção (opcional)" else "${garden.selected().size} intenções escolhidas", { inlinePicker = !inlinePicker }, "guide-intentions")
@@ -167,9 +255,27 @@ fun SertumApp(model: PrayerSessionViewModel = viewModel(), repository: GardenRep
                     SacredText(saveError, style = SertumTheme.typography.micro)
                     QuietAction("Tentar guardar novamente", { repository?.retry() }, "retry-garden-save")
                 }
-                TreasurySheets(treasuryState, treasury, visible = tabbed && state.tab == SanctuaryTab.TREASURY )
+                TreasurySheets(
+                    state = treasuryState,
+                    actions = treasury,
+                    visible = tabbed && state.tab == SanctuaryTab.TREASURY,
+                    bookmarkedMysteries = bookmarkedMysteries,
+                    onToggleMysteryBookmark = garden?.let { g -> { key -> g.bookmark("mystery", key) } },
+                    onPraySingleDecade = { set, index -> model.startSingleDecade(set, index, garden?.selected().orEmpty()) },
+                    onPraySet = { set -> model.startRosarySet(set, garden?.selected().orEmpty()) },
+                )
                 SacredBottomSheet(picker && tabbed, { picker = false }, "Intenções para esta coroa", tag = "intention-picker") {
                     if (garden != null) IntentionPicker(garden, personal, selected) { picker = false }
+                }
+                SacredBottomSheet(searchOpen && tabbed, { searchOpen = false }, "Buscar no Sertum", tag = "unified-search-sheet") {
+                    UnifiedSearchSheetContent(
+                        onOpenMystery = { set, idx -> searchOpen = false; openMysteryStudy(set, idx) },
+                        onOpenGuide = { guide -> searchOpen = false; shownGuide = guide; openGuide = guide },
+                        onOpenPrayer = { id -> searchOpen = false; openTreasuryPrayer(id) },
+                        onOpenLesson = { id -> searchOpen = false; openFormation(lesson = id) },
+                        onOpenQuestion = { id -> searchOpen = false; openFormation(question = id) },
+                        onOpenJourney = { id -> searchOpen = false; openFormation(journey = id) },
+                    )
                 }
             }
         }

@@ -14,6 +14,7 @@ internal fun PrayerUiState.snapshot(): String = StringWriter().also { writer ->
     Properties().apply {
         setProperty("formatVersion", "1"); setProperty("revision", revision.toString())
         setProperty("guide", sessionGuide.name); setProperty("set", sessionSet.name); setProperty("mode", sessionMode.name)
+        setProperty("focusMystery", sessionFocusMystery.toString())
         setProperty("index", stepIndex.toString()); setProperty("started", requireNotNull(startedAt).toString())
         finishedAt?.let { setProperty("finished", it.toString()) }; setProperty("id", requireNotNull(sessionId))
         setProperty("eyes", eyesClosed.toString()); setProperty("meditated", meditated.toString())
@@ -29,17 +30,34 @@ internal fun restorePrayer(snapshot: String, base: PrayerUiState): PrayerUiState
     require(p.getProperty("formatVersion") == "1")
     val guide = enumOr(p.getProperty("guide"), PrayerGuide.TRADITIONAL)
     val set = enumOr(p.getProperty("set"), base.selectedSet)
+    val focus = (p.getProperty("focusMystery")?.toIntOrNull() ?: 0).coerceIn(0, 4)
     val count = p.getProperty("count").toInt().also { require(it in 0..10000) }
-    base.copy(sessionId = requireNotNull(p.getProperty("id")).also { require(it.isNotBlank()) }, revision = p.getProperty("revision").toLong().coerceAtLeast(0), sessionGuide = guide, sessionSet = set,
+    base.copy(
+        sessionId = requireNotNull(p.getProperty("id")).also { require(it.isNotBlank()) },
+        revision = p.getProperty("revision").toLong().coerceAtLeast(0),
+        sessionGuide = guide,
+        sessionSet = set,
+        sessionFocusMystery = focus,
         sessionMode = enumOr(p.getProperty("mode"), base.selectedMode),
-        stepIndex = p.getProperty("index").toInt().coerceIn(0, guide.script.build(set).lastIndex),
-        startedAt = p.getProperty("started").toLong(), finishedAt = p.getProperty("finished")?.toLong(),
-        eyesClosed = p.getProperty("eyes").toBoolean(), meditated = p.getProperty("meditated").toBoolean(),
-        offeredIntentions = (0 until count).map { i -> OfferedIntention(requireNotNull(p.getProperty("id.$i")), requireNotNull(p.getProperty("title.$i")), p.getProperty("thanks.$i").toBoolean()) })
+        stepIndex = p.getProperty("index").toInt().coerceIn(0, guide.script.build(set, focus).lastIndex),
+        startedAt = p.getProperty("started").toLong(),
+        finishedAt = p.getProperty("finished")?.toLong(),
+        eyesClosed = p.getProperty("eyes").toBoolean(),
+        meditated = p.getProperty("meditated").toBoolean(),
+        offeredIntentions = (0 until count).map { i -> OfferedIntention(requireNotNull(p.getProperty("id.$i")), requireNotNull(p.getProperty("title.$i")), p.getProperty("thanks.$i").toBoolean()) },
+    )
 }.getOrNull()
 
 internal suspend fun GardenRepository.persistPrayer(state: PrayerUiState) {
-    storePrayerPreferences(state.themeMode.name, state.language.name, state.meditated, state.hapticsEnabled, state.selectedMode.name)
+    storePrayerPreferences(
+        state.themeMode.name,
+        state.language.name,
+        state.meditated,
+        state.hapticsEnabled,
+        state.selectedMode.name,
+        state.readingScale.name,
+        state.volumeKeysEnabled,
+    )
     val id = state.sessionId ?: return
     val started = state.startedAt ?: return
     saveCrown(PrayerSessionEntity(id, started, state.finishedAt, state.sessionGuide.name, state.sessionSet.name, state.sessionMode.name,
