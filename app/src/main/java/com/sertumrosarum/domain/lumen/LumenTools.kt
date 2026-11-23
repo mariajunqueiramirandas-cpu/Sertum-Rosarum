@@ -83,15 +83,27 @@ data class ToolExecutionOutput(
     val resultJson: String,
     val emittedAction: CatechistAction? = null,
     val traceLabel: String? = null,
+    val interimReply: String? = null,
+    val webSources: List<CatechistSource> = emptyList(),
 )
 
 /**
- * The 14 native Mistral Large 4 function-calling tools that give the Catechist full
+ * The native Mistral Large 4 function-calling tools that give the Catechist full
  * read/write grounding across Sertum Rosarum while keeping fixed Church prayers immutable.
  */
 object LumenTools {
+    internal const val SEND_INTERIM_REPLY = "send_interim_reply"
+    internal const val SEARCH_WEB_PRAYERS = "search_web_prayers"
+
+    internal fun parseInterimReply(argumentsJson: String): String? {
+        if (!argumentsJson.trimEnd().endsWith('}')) return null
+        val args = LumenJsonParser.parseValue(argumentsJson) as? Map<*, *> ?: return null
+        val message = args["message"] as? String ?: return null
+        return LumenGuardrails.sanitizeInput(message).takeIf { it.isNotEmpty() && it.length <= 300 }
+    }
 
     fun liveProgressLabel(toolName: String, persona: CatechistPersona): String = when (toolName) {
+        SEARCH_WEB_PRAYERS -> "${persona.displayName} está procurando orações na web…"
         "search_treasury", "read_treasury_prayer" -> "${persona.displayName} está consultando o Tesouro de Orações…"
         "search_catechism", "read_catechism_lesson" -> "${persona.displayName} está abrindo a Catequese…"
         "read_mystery_study" -> "${persona.displayName} está meditando o Mistério nas Escrituras…"
@@ -110,6 +122,34 @@ object LumenTools {
     /** Exact JSON array of tool definitions passed to Mistral `/v1/chat/completions` `"tools"`. */
     val mistralToolsJson: String = """
 [
+  {
+    "type": "function",
+    "function": {
+      "name": "$SEND_INTERIM_REPLY",
+      "description": "Post a short catechist message to the chat while you keep working. Call this first before a web search, a personalized Rosary, or a long sequence of tool calls. Describe the specific next step. Send another message only when you have a useful confirmed discovery to share.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "message": { "type": "string", "description": "One or two short sentences in your catechist voice, in Brazilian Portuguese, up to 300 characters. Share a useful next step or a confirmed finding." }
+        },
+        "required": ["message"]
+      }
+    }
+  },
+  {
+    "type": "function",
+    "function": {
+      "name": "$SEARCH_WEB_PRAYERS",
+      "description": "Find prayers, litanies, novenas, devotions, and published translations on the live web. Call send_interim_reply first. Search by public title, occasion, tradition, or language. The results include cited sources for the final reply.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": { "type": "string", "description": "Public search terms only, such as a prayer title, occasion, tradition, or language. Omit personal names and details from the conversation or Meu Jardim." }
+        },
+        "required": ["query"]
+      }
+    }
+  },
   {
     "type": "function",
     "function": {
@@ -338,6 +378,11 @@ object LumenTools {
         persona: CatechistPersona,
         fallbackMysterySet: MysterySet,
     ): ToolExecutionOutput {
+        if (toolName == SEND_INTERIM_REPLY) {
+            val message = parseInterimReply(argumentsJson)
+                ?: return ToolExecutionOutput(jsonObj("error" to "Escreva uma mensagem breve de até 300 caracteres."))
+            return ToolExecutionOutput(jsonObj("ok" to true), interimReply = message)
+        }
         val args = (LumenJsonParser.parseValue(argumentsJson) as? Map<*, *>) ?: emptyMap<String, Any?>()
         return when (toolName) {
             "search_treasury" -> execSearchTreasury(args)
@@ -810,7 +855,7 @@ object LumenTools {
         return ToolExecutionOutput(
             resultJson = jsonObj("ok" to true, "targetType" to target, "label" to action.label),
             emittedAction = action,
-            traceLabel = null,
+            traceLabel = "Preparou um atalho no aplicativo",
         )
     }
 

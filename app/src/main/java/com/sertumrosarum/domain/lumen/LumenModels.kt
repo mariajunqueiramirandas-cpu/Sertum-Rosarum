@@ -130,6 +130,8 @@ data class CatechistMessage(
     val suggestedFollowUp: String? = null,
     val isOfflineFallback: Boolean = false,
     val timestampMs: Long = System.currentTimeMillis(),
+    val isInterim: Boolean = false,
+    val webSources: List<CatechistSource> = emptyList(),
 ) {
     /** Convenience primary action for callers expecting a single action. */
     val action: CatechistAction? get() = actions.firstOrNull()
@@ -143,6 +145,17 @@ data class CatechistContext(
     val recentIntentions: List<String> = emptyList(),
 )
 
+data class CatechistProgress(
+    val persona: CatechistPersona,
+    val status: String,
+    val toolTrace: List<String> = emptyList(),
+    val replyPreview: String? = null,
+)
+
+data class CatechistSource(val title: String, val url: String)
+
+data class LumenWebSearchResult(val summary: String, val sources: List<CatechistSource>)
+
 data class CatechistTurnResult(
     val replyText: String,
     val reference: String?,
@@ -150,6 +163,7 @@ data class CatechistTurnResult(
     val toolTrace: List<String> = emptyList(),
     val suggestedFollowUp: String? = null,
     val isOfflineFallback: Boolean = false,
+    val webSources: List<CatechistSource> = emptyList(),
 ) {
     val action: CatechistAction? get() = actions.firstOrNull()
 }

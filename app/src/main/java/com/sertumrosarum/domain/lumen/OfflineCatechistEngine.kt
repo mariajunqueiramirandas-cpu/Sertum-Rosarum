@@ -40,7 +40,7 @@ object OfflineCatechistEngine {
             context.activeMysteryTitle != null && context.activeMysteryIndex != null ->
                 mysteryContextReply(persona, context)
             else ->
-                generalReply(persona, clean, context)
+                generalReply(persona, context)
         }
     }
 
@@ -168,7 +168,7 @@ object OfflineCatechistEngine {
                 mysteryIndex = 0,
                 meditated = true,
             ),),
-            suggestedFollowUp = "Como lidar com o cansaço na hora de rezar?",
+            suggestedFollowUp = "Quero saber como rezar quando bate o cansaço.",
             isOfflineFallback = true,
         )
     }
@@ -194,7 +194,7 @@ object OfflineCatechistEngine {
                 mysteryIndex = 0,
                 meditated = true,
             ),),
-            suggestedFollowUp = "Me ajuda a montar um terço pelo que estou vivendo?",
+            suggestedFollowUp = "Quero montar um terço pelo que estou vivendo.",
             isOfflineFallback = true,
         )
     }
@@ -220,7 +220,7 @@ object OfflineCatechistEngine {
                 intentionDescription = "Confiando a ansiedade e pedindo paz ao coração.",
                 category = "Família",
             ),),
-            suggestedFollowUp = "Qual oração do Tesouro ajuda na angústia?",
+            suggestedFollowUp = "Quero encontrar uma oração para a angústia no Tesouro.",
             isOfflineFallback = true,
         )
     }
@@ -246,7 +246,7 @@ object OfflineCatechistEngine {
                 intentionDescription = "Pedindo cura, amparo aos médicos e paz à família.",
                 category = "Saúde",
             ),),
-            suggestedFollowUp = "Quero montar o terço de hoje por essa intenção",
+            suggestedFollowUp = "Quero montar o terço de hoje por essa intenção.",
             isOfflineFallback = true,
         )
     }
@@ -270,7 +270,7 @@ object OfflineCatechistEngine {
                 subtitle = "Na aba Catequese · como preparar uma boa confissão.",
                 lessonId = "reconciliation",
             ),),
-            suggestedFollowUp = "Como fazer um exame de consciência simples?",
+            suggestedFollowUp = "Quero aprender a fazer um exame de consciência simples.",
             isOfflineFallback = true,
         )
     }
@@ -296,7 +296,7 @@ object OfflineCatechistEngine {
                 mysteryIndex = 0,
                 meditated = true,
             ),),
-            suggestedFollowUp = "Por que os católicos pedem a intercessão de Maria?",
+            suggestedFollowUp = "Quero entender por que pedimos a intercessão de Maria.",
             isOfflineFallback = true,
         )
     }
@@ -322,7 +322,7 @@ object OfflineCatechistEngine {
                 intentionDescription = "Pedindo consolo, esperança e presença de Cristo.",
                 category = "Família",
             ),),
-            suggestedFollowUp = "Qual mistério do terço conversa com a dor?",
+            suggestedFollowUp = "Quero contemplar um mistério do terço que me ajude a rezar na dor.",
             isOfflineFallback = true,
         )
     }
@@ -348,7 +348,7 @@ object OfflineCatechistEngine {
                 intentionDescription = "Em sincera ação de graças ao Senhor.",
                 category = "Ação de Graças",
             ),),
-            suggestedFollowUp = "Quero rezar o Magnificat ou uma dezena de louvor",
+            suggestedFollowUp = "Quero rezar o Magnificat em ação de graças.",
             isOfflineFallback = true,
         )
     }
@@ -374,14 +374,13 @@ object OfflineCatechistEngine {
                 mysteryIndex = idx,
                 meditated = true,
             ),),
-            suggestedFollowUp = "Como viver o fruto desse mistério hoje?",
+            suggestedFollowUp = "Quero viver o fruto desse mistério hoje.",
             isOfflineFallback = true,
         )
     }
 
     private fun generalReply(
         persona: CatechistPersona,
-        clean: String,
         context: CatechistContext,
     ): CatechistTurnResult {
         val intro = when (persona) {
@@ -401,7 +400,7 @@ object OfflineCatechistEngine {
                 mysteryIndex = 0,
                 meditated = true,
             ),),
-            suggestedFollowUp = if (clean.length < 40) "Me explica os mistérios de hoje?" else "Guardar isso como intenção no Meu Jardim?",
+            suggestedFollowUp = "Quero saber mais sobre o terço de hoje.",
             isOfflineFallback = true,
         )
     }

@@ -8,6 +8,7 @@ import com.sertumrosarum.data.lumen.LumenRepository
 import com.sertumrosarum.domain.lumen.CatechistContext
 import com.sertumrosarum.domain.lumen.CatechistMessage
 import com.sertumrosarum.domain.lumen.CatechistPersona
+import com.sertumrosarum.domain.lumen.CatechistProgress
 import com.sertumrosarum.domain.lumen.CustomRosarySupplement
 import com.sertumrosarum.domain.lumen.LumenGuardrails
 import com.sertumrosarum.domain.lumen.LumenMood
@@ -16,6 +17,7 @@ import com.sertumrosarum.domain.prayer.MysterySet
 import com.sertumrosarum.ui.canvas.DevotionalIllustration
 import java.util.UUID
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
@@ -32,15 +34,16 @@ fun CatechistPersona.portrait(): DevotionalIllustration = when (this) {
 data class CatechistUiState(
     val persona: CatechistPersona = CatechistPersona.DEFAULT,
     val messages: List<CatechistMessage> = emptyList(),
-    val isThinking: Boolean = false,
-    val thinkingStatus: String? = null,
+    val progress: CatechistProgress? = null,
     val isPreparingRosary: Boolean = false,
     val onlineEnabled: Boolean = true,
     val customApiKey: String = "",
     val hasEffectiveApiKey: Boolean = false,
     val activeContextLabel: String? = null,
     val notice: String? = null,
-)
+) {
+    val isThinking: Boolean get() = progress != null
+}
 
 class CatechistViewModel(
     private val lumen: LumenRepository = LumenRepository(),
@@ -54,6 +57,7 @@ class CatechistViewModel(
     private var gardenRepository: GardenRepository? = null
     private var currentContext = CatechistContext(activeMysterySet = MysterySet.JOYFUL)
     private var toolBridge: LumenToolBridge = LumenToolBridge.EMPTY
+    private var conversationJob: Job? = null
 
     suspend fun connect(repository: GardenRepository) {
         if (gardenRepository != null) return
@@ -112,7 +116,8 @@ class CatechistViewModel(
     }
 
     fun newConversation() {
-        mutableState.update { it.copy(messages = emptyList(), isThinking = false, thinkingStatus = null, notice = null) }
+        conversationJob?.cancel()
+        mutableState.update { it.copy(messages = emptyList(), progress = null, notice = null) }
     }
 
     fun sendMessage(rawText: String, overrideContext: CatechistContext? = null) {
@@ -125,15 +130,26 @@ class CatechistViewModel(
             fromUser = true,
             text = text,
         )
+        val initialStatus = if (snapshot.onlineEnabled && snapshot.hasEffectiveApiKey) {
+            "Conectando com ${snapshot.persona.displayName}…"
+        } else {
+            snapshot.persona.thinkingLine
+        }
         mutableState.update {
             it.copy(
                 messages = it.messages + userMsg,
-                isThinking = true,
-                thinkingStatus = snapshot.persona.thinkingLine,
+                progress = CatechistProgress(snapshot.persona, initialStatus),
                 notice = null,
             )
         }
-        viewModelScope.launch {
+        fun updateActiveTurn(transform: (CatechistUiState) -> CatechistUiState) {
+            mutableState.update { state ->
+                if (state.isThinking && state.messages.lastOrNull { it.fromUser }?.id == userMsg.id) {
+                    transform(state)
+                } else state
+            }
+        }
+        conversationJob = viewModelScope.launch {
             val turn = lumen.sendConversationTurn(
                 userMessage = text,
                 history = snapshot.messages,
@@ -142,8 +158,18 @@ class CatechistViewModel(
                 toolBridge = toolBridge,
                 onlineEnabled = snapshot.onlineEnabled,
                 userApiKeyOverride = snapshot.customApiKey,
-                onToolStatus = { status ->
-                    mutableState.update { it.copy(thinkingStatus = status) }
+                onInterimReply = { text ->
+                    val message = CatechistMessage(
+                        id = UUID.randomUUID().toString(),
+                        fromUser = false,
+                        text = text,
+                        persona = snapshot.persona,
+                        isInterim = true,
+                    )
+                    updateActiveTurn { it.copy(messages = it.messages + message) }
+                },
+                onProgress = { progress ->
+                    updateActiveTurn { it.copy(progress = progress) }
                 },
             )
             val replyMsg = CatechistMessage(
@@ -156,13 +182,10 @@ class CatechistViewModel(
                 toolTrace = turn.toolTrace,
                 suggestedFollowUp = turn.suggestedFollowUp,
                 isOfflineFallback = turn.isOfflineFallback,
+                webSources = turn.webSources,
             )
-            mutableState.update {
-                it.copy(
-                    messages = it.messages + replyMsg,
-                    isThinking = false,
-                    thinkingStatus = null,
-                )
+            updateActiveTurn {
+                it.copy(messages = it.messages + replyMsg, progress = null)
             }
         }
     }
