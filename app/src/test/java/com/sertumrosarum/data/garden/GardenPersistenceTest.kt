@@ -1,10 +1,12 @@
 package com.sertumrosarum.data.garden
 
 import android.content.Context
+import android.database.sqlite.SQLiteDatabase
 import androidx.datastore.preferences.core.PreferenceDataStoreFactory
 import androidx.lifecycle.SavedStateHandle
 import androidx.room.Room
 import androidx.test.core.app.ApplicationProvider
+import com.sertumrosarum.domain.lumen.CatechistPrayer
 import com.sertumrosarum.domain.prayer.PrayerMode
 import com.sertumrosarum.domain.treasury.PrayerLanguage
 import com.sertumrosarum.feature.garden.GardenViewModel
@@ -12,6 +14,7 @@ import com.sertumrosarum.feature.guides.PrayerGuide
 import com.sertumrosarum.feature.prayer.*
 import kotlinx.coroutines.*
 import kotlinx.coroutines.flow.first
+import org.json.JSONObject
 import org.junit.*
 import org.junit.Assert.*
 import org.junit.runner.RunWith
@@ -120,14 +123,18 @@ class GardenPersistenceTest {
         val context = ApplicationProvider.getApplicationContext<Context>()
         val name = "reopen-${java.util.UUID.randomUUID()}.db"
         var disk = Room.databaseBuilder(context, SertumDatabase::class.java, name).build()
+        val prayer = CatechistPrayer("lumen:prece", "Uma prece", "Prece de confiança", "## Abertura\n\nSenhor, guardai-nos.\n**R.** Amém.", "Santuário", "https://example.org/prece")
         try {
             disk.garden().saveIntention(IntentionEntity("lasting", "Uma intenção persistente", createdAt = 1, thanksgiving = true))
             disk.garden().saveJournal(JournalEntry("note", 2, "Uma memória persistente"))
+            disk.garden().saveCatechistPrayer(SavedCatechistPrayer(prayer, 3))
+            disk.garden().saveCatechistPrayer(SavedCatechistPrayer(prayer, 4))
             disk.close()
             disk = Room.databaseBuilder(context, SertumDatabase::class.java, name).build()
             assertEquals("Uma intenção persistente", disk.garden().intentions().first().single().title)
             assertTrue(disk.garden().intentions().first().single().thanksgiving)
             assertEquals("Uma memória persistente", disk.garden().journal().first().single().text)
+            assertEquals(SavedCatechistPrayer(prayer, 3), disk.garden().savedCatechistPrayers().first().single())
         } finally { disk.close(); context.deleteDatabase(name) }
     }
 
@@ -140,5 +147,42 @@ class GardenPersistenceTest {
         assertNotNull(repository.error.value); assertTrue(events.isEmpty())
         shouldFail = false; repository.retry(); repository.flush()
         assertEquals(listOf(1, 2), events); assertNull(repository.error.value)
+    }
+
+    @Test fun `upgrading a version one garden keeps its bookmarks and can save prayers`() = runBlocking {
+        val context = ApplicationProvider.getApplicationContext<Context>()
+        val name = "garden-upgrade-test.db"
+        val path = context.getDatabasePath(name).apply { parentFile?.mkdirs() }
+        val schema = JSONObject(File("schemas/com.sertumrosarum.data.garden.SertumDatabase/1.json").readText())
+            .getJSONObject("database")
+        try {
+            SQLiteDatabase.openOrCreateDatabase(path, null).use { old ->
+                val entities = schema.getJSONArray("entities")
+                for (index in 0 until entities.length()) {
+                    val entity = entities.getJSONObject(index)
+                    val table = entity.getString("tableName")
+                    old.execSQL(entity.getString("createSql").replace("\${TABLE_NAME}", table))
+                    val indices = entity.optJSONArray("indices") ?: continue
+                    for (i in 0 until indices.length()) {
+                        old.execSQL(indices.getJSONObject(i).getString("createSql").replace("\${TABLE_NAME}", table))
+                    }
+                }
+                val setup = schema.getJSONArray("setupQueries")
+                for (index in 0 until setup.length()) old.execSQL(setup.getString(index))
+                old.execSQL("INSERT INTO bookmarks (kind, itemId, createdAt) VALUES ('prayer', 'ave-maria', 1)")
+                old.version = 1
+            }
+            val upgraded = Room.databaseBuilder(context, SertumDatabase::class.java, name).build()
+            try {
+                assertEquals("ave-maria", upgraded.garden().bookmarks().first().single().itemId)
+                val prayer = CatechistPrayer("lumen:prece", "Uma prece", "", "Senhor, guardai-nos.", "Composta pelo Lumen")
+                upgraded.garden().saveCatechistPrayer(SavedCatechistPrayer(prayer, 2))
+                assertEquals(prayer, upgraded.garden().savedCatechistPrayers().first().single().prayer)
+            } finally {
+                upgraded.close()
+            }
+        } finally {
+            context.deleteDatabase(name)
+        }
     }
 }

@@ -183,6 +183,7 @@ class CatechistViewModel(
                 suggestedFollowUp = turn.suggestedFollowUp,
                 isOfflineFallback = turn.isOfflineFallback,
                 webSources = turn.webSources,
+                prayers = turn.prayers,
             )
             updateActiveTurn {
                 it.copy(messages = it.messages + replyMsg, progress = null)

@@ -1,6 +1,7 @@
 package com.sertumrosarum.data.garden
 
 import androidx.room.*
+import com.sertumrosarum.domain.lumen.CatechistPrayer
 import kotlinx.coroutines.flow.Flow
 
 @Entity(tableName = "intentions")
@@ -40,6 +41,9 @@ data class JournalEntry(@PrimaryKey val id: String, val createdAt: Long, val tex
 @Entity(tableName = "bookmarks", primaryKeys = ["kind", "itemId"])
 data class BookmarkEntity(val kind: String, val itemId: String, val createdAt: Long)
 
+@Entity(tableName = "saved_catechist_prayers", primaryKeys = ["id"])
+data class SavedCatechistPrayer(@Embedded val prayer: CatechistPrayer, val savedAt: Long)
+
 @Entity(tableName = "learning")
 data class LearningEntity(@PrimaryKey val lessonId: String, val openedAt: Long, val completedAt: Long? = null, val reflection: String = "", val practiceDone: Boolean = false)
 
@@ -53,6 +57,7 @@ interface GardenDao {
     @Query("SELECT * FROM session_intentions") fun offerings(): Flow<List<SessionIntentionEntity>>
     @Query("SELECT * FROM journal ORDER BY createdAt DESC") fun journal(): Flow<List<JournalEntry>>
     @Query("SELECT * FROM bookmarks ORDER BY createdAt DESC") fun bookmarks(): Flow<List<BookmarkEntity>>
+    @Query("SELECT * FROM saved_catechist_prayers ORDER BY savedAt DESC, id") fun savedCatechistPrayers(): Flow<List<SavedCatechistPrayer>>
     @Query("SELECT * FROM learning ORDER BY openedAt DESC") fun learning(): Flow<List<LearningEntity>>
     @Upsert suspend fun saveIntention(value: IntentionEntity)
     @Upsert suspend fun saveSession(value: PrayerSessionEntity)
@@ -61,6 +66,8 @@ interface GardenDao {
     @Query("DELETE FROM journal WHERE id = :id") suspend fun deleteJournal(id: String)
     @Upsert suspend fun saveBookmark(value: BookmarkEntity)
     @Query("DELETE FROM bookmarks WHERE kind = :kind AND itemId = :id") suspend fun deleteBookmark(kind: String, id: String)
+    @Insert(onConflict = OnConflictStrategy.IGNORE) suspend fun saveCatechistPrayer(value: SavedCatechistPrayer)
+    @Query("DELETE FROM saved_catechist_prayers WHERE id = :id") suspend fun deleteCatechistPrayer(id: String)
     @Upsert suspend fun saveLearning(value: LearningEntity)
     @Insert suspend fun saveFeedback(value: ContentFeedback)
     @Query("SELECT * FROM learning WHERE lessonId = :id") suspend fun lesson(id: String): LearningEntity?
@@ -69,5 +76,11 @@ interface GardenDao {
     @Query("SELECT COUNT(*) FROM feedback") suspend fun feedbackCount(): Int
 }
 
-@Database(entities = [IntentionEntity::class, PrayerSessionEntity::class, SessionIntentionEntity::class, JournalEntry::class, BookmarkEntity::class, LearningEntity::class, ContentFeedback::class], version = 1, exportSchema = true)
+@Database(
+    entities = [IntentionEntity::class, PrayerSessionEntity::class, SessionIntentionEntity::class, JournalEntry::class,
+        BookmarkEntity::class, SavedCatechistPrayer::class, LearningEntity::class, ContentFeedback::class],
+    version = 2,
+    autoMigrations = [AutoMigration(from = 1, to = 2)],
+    exportSchema = true,
+)
 abstract class SertumDatabase : RoomDatabase() { abstract fun garden(): GardenDao }

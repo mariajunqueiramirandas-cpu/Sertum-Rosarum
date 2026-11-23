@@ -7,13 +7,18 @@ import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
+import androidx.compose.ui.test.onRoot
 import androidx.compose.ui.test.performScrollTo
 import androidx.compose.ui.test.performSemanticsAction
 import androidx.compose.ui.test.performTextInput
 import androidx.lifecycle.ViewModelProvider
+import com.github.takahirom.roborazzi.captureRoboImage
+import com.sertumrosarum.domain.prayer.DevotionalPrayer
+import com.sertumrosarum.feature.catechist.CatechistViewModel
 import com.sertumrosarum.feature.prayer.PrayerSessionViewModel
 import com.sertumrosarum.ui.theme.ReadingScale
 import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.flow.first
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertTrue
 import org.junit.Before
@@ -38,6 +43,39 @@ class SertumUpgradesFlowTest {
         if (scroll) node.performScrollTo()
         node.performSemanticsAction(SemanticsActions.OnClick)
         compose.waitForIdle()
+    }
+
+    @Test fun `prayer discovery offers complete devotions and saves them after the conversation ends`() {
+        compose.activityRule.scenario.onActivity {
+            ViewModelProvider(it)[CatechistViewModel::class.java].setOnlineEnabled(false)
+        }
+        tap("home-open-catechist", scroll = true)
+        compose.onNodeWithTag("catechist-input").performTextInput("queria rezar algo bem diferente hoje")
+        tap("catechist-send")
+
+        compose.onNodeWithTag("prayer-card-guide:TEARS").assertExists()
+        compose.onNodeWithTag("prayer-card-treasury:oracao-do-incenso").assertExists()
+        compose.onNodeWithTag("prayer-card-guide:VIA_SACRA").assertExists()
+        compose.onNodeWithTag("prayer-card-guide:TEARS").performScrollTo()
+        compose.onRoot().captureRoboImage("build/outputs/roborazzi/catechist-prayer-options.png")
+        tap("read-prayer-guide:TEARS", scroll = true)
+        compose.onNodeWithTag("catechist-prayer-sheet").assertIsDisplayed()
+        compose.onRoot().captureRoboImage("build/outputs/roborazzi/catechist-prayer-reader.png")
+        compose.onNodeWithText(DevotionalPrayer.TEARS_OPENING.text).assertExists()
+        compose.onNodeWithText(DevotionalPrayer.TEARS_CLOSING.text).assertExists()
+        tap("catechist-prayer-save")
+        runBlocking { repo.flush() }
+        assertEquals("guide:TEARS", runBlocking { repo.dao.savedCatechistPrayers().first().single().prayer.id })
+
+        compose.onNodeWithTag("catechist-prayer-sheet", useUnmergedTree = true).performSemanticsAction(SemanticsActions.Dismiss)
+        tap("catechist-new-chat", scroll = true)
+        tap("catechist-back")
+        tap("tab-GARDEN")
+        tap("garden-Guardados")
+        tap("kept-guide:TEARS", scroll = true)
+        compose.onNodeWithText(DevotionalPrayer.TEARS_CLOSING.text).assertExists()
+        tap("catechist-prayer-start")
+        compose.onNodeWithTag("prayer-session-title").assertTextEquals("Coroa das Lágrimas")
     }
 
     @Test fun `home shows liturgical awareness and starts prayer in one tap with volume key advance`() {

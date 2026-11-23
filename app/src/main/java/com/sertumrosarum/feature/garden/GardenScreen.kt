@@ -43,6 +43,7 @@ import com.sertumrosarum.data.garden.JournalEntry
 import com.sertumrosarum.data.garden.PrayerSessionEntity
 import com.sertumrosarum.domain.formation.FormationCatalog
 import com.sertumrosarum.domain.formation.FormationLesson
+import com.sertumrosarum.domain.lumen.CatechistPrayer
 import com.sertumrosarum.domain.prayer.MysterySet
 import com.sertumrosarum.domain.treasury.TreasuryCatalog
 import com.sertumrosarum.feature.formation.chapterOf
@@ -115,6 +116,7 @@ fun GardenScreen(
     onJourney: (String) -> Unit = {},
     onResume: () -> Unit = {},
     sheetHost: GardenSheetHost? = null,
+    onCatechistPrayer: (CatechistPrayer) -> Unit = {},
 ) {
     val localHost = rememberGardenSheetHost()
     val host = sheetHost ?: localHost
@@ -128,7 +130,7 @@ fun GardenScreen(
                     GardenPlace.INTENTIONS -> IntentionsPlace(state) { host.intentionSheet = it }
                     GardenPlace.CROWNS -> CrownsPlace(state, onResume) { host.sessionId = it }
                     GardenPlace.JOURNAL -> JournalPlace(state, onLesson, { host.noteSession = null; host.noteSheet = NEW }) { host.noteSession = it.sessionId; host.noteSheet = it.id }
-                    GardenPlace.KEPT -> KeptPlace(state, model, onPrayer, onLesson, onMystery, onQuestion, onJourney)
+                    GardenPlace.KEPT -> KeptPlace(state, model, onPrayer, onLesson, onMystery, onQuestion, onJourney, onCatechistPrayer)
                 }
                 SacredText("Guardado neste aparelho. Sem pontuações nem sequências de dias.", Modifier.fillMaxWidth().padding(top = 36.dp), SertumTheme.typography.micro.copy(fontWeight = FontWeight.Normal), SertumTheme.colors.muted, TextAlign.Center)
             }
@@ -475,13 +477,14 @@ private fun KeptPlace(
     onMystery: (MysterySet, Int) -> Unit,
     onQuestion: (String) -> Unit,
     onJourney: (String) -> Unit,
+    onCatechistPrayer: (CatechistPrayer) -> Unit,
 ) {
     val prayers = state.bookmarks.filter { it.kind == "prayer" }.mapNotNull { item -> TreasuryCatalog.find(item.itemId)?.let { item.itemId to it.title } }
     val mysteries = state.bookmarks.filter { it.kind == "mystery" }.mapNotNull { item -> parseMysteryBookmark(item.itemId)?.let { (set, idx) -> Triple(item.itemId, set, idx) } }
     val lessons = state.bookmarks.filter { it.kind == "lesson" }.mapNotNull { item -> FormationCatalog.lesson(item.itemId) }
     val questions = state.bookmarks.filter { it.kind == "question" }.mapNotNull { item -> FormationCatalog.questions.find { it.id == item.itemId } }
     val journeys = state.bookmarks.filter { it.kind == "journey" }.mapNotNull { item -> FormationCatalog.journeys.find { it.id == item.itemId } }
-    if (prayers.isEmpty() && mysteries.isEmpty() && lessons.isEmpty() && questions.isEmpty() && journeys.isEmpty()) {
+    if (prayers.isEmpty() && state.savedCatechistPrayers.isEmpty() && mysteries.isEmpty() && lessons.isEmpty() && questions.isEmpty() && journeys.isEmpty()) {
         GardenEmpty(DevotionalIllustration.BOOKMARKS, "Volte ao que tocou seu coração.", "Guarde uma oração, um mistério do rosário, uma lição, uma resposta ou um caminho prático, e ele esperará por você aqui.")
         return
     }
@@ -489,6 +492,12 @@ private fun KeptPlace(
     fun shelfGap() = if (hasAbove) Modifier.padding(top = 26.dp) else Modifier
     if (prayers.isNotEmpty()) {
         KeptShelf("Orações", prayers.map { (id, title) -> Kept(id, title, "Do Tesouro", DevotionalIllustration.BOOKMARKS) { onPrayer(id) } }, shelfGap()) { model?.bookmark("prayer", it) }
+        hasAbove = true
+    }
+    if (state.savedCatechistPrayers.isNotEmpty()) {
+        KeptShelf("Orações do Catequista", state.savedCatechistPrayers.map { prayer ->
+            Kept(prayer.id, prayer.title, prayer.attribution, DevotionalIllustration.BOOKMARKS) { onCatechistPrayer(prayer) }
+        }, shelfGap()) { model?.removeCatechistPrayer(it) }
         hasAbove = true
     }
     if (mysteries.isNotEmpty()) {

@@ -285,11 +285,11 @@ object LumenTools {
     "type": "function",
     "function": {
       "name": "suggest_prayer_guide",
-      "description": "Attach a 1-tap launch card for ANY bundled devotional guide in Roteiros (e.g. TRADITIONAL, CATECHETICAL, COMPLETE, SINGLE_DECADE, FULL_ROSARY, FAMILY, SICK, PEACE, DECEASED, ANXIETY, VOCATIONS, DIVINE_MERCY, SAINT_JOSEPH, OUR_LADY_OF_TEARS, SEVEN_JOYS, STATIONS_OF_THE_CROSS, etc.). Call read_liturgy_and_guides first to confirm exact guideName.",
+      "description": "Attach a 1-tap launch card for a bundled guide the user wants to start. Call read_liturgy_and_guides first. To offer the complete prayer for reading and saving, use the final reply's prayers field instead.",
       "parameters": {
         "type": "object",
         "properties": {
-          "guideName": { "type": "string", "description": "Exact PrayerGuide enum name from read_liturgy_and_guides" },
+          "guideName": { "type": "string", "enum": ${LumenJsonParser.serializeSimple(PrayerGuide.entries.map { it.name })}, "description": "Exact guideName from read_liturgy_and_guides" },
           "mysterySet": { "type": "string", "enum": ["JOYFUL", "LUMINOUS", "SORROWFUL", "GLORIOUS"], "description": "Optional mystery set override for Rosary scripts" },
           "focusMysteryIndex": { "type": "integer", "description": "Optional 0..4 mystery index when launching SINGLE_DECADE" },
           "meditated": { "type": "boolean", "description": "Optional bead-by-bead meditation toggle" },
